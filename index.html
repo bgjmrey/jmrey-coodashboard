@@ -584,6 +584,7 @@ const SUPABASE_BATCH_SIZE = 500;
 const SUPABASE_SYNC_DEBOUNCE_MS = 1000;
 let _sbClient = null;
 let _sbWarned = false;
+let _sbLibWarned = false;
 const _sbSyncTimers = {};
 
 function hasSupabaseConfig(){
@@ -593,10 +594,19 @@ function hasSupabaseConfig(){
 }
 function getSupabaseClient(){
   if(_sbClient) return _sbClient;
-  if(!window.supabase?.createClient) return null;
+  if(!window.supabase?.createClient){
+    notifySupabaseLibraryMissingOnce();
+    return null;
+  }
   if(!hasSupabaseConfig()) return null;
   _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   return _sbClient;
+}
+function notifySupabaseLibraryMissingOnce(){
+  if(_sbLibWarned) return;
+  _sbLibWarned = true;
+  console.error('Supabase SDK no cargado: window.supabase.createClient no disponible');
+  toast('Error: no se cargó la librería de Supabase (modo local)', 'err');
 }
 function notifySupabaseFallbackOnce(){
   if(_sbWarned) return;
