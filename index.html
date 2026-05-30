@@ -560,8 +560,10 @@ const E_COL = {entregado:'b-green',aceptado:'b-blue',enDesarrollo:'b-blue',acept
 
 // ── PERSISTENCIA ─────────────────────────────────────
 // Supabase config (GitHub Pages friendly, no build step)
-const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_PLACEHOLDER_URL = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_PLACEHOLDER_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = SUPABASE_PLACEHOLDER_URL;
+const SUPABASE_ANON_KEY = SUPABASE_PLACEHOLDER_KEY;
 const SUPABASE_TABLES = {
   servicios: 'servicios',
   valoraciones: 'valoraciones',
@@ -586,8 +588,8 @@ const _sbSyncTimers = {};
 
 function hasSupabaseConfig(){
   return !!SUPABASE_URL && !!SUPABASE_ANON_KEY
-    && !SUPABASE_URL.includes('YOUR_PROJECT')
-    && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_ANON_KEY');
+    && SUPABASE_URL !== SUPABASE_PLACEHOLDER_URL
+    && SUPABASE_ANON_KEY !== SUPABASE_PLACEHOLDER_KEY;
 }
 function getSupabaseClient(){
   if(_sbClient) return _sbClient;
@@ -659,21 +661,30 @@ async function hydrateDBFromSupabase(){
     return;
   }
   try{
-    const [servicios, valoraciones, clientes, tecnicos] = await Promise.all([
-      loadCollectionFromSupabase('servicios', DB.servicios),
-      loadCollectionFromSupabase('valoraciones', DB.valoraciones),
-      loadCollectionFromSupabase('clientes', DB.clientes),
-      loadCollectionFromSupabase('tecnicos', DB.tecnicos),
-    ]);
-    DB.servicios = servicios;
-    DB.valoraciones = valoraciones;
-    DB.clientes = clientes;
-    DB.tecnicos = tecnicos;
+    const loads = [
+      ['servicios', DB.servicios],
+      ['valoraciones', DB.valoraciones],
+      ['clientes', DB.clientes],
+      ['tecnicos', DB.tecnicos],
+    ];
+    const results = await Promise.allSettled(loads.map(([name, fallback])=>loadCollectionFromSupabase(name, fallback)));
+    results.forEach((res, i)=>{
+      const key = loads[i][0];
+      if(res.status === 'fulfilled'){
+        DB[key] = res.value;
+      }else{
+        console.error('Supabase load error ['+key+']', res.reason);
+      }
+    });
     ssLocal('svc', DB.servicios);
     ssLocal('val', DB.valoraciones);
     ssLocal('cli', DB.clientes);
     ssLocal('tec', DB.tecnicos);
-    toast('Datos cargados desde Supabase: '+DB.servicios.length+' servicios, '+DB.valoraciones.length+' valoraciones');
+    if(results.some(r=>r.status === 'fulfilled')){
+      toast(`Datos cargados desde Supabase: ${DB.servicios.length} servicios, ${DB.valoraciones.length} valoraciones`);
+    }else{
+      toast('No se pudo cargar Supabase; usando datos locales', 'err');
+    }
   }catch(err){
     console.error('Supabase load error', err);
     toast('No se pudo cargar Supabase; usando datos locales', 'err');
