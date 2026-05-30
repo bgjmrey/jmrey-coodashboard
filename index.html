@@ -21,161 +21,76 @@
   --fg-d:#F4ECE0;--fg-d2:#B6884A;
   --accent:var(--gold-600);--border:var(--ink-200);--border-s:var(--ivory-300);
   --ff-serif:'Cormorant Garamond',Georgia,serif;--ff-sans:'Manrope',system-ui,sans-serif;
+  --fz-h3:22px;--fz-h4:18px;--fz-b:15px;--fz-sm:13px;--fz-xs:12px;--fz-2xs:11px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;
+  --r-md:6px;--r-lg:10px;
+  --sh-sm:0 2px 6px rgba(20,23,28,.05),0 1px 2px rgba(20,23,28,.04);
+  --sh-md:0 8px 24px -8px rgba(20,23,28,.10);
+  --max:1300px;--g:clamp(16px,3vw,48px);
 }
-*{box-sizing:border-box} body{margin:0;font-family:var(--ff-sans);background:var(--bg);color:var(--fg-2)}
-.hdr,.nav,footer{padding:16px 24px}.hdr,footer{background:var(--bg-dark);color:var(--fg-d)}.nav{background:var(--navy-800)}
-.sec{max-width:1100px;margin:0 auto;padding:24px}.card{background:#fff;border:1px solid var(--border-s);border-radius:10px;padding:24px}
-.toast{position:fixed;bottom:24px;right:24px;background:var(--bg-dark);color:var(--fg-d);padding:12px 18px;border-radius:10px;opacity:0;transform:translateY(10px);transition:.2s}.toast.on{opacity:1;transform:none}
-.muted{color:var(--ink-500)} .ok{color:#2e7d32} .err{color:#c62828}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--ff-sans);font-size:var(--fz-b);background:var(--bg);color:var(--fg-2);line-height:1.6;min-height:100vh;}
+.hdr{background:var(--bg-dark);padding:var(--sp-4) var(--g);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);position:sticky;top:0;z-index:100;}
+.hdr-brand{display:flex;align-items:baseline;gap:var(--sp-3);}
+.hdr-logo{font-family:var(--ff-serif);font-size:var(--fz-h3);font-weight:600;color:var(--fg-d);}
+.hdr-logo span{color:var(--accent);}
+.hdr-sub{font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--fg-d2);}
+.hdr-meta{font-size:var(--fz-sm);color:var(--fg-d2);text-align:right;}
+.hdr-meta strong{color:var(--fg-d);display:block;}
+.nav{background:var(--navy-800);padding:0 var(--g);display:flex;gap:2px;border-bottom:2px solid var(--accent);}
+.nav-tab{font-family:var(--ff-sans);font-size:var(--fz-sm);font-weight:600;padding:10px 18px;background:transparent;border:none;color:var(--fg-d2);cursor:pointer;transition:all 160ms;white-space:nowrap;position:relative;}
+.nav-tab:hover{color:var(--fg-d);} .nav-tab.active{color:var(--fg-d);background:var(--bg-dark);} .nav-tab.active::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--accent);}
+.sec{display:none;max-width:var(--max);margin:0 auto;padding:var(--sp-5) var(--g);} .sec.active{display:block;}
+#sec-servicios,#sec-valoraciones{max-width:100%;padding-left:var(--sp-4);padding-right:var(--sp-4);}
+.fbar,.sc,.kc,.dtw,.modal{background:var(--bg-card);border:1px solid var(--border-s);border-radius:var(--r-lg);box-shadow:var(--sh-sm);} 
+.fbar{padding:var(--sp-4) var(--sp-5);margin-bottom:var(--sp-5);display:flex;flex-wrap:wrap;gap:var(--sp-4);align-items:flex-end;}
+.fg{display:flex;flex-direction:column;gap:2px;} .fl{font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);}
+.fsel,.finp,.filter-row input,.filter-row select,.fi input,.fi select,.fi textarea{font-family:var(--ff-sans);font-size:var(--fz-sm);color:var(--fg-1);background:var(--bg-e);border:1px solid var(--border);border-radius:var(--r-md);padding:6px var(--sp-3);outline:none;width:100%;}
+.finp{width:80px;} .seh-ey{font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--accent);margin-bottom:var(--sp-2);} .seh-t{font-family:var(--ff-serif);font-size:var(--fz-h3);font-weight:500;color:var(--fg-1);margin-bottom:var(--sp-1);} .seh-r{width:48px;height:2px;background:var(--accent);margin-bottom:var(--sp-5);}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--sp-4);margin-bottom:var(--sp-6);} .sc{padding:var(--sp-5);} .sc-lbl{font-size:var(--fz-xs);font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--fg-4);margin-bottom:var(--sp-2);} .sc-val{font-family:var(--ff-serif);font-size:34px;font-weight:500;color:var(--fg-1);line-height:1;margin-bottom:2px;} .sc-sub{font-size:var(--fz-sm);color:var(--fg-3);}
+.tg2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-5);margin-bottom:var(--sp-5);} @media(max-width:860px){.tg2{grid-template-columns:1fr;}}
+.kc{overflow:hidden;} .kc-hd{background:var(--bg-dark);padding:10px var(--sp-5);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);} .kc-t{font-family:var(--ff-serif);font-size:var(--fz-h4);font-weight:500;color:var(--fg-d);} .kc-b,.kc-s{font-size:var(--fz-2xs);font-weight:700;letter-spacing:.1em;color:var(--accent);} .tw{overflow-x:auto;}
+table.kt,table.dt,table.rt{width:100%;border-collapse:collapse;font-size:var(--fz-sm);} table.kt thead tr,table.dt thead tr{background:var(--navy-700);} table.kt th,table.kt td,table.dt th,table.dt td{padding:7px var(--sp-3);} table.kt tbody tr:nth-child(even),table.dt tbody tr:nth-child(even),table.rt tbody tr:nth-child(even){background:var(--bg-e);} table.kt tbody tr:hover,table.dt tbody tr:hover,table.rt tbody tr:hover{background:var(--ivory-200);} 
+.de-tb{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-3);margin-bottom:var(--sp-5);} .de-tb-t{font-family:var(--ff-serif);font-size:var(--fz-h3);font-weight:500;color:var(--fg-1);} .btn{font-family:var(--ff-sans);font-size:var(--fz-sm);font-weight:600;padding:8px 18px;border-radius:var(--r-md);border:none;cursor:pointer;transition:all 160ms;display:inline-flex;align-items:center;gap:6px;} .btn-p{background:var(--bg-dark);color:var(--fg-d);} .btn-s{background:var(--bg-e);color:var(--fg-2);border:1px solid var(--border);} .bi{padding:5px 7px;border-radius:var(--r-md);background:transparent;border:1px solid var(--border);cursor:pointer;color:var(--fg-3);font-size:13px;}
+.ovl{display:none;position:fixed;inset:0;background:rgba(14,31,61,.45);z-index:200;align-items:flex-start;justify-content:center;padding:48px var(--g);overflow-y:auto;} .ovl.open{display:flex;} .modal{width:100%;max-width:700px;} .mhd{background:var(--bg-dark);padding:var(--sp-4) var(--sp-5);display:flex;align-items:center;justify-content:space-between;border-radius:var(--r-lg) var(--r-lg) 0 0;} .mhd-t{font-family:var(--ff-serif);font-size:var(--fz-h4);font-weight:500;color:var(--fg-d);} .mcl{background:transparent;border:none;color:var(--fg-d2);font-size:20px;cursor:pointer;line-height:1;padding:4px;} .mbody{padding:var(--sp-5);} .mft{padding:var(--sp-4) var(--sp-5);border-top:1px solid var(--border-s);display:flex;justify-content:flex-end;gap:var(--sp-3);} .fg2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);} .fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-4);} @media(max-width:580px){.fg2,.fg3{grid-template-columns:1fr;}} .fi{display:flex;flex-direction:column;gap:4px;} .fi.s2{grid-column:1/-1;} .fi label{font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--fg-4);} .fi textarea{min-height:64px;resize:vertical;} .fi-hint{font-size:var(--fz-2xs);color:var(--fg-3);margin-top:2px;}
+.toast{position:fixed;bottom:var(--sp-5);right:var(--sp-5);background:var(--bg-dark);color:var(--fg-d);padding:var(--sp-3) var(--sp-5);border-radius:var(--r-lg);border-left:3px solid var(--accent);font-size:var(--fz-sm);font-weight:500;z-index:999;box-shadow:var(--sh-md);transform:translateY(12px);opacity:0;transition:all 260ms ease;pointer-events:none;} .toast.on{transform:translateY(0);opacity:1;}
+footer{background:var(--bg-dark);margin-top:48px;padding:var(--sp-4) var(--g);border-top:1px solid var(--accent);} .fin{max-width:var(--max);margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-4);} .fb{font-family:var(--ff-serif);font-size:var(--fz-h4);font-weight:500;color:var(--fg-d);} .fm{font-size:var(--fz-xs);color:var(--fg-d2);} .copy-bar,.drill-active-bar{display:none}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<header class="hdr"><strong>JMREY</strong> · Cuadro de Mando BC</header>
-<nav class="nav">Carga prioritaria desde Supabase</nav>
-<section class="sec">
-  <div class="card">
-    <h1 style="margin-top:0">Estado de carga</h1>
-    <p id="status" class="muted">Inicializando…</p>
-    <pre id="summary" style="white-space:pre-wrap"></pre>
-  </div>
-</section>
-<footer>JMREY Business</footer>
+<header class="hdr"><div class="hdr-brand"><span class="hdr-logo">JM<span>REY</span></span><span class="hdr-sub">Cuadro de Mando · Dpto. BC</span></div><div class="hdr-meta"><strong>Borja González</strong><span>bg@jmrey.com</span></div></header>
+<nav class="nav"><button class="nav-tab active" data-sec="kpis">📊 KPIs</button><button class="nav-tab" data-sec="servicios">📋 Servicios</button><button class="nav-tab" data-sec="valoraciones">⭐ Valoraciones</button><button class="nav-tab" data-sec="clientes">🏢 Clientes</button></nav>
+<section id="sec-kpis" class="sec active"><div class="seh-ey">Indicadores clave</div><h2 class="seh-t">Dashboard restaurado</h2><div class="seh-r"></div><div class="sg"><div class="sc"><div class="sc-lbl">Estado</div><div class="sc-val" id="stat-source">—</div><div class="sc-sub" id="stat-counts">Cargando datos…</div></div></div></section>
+<section id="sec-servicios" class="sec"><div class="de-tb"><div><div class="seh-ey">Gestión de datos</div><div class="de-tb-t">Servicios</div></div></div><div class="dtw"><div class="tw"><table class="dt"><thead><tr><th>ID</th><th>Título</th><th>Cliente</th><th>Técnico</th></tr></thead><tbody id="tbody-svc"></tbody></table></div></div></section>
+<section id="sec-valoraciones" class="sec"><div class="de-tb"><div><div class="seh-ey">Gestión de datos</div><div class="de-tb-t">Valoraciones</div></div></div><div class="dtw"><div class="tw"><table class="dt"><thead><tr><th>ID Servicio</th><th>ID Val.</th><th>Cliente</th><th>Título</th></tr></thead><tbody id="tbody-val"></tbody></table></div></div></section>
+<section id="sec-clientes" class="sec"><div class="de-tb"><div><div class="seh-ey">Gestión de datos</div><div class="de-tb-t">Clientes</div></div></div><div class="dtw"><div class="tw"><table class="dt"><thead><tr><th>Partner</th><th>Cliente</th><th>Técnico director</th></tr></thead><tbody id="tbody-cli"></tbody></table></div></div></section>
 <div class="toast" id="toast"></div>
+<footer><div class="fin"><span class="fb">JMREY Business</span><span class="fm">Cuadro de Mando · Departamento BC</span></div></footer>
 <script>
-const MASTER = window.MASTER || { clientes: [], tecnicos: [] };
-const SEED = window.SEED || { servicios: [], valoraciones: [] };
-
+const MASTER = { clientes: [], tecnicos: [] };
+const SEED = { servicios: [], valoraciones: [] };
 const SUPABASE_PLACEHOLDER_URL = 'https://YOUR_PROJECT.supabase.co';
 const SUPABASE_PLACEHOLDER_KEY = 'YOUR_SUPABASE_ANON_KEY';
 const SUPABASE_URL = 'https://bpxeyugyadcgyewrpcde.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_-MbTS5o7pn2zqWiaY0UJ0A_zHhKAVKv';
-const SUPABASE_TABLES = {
-  servicios: 'servicios',
-  valoraciones: 'valoraciones',
-  clientes: 'clientes',
-  tecnicos: 'tecnicos',
-};
-
-function ls(k,fb){try{const v=localStorage.getItem('jmr_'+k);return v?JSON.parse(v):fb;}catch{return fb;}}
-function ssLocal(k,v){try{localStorage.setItem('jmr_'+k,JSON.stringify(v));}catch{}}
-let _sbClient = null;
-let _sbWarned = false;
-let _sbLibWarned = false;
-
-function toast(msg){
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('on');
-  clearTimeout(el._timer);
-  el._timer = setTimeout(()=>el.classList.remove('on'), 2200);
-}
-function setStatus(msg, cls='muted'){
-  const el = document.getElementById('status');
-  el.className = cls;
-  el.textContent = msg;
-}
-function setSummary(obj){
-  document.getElementById('summary').textContent = JSON.stringify(obj, null, 2);
-}
-function hasSupabaseConfig(){
-  return !!SUPABASE_URL && !!SUPABASE_ANON_KEY
-    && SUPABASE_URL !== SUPABASE_PLACEHOLDER_URL
-    && SUPABASE_ANON_KEY !== SUPABASE_PLACEHOLDER_KEY;
-}
-function getSupabaseClient(){
-  if(_sbClient) return _sbClient;
-  if(!window.supabase?.createClient){
-    if(!_sbLibWarned){
-      _sbLibWarned = true;
-      console.error('Supabase SDK no cargado');
-    }
-    return null;
-  }
-  if(!hasSupabaseConfig()) return null;
-  _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  return _sbClient;
-}
-function notifySupabaseFallbackOnce(reason){
-  if(_sbWarned) return;
-  _sbWarned = true;
-  toast(reason || 'Usando datos locales');
-}
-
-async function loadCollectionFromSupabase(collection, fallbackRows){
-  const client = getSupabaseClient();
-  if(!client) return fallbackRows;
-  const table = SUPABASE_TABLES[collection] || collection;
-  const { data, error } = await client.from(table).select('*');
-  if(error) throw error;
-  if(Array.isArray(data) && data.length >= 0) return data;
-  return fallbackRows;
-}
-
-let DB = {
-  servicios: [],
-  valoraciones: [],
-  clientes: [],
-  tecnicos: [],
-};
-
-async function hydrateDBFromSupabase(){
-  const fallback = {
-    servicios: ls('svc', SEED.servicios || []),
-    valoraciones: ls('val', SEED.valoraciones || []),
-    clientes: ls('cli', MASTER.clientes || []),
-    tecnicos: ls('tec', MASTER.tecnicos || []),
-  };
-
-  if(!hasSupabaseConfig()){
-    DB = { ...fallback };
-    notifySupabaseFallbackOnce('Supabase no configurado; usando localStorage/seed');
-    return { source: 'fallback', db: DB };
-  }
-
-  try{
-    const [servicios, valoraciones, clientes, tecnicos] = await Promise.all([
-      loadCollectionFromSupabase('servicios', fallback.servicios),
-      loadCollectionFromSupabase('valoraciones', fallback.valoraciones),
-      loadCollectionFromSupabase('clientes', fallback.clientes),
-      loadCollectionFromSupabase('tecnicos', fallback.tecnicos),
-    ]);
-
-    DB = { servicios, valoraciones, clientes, tecnicos };
-
-    ssLocal('svc', DB.servicios);
-    ssLocal('val', DB.valoraciones);
-    ssLocal('cli', DB.clientes);
-    ssLocal('tec', DB.tecnicos);
-
-    return { source: 'supabase', db: DB };
-  }catch(err){
-    console.error('Supabase load error', err);
-    DB = { ...fallback };
-    notifySupabaseFallbackOnce('Error leyendo Supabase; usando localStorage/seed');
-    return { source: 'fallback', db: DB, error: String(err?.message || err) };
-  }
-}
-
-(async function init(){
-  const result = await hydrateDBFromSupabase();
-  if(result.source === 'supabase'){
-    setStatus('Datos cargados desde Supabase', 'ok');
-    toast('Cargado desde Supabase');
-  } else {
-    setStatus('Cargado desde localStorage/seed como respaldo', 'err');
-  }
-  setSummary({
-    source: result.source,
-    counts: {
-      servicios: DB.servicios.length,
-      valoraciones: DB.valoraciones.length,
-      clientes: DB.clientes.length,
-      tecnicos: DB.tecnicos.length,
-    },
-    error: result.error || null
-  });
-})();
+const SUPABASE_TABLES = { servicios:'servicios', valoraciones:'valoraciones', clientes:'clientes', tecnicos:'tecnicos' };
+function ls(k,fb){ try{ const v=localStorage.getItem('jmr_'+k); return v?JSON.parse(v):fb; }catch{ return fb; } }
+function ssLocal(k,v){ try{ localStorage.setItem('jmr_'+k, JSON.stringify(v)); }catch{} }
+let _sbClient = null, _sbWarned = false, _sbLibWarned = false;
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),2200); }
+function hasSupabaseConfig(){ return !!SUPABASE_URL && !!SUPABASE_ANON_KEY && SUPABASE_URL !== SUPABASE_PLACEHOLDER_URL && SUPABASE_ANON_KEY !== SUPABASE_PLACEHOLDER_KEY; }
+function getSupabaseClient(){ if(_sbClient) return _sbClient; if(!window.supabase?.createClient){ if(!_sbLibWarned){ _sbLibWarned=true; console.error('Supabase SDK no cargado'); } return null; } if(!hasSupabaseConfig()) return null; _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); return _sbClient; }
+function notifySupabaseFallbackOnce(msg='Usando datos locales/seed'){ if(_sbWarned) return; _sbWarned = true; toast(msg); }
+function buildFallbackDB(){ return { servicios: ls('svc', SEED.servicios || []), valoraciones: ls('val', SEED.valoraciones || []), clientes: ls('cli', MASTER.clientes || []), tecnicos: ls('tec', MASTER.tecnicos || []) }; }
+async function fetchCollectionFromSupabase(collection){ const client = getSupabaseClient(); if(!client) throw new Error('Supabase no disponible'); const table = SUPABASE_TABLES[collection] || collection; const { data, error } = await client.from(table).select('*'); if(error) throw error; return Array.isArray(data) ? data : []; }
+function hasMeaningfulData(db){ return !!((db.servicios&&db.servicios.length) || (db.valoraciones&&db.valoraciones.length) || (db.clientes&&db.clientes.length) || (db.tecnicos&&db.tecnicos.length)); }
+let DB = buildFallbackDB();
+async function hydrateDBFromSupabase(){ const fallbackDB = buildFallbackDB(); DB = fallbackDB; if(!hasSupabaseConfig()){ notifySupabaseFallbackOnce('Supabase no configurado; usando localStorage/seed'); return { source:'fallback', usedFallback:true }; } try{ const [servicios, valoraciones, clientes, tecnicos] = await Promise.all([ fetchCollectionFromSupabase('servicios'), fetchCollectionFromSupabase('valoraciones'), fetchCollectionFromSupabase('clientes'), fetchCollectionFromSupabase('tecnicos') ]); const supabaseDB = { servicios, valoraciones, clientes, tecnicos }; if(hasMeaningfulData(supabaseDB)){ DB = supabaseDB; ssLocal('svc', DB.servicios); ssLocal('val', DB.valoraciones); ssLocal('cli', DB.clientes); ssLocal('tec', DB.tecnicos); toast('Datos cargados desde Supabase'); return { source:'supabase', usedFallback:false }; } DB = fallbackDB; notifySupabaseFallbackOnce('Supabase vacío; usando localStorage/seed'); return { source:'fallback', usedFallback:true }; }catch(err){ console.error('Supabase load error', err); DB = fallbackDB; notifySupabaseFallbackOnce('Error leyendo Supabase; usando localStorage/seed'); return { source:'fallback', usedFallback:true, error:String(err?.message || err) }; } }
+function renderRows(id, rows, cols){ const tbody = document.getElementById(id); if(!tbody) return; tbody.innerHTML = rows.length ? rows.map(r => '<tr>'+cols.map(c => '<td>' + (r[c] ?? '') + '</td>').join('')+'</tr>').join('') : '<tr><td colspan="'+cols.length+'">Sin datos</td></tr>'; }
+function renderAll(status){ document.getElementById('stat-source').textContent = status.source === 'supabase' ? 'Supabase' : 'Fallback'; document.getElementById('stat-counts').textContent = `${DB.servicios.length} servicios · ${DB.valoraciones.length} valoraciones · ${DB.clientes.length} clientes · ${DB.tecnicos.length} técnicos`; renderRows('tbody-svc', DB.servicios, ['id','titulo','cliente2','tecnico']); renderRows('tbody-val', DB.valoraciones, ['id_svc','id_val','cliente','titulo']); renderRows('tbody-cli', DB.clientes, ['partner','cliente','tecnico']); }
+document.querySelectorAll('.nav-tab').forEach(btn=>btn.addEventListener('click',()=>{ document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active')); document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active')); btn.classList.add('active'); document.getElementById('sec-'+btn.dataset.sec).classList.add('active'); }));
+(async function init(){ const status = await hydrateDBFromSupabase(); renderAll(status); })();
 </script>
 </body>
 </html>
