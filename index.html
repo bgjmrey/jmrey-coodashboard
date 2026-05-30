@@ -283,6 +283,7 @@ table.rt tbody td.c{text-align:center;}
 @keyframes fu{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 .anim{animation:fu 260ms ease forwards;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -558,16 +559,166 @@ const E_COL = {entregado:'b-green',aceptado:'b-blue',enDesarrollo:'b-blue',acept
   ValoradoTecnico:'b-amber',rechazado:'b-red',Cancelado:'b-red',StandBy:'b-gray'};
 
 // ── PERSISTENCIA ─────────────────────────────────────
-function ls(k,fb){try{const v=localStorage.getItem('jmr_'+k);return v?JSON.parse(v):fb;}catch{return fb;}}
-function ss(k,v){try{localStorage.setItem('jmr_'+k,JSON.stringify(v));}catch{}}
+// Supabase config (GitHub Pages friendly, no build step)
+const SUPABASE_PLACEHOLDER_URL = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_PLACEHOLDER_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://bpxeyugyadcgyewrpcde.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_-MbTS5o7pn2zqWiaY0UJ0A_zHhKAVKv';
+const SUPABASE_TABLES = {
+  servicios: 'servicios',
+  valoraciones: 'valoraciones',
+  clientes: 'clientes',
+  tecnicos: 'tecnicos',
+};
+// Supabase tables expected (minimal fields):
+// - servicios: id + current servicio fields used in this file
+// - valoraciones: id_svc, id_val + current valoración fields
+// - clientes: partner, cliente + current cliente fields
+// - tecnicos: email + current técnico fields
 
-// Seed version — bump this string whenever seed data changes structurally
-const SEED_VERSION = 'v5-hjmrey';
-if(localStorage.getItem('jmr_seed_ver') !== SEED_VERSION){
-  // Reset servicios and valoraciones from seed (preserve clientes/tecnicos edits)
+function ls(k,fb){try{const v=localStorage.getItem('jmr_'+k);return v?JSON.parse(v):fb;}catch{return fb;}}
+function ssLocal(k,v){try{localStorage.setItem('jmr_'+k,JSON.stringify(v));}catch{}}
+const LS_TO_COLLECTION = {svc:'servicios', val:'valoraciones', cli:'clientes', tec:'tecnicos'};
+const SUPABASE_DELETE_FIELD = {servicios:'id', valoraciones:'id_svc', clientes:'partner', tecnicos:'email'};
+const SUPABASE_BATCH_SIZE = 500;
+const SUPABASE_SYNC_DEBOUNCE_MS = 1000;
+let _sbClient = null;
+let _sbWarned = false;
+let _sbLibWarned = false;
+const _sbSyncTimers = {};
+
+function hasSupabaseConfig(){
+  return !!SUPABASE_URL && !!SUPABASE_ANON_KEY
+    && SUPABASE_URL !== SUPABASE_PLACEHOLDER_URL
+    && SUPABASE_ANON_KEY !== SUPABASE_PLACEHOLDER_KEY;
+}
+function getSupabaseClient(){
+  if(_sbClient) return _sbClient;
+  if(!window.supabase?.createClient){
+    notifySupabaseLibraryMissingOnce();
+    return null;
+  }
+  if(!hasSupabaseConfig()) return null;
+  _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return _sbClient;
+}
+function notifySupabaseLibraryMissingOnce(){
+  if(_sbLibWarned) return;
+  _sbLibWarned = true;
+  console.error('Supabase SDK no cargado: window.supabase.createClient no disponible');
+  toast('Error: no se cargó la librería de Supabase (modo local)', 'err');
+}
+function notifySupabaseFallbackOnce(){
+  if(_sbWarned) return;
+  _sbWarned = true;
+  toast('Supabase no configurado: usando datos locales (modo local)');
+}
+
+async function syncCollectionToSupabase(collection, rows){
+  const client = getSupabaseClient();
+  if(!client) return false;
+  const table = SUPABASE_TABLES[collection] || collection;
+  const deleteField = SUPABASE_DELETE_FIELD[collection];
+  try{
+    if(deleteField){
+      const { error: delErr } = await client.from(table).delete().not(deleteField, 'is', null);
+      if(delErr) throw delErr;
+    }
+    const data = Array.isArray(rows) ? rows : [];
+    for(let i=0;i<data.length;i+=SUPABASE_BATCH_SIZE){
+      const chunk = data.slice(i,i+SUPABASE_BATCH_SIZE);
+      const { error: insErr } = await client.from(table).insert(chunk);
+      if(insErr) throw insErr;
+    }
+    return true;
+  }catch(err){
+    console.error('Supabase sync error ['+collection+']', err);
+    toast('Error de sincronización en Supabase ('+collection+')', 'err');
+    return false;
+  }
+}
+
+function queueSupabaseSyncByLocalKey(k, rows){
+  const collection = LS_TO_COLLECTION[k];
+  if(!collection) return;
+  clearTimeout(_sbSyncTimers[collection]);
+  _sbSyncTimers[collection] = setTimeout(()=>{ syncCollectionToSupabase(collection, rows); }, SUPABASE_SYNC_DEBOUNCE_MS);
+}
+
+function ss(k,v){
+  ssLocal(k,v);
+  const client = getSupabaseClient();
+  if(!client){
+    if(!hasSupabaseConfig()) notifySupabaseFallbackOnce();
+    return;
+  }
+  queueSupabaseSyncByLocalKey(k,v);
+}
+
+async function loadCollectionFromSupabase(collection, fallbackRows){
+  const client = getSupabaseClient();
+  if(!client) return fallbackRows;
+  const table = SUPABASE_TABLES[collection] || collection;
+  const { data, error } = await client.from(table).select('*');
+  if(error) throw error;
+  if(Array.isArray(data) && data.length) return data;
+  return fallbackRows;
+}
+
+async function hydrateDBFromSupabase(){
+  if(!hasSupabaseConfig()){
+    notifySupabaseFallbackOnce();
+    return;
+  }
+  try{
+    const loads = [
+      ['servicios', DB.servicios],
+      ['valoraciones', DB.valoraciones],
+      ['clientes', DB.clientes],
+      ['tecnicos', DB.tecnicos],
+    ];
+    const results = await Promise.allSettled(loads.map(([name, fallback])=>loadCollectionFromSupabase(name, fallback)));
+    results.forEach((res, i)=>{
+      const key = loads[i][0];
+      if(res.status === 'fulfilled'){
+        DB[key] = res.value;
+      }else{
+        console.error('Supabase load error ['+key+']', res.reason);
+      }
+    });
+    ssLocal('svc', DB.servicios);
+    ssLocal('val', DB.valoraciones);
+    ssLocal('cli', DB.clientes);
+    ssLocal('tec', DB.tecnicos);
+    if(results.some(r=>r.status === 'fulfilled')){
+      toast(`Datos cargados desde Supabase: ${DB.servicios.length} servicios, ${DB.valoraciones.length} valoraciones`);
+    }else{
+      toast('No se pudo cargar Supabase; usando datos locales', 'err');
+    }
+  }catch(err){
+    console.error('Supabase load error', err);
+    toast('No se pudo cargar Supabase; usando datos locales', 'err');
+  }
+}
+
+// Reset servicios/valoraciones cache when embedded seed changes (preserve clientes/tecnicos edits)
+function computeSeedSignature(){
+  try{
+    const json = JSON.stringify({servicios: SEED.servicios, valoraciones: SEED.valoraciones});
+    let hash = 5381;
+    for(let i=0;i<json.length;i++){
+      hash = ((hash << 5) + hash) ^ json.charCodeAt(i);
+    }
+    return 'seed-'+(hash>>>0).toString(16);
+  }catch{
+    return 'seed-signature-fallback';
+  }
+}
+const SEED_SIGNATURE = computeSeedSignature();
+if(localStorage.getItem('jmr_seed_sig') !== SEED_SIGNATURE){
   localStorage.removeItem('jmr_svc');
   localStorage.removeItem('jmr_val');
-  localStorage.setItem('jmr_seed_ver', SEED_VERSION);
+  localStorage.setItem('jmr_seed_sig', SEED_SIGNATURE);
 }
 
 let DB = {
@@ -1793,10 +1944,17 @@ document.addEventListener('mousedown', e=>{
   }
 });
 // ── INIT ─────────────────────────────────────────────
-populateSvcSelects();
-populateValSelects();
-populateCliSelects();
-renderKPI();
+async function initApp(){
+  await hydrateDBFromSupabase();
+  populateSvcSelects();
+  populateValSelects();
+  populateCliSelects();
+  renderSvc();
+  renderVal();
+  renderCli();
+  renderKPI();
+}
+initApp();
 </script>
 </body>
 </html>
