@@ -701,13 +701,19 @@ async function hydrateDBFromSupabase(){
   }
 }
 
-// Seed version — bump this string whenever seed data changes structurally
-const SEED_VERSION = 'v5-hjmrey';
-if(localStorage.getItem('jmr_seed_ver') !== SEED_VERSION){
-  // Reset servicios and valoraciones from seed (preserve clientes/tecnicos edits)
+// Reset servicios/valoraciones cache when embedded seed changes (preserve clientes/tecnicos edits)
+function computeSeedSignature(){
+  try{
+    return JSON.stringify({servicios: SEED.servicios, valoraciones: SEED.valoraciones});
+  }catch{
+    return 'seed-signature-fallback';
+  }
+}
+const SEED_SIGNATURE = computeSeedSignature();
+if(localStorage.getItem('jmr_seed_sig') !== SEED_SIGNATURE){
   localStorage.removeItem('jmr_svc');
   localStorage.removeItem('jmr_val');
-  localStorage.setItem('jmr_seed_ver', SEED_VERSION);
+  localStorage.setItem('jmr_seed_sig', SEED_SIGNATURE);
 }
 
 let DB = {
