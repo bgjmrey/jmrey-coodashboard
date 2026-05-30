@@ -21,304 +21,30 @@
   --fg-d:#F4ECE0;--fg-d2:#B6884A;
   --accent:var(--gold-600);--border:var(--ink-200);--border-s:var(--ivory-300);
   --ff-serif:'Cormorant Garamond',Georgia,serif;--ff-sans:'Manrope',system-ui,sans-serif;
-  --fz-h3:22px;--fz-h4:18px;--fz-b:15px;--fz-sm:13px;--fz-xs:12px;--fz-2xs:11px;
-  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;
-  --r-md:6px;--r-lg:10px;
-  --sh-sm:0 2px 6px rgba(20,23,28,.05),0 1px 2px rgba(20,23,28,.04);
-  --sh-md:0 8px 24px -8px rgba(20,23,28,.10);
-  --max:1300px;--g:clamp(16px,3vw,48px);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--ff-sans);font-size:var(--fz-b);background:var(--bg);color:var(--fg-2);line-height:1.6;min-height:100vh;}
-
-/* HEADER */
-.hdr{background:var(--bg-dark);padding:var(--sp-4) var(--g);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);position:sticky;top:0;z-index:100;}
-.hdr-brand{display:flex;align-items:baseline;gap:var(--sp-3);}
-.hdr-logo{font-family:var(--ff-serif);font-size:var(--fz-h3);font-weight:600;color:var(--fg-d);}
-.hdr-logo span{color:var(--accent);}
-.hdr-sub{font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--fg-d2);}
-.hdr-meta{font-size:var(--fz-sm);color:var(--fg-d2);text-align:right;}
-.hdr-meta strong{color:var(--fg-d);display:block;}
-
-/* NAV */
-.nav{background:var(--navy-800);padding:0 var(--g);display:flex;gap:2px;border-bottom:2px solid var(--accent);}
-.nav-tab{font-family:var(--ff-sans);font-size:var(--fz-sm);font-weight:600;padding:10px 18px;
-  background:transparent;border:none;color:var(--fg-d2);cursor:pointer;transition:all 160ms;white-space:nowrap;position:relative;}
-.nav-tab:hover{color:var(--fg-d);}
-.nav-tab.active{color:var(--fg-d);background:var(--bg-dark);}
-.nav-tab.active::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--accent);}
-
-/* SECTIONS */
-.sec{display:none;max-width:var(--max);margin:0 auto;padding:var(--sp-5) var(--g);}
-.sec.active{display:block;}
-#sec-servicios,#sec-valoraciones{max-width:100%;padding-left:var(--sp-4);padding-right:var(--sp-4);}
-
-/* FILTER BAR */
-.fbar{background:var(--bg-card);border:1px solid var(--border-s);border-radius:var(--r-lg);
-  padding:var(--sp-4) var(--sp-5);margin-bottom:var(--sp-5);
-  display:flex;flex-wrap:wrap;gap:var(--sp-4);align-items:flex-end;box-shadow:var(--sh-sm);}
-.fg{display:flex;flex-direction:column;gap:2px;}
-.fl{font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);}
-.fsel,.finp{font-family:var(--ff-sans);font-size:var(--fz-sm);font-weight:500;color:var(--fg-1);
-  background:var(--bg-e);border:1px solid var(--border);border-radius:var(--r-md);
-  padding:6px var(--sp-3);outline:none;transition:border-color 180ms;cursor:pointer;
-  appearance:none;-webkit-appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%237A7669' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
-.fsel:focus,.finp:focus{border-color:var(--accent);}
-.finp{background-image:none;padding-right:var(--sp-3);width:80px;}
-.fdiv{width:1px;height:32px;background:var(--border);align-self:flex-end;margin-bottom:2px;}
-.tog{display:flex;background:var(--bg-e);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
-.tog-btn{font-family:var(--ff-sans);font-size:var(--fz-sm);font-weight:600;padding:6px 14px;
-  border:none;background:transparent;color:var(--fg-3);cursor:pointer;transition:all 160ms;}
-.tog-btn.on{background:var(--bg-dark);color:var(--fg-d);}
-
-/* SECTION HEADER */
-.seh-ey{font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--accent);margin-bottom:var(--sp-2);}
-.seh-t{font-family:var(--ff-serif);font-size:var(--fz-h3);font-weight:500;color:var(--fg-1);margin-bottom:var(--sp-1);}
-.seh-r{width:48px;height:2px;background:var(--accent);margin-bottom:var(--sp-5);}
-
-/* SUMMARY CARDS */
-.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--sp-4);margin-bottom:var(--sp-6);}
-.sc{background:var(--bg-card);border:1px solid var(--border-s);border-radius:var(--r-lg);box-shadow:var(--sh-sm);padding:var(--sp-5);}
-.sc-lbl{font-size:var(--fz-xs);font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--fg-4);margin-bottom:var(--sp-2);}
-.sc-val{font-family:var(--ff-serif);font-size:34px;font-weight:500;color:var(--fg-1);line-height:1;margin-bottom:2px;}
-.sc-sub{font-size:var(--fz-sm);color:var(--fg-3);}
-.sc-prog{margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--border-s);}
-.pr{display:flex;align-items:center;gap:var(--sp-2);}
-.pr-l{font-size:var(--fz-xs);color:var(--fg-4);min-width:28px;}
-.pr-v{font-size:var(--fz-xs);font-weight:700;color:var(--fg-2);}
-.pr-t{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
-.pr-f{height:100%;background:var(--accent);border-radius:2px;transition:width 400ms ease;}
-.pr-p{font-size:var(--fz-2xs);font-weight:700;color:var(--accent);min-width:32px;text-align:right;}
-
-/* KPI TABLES */
-.tg2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-5);margin-bottom:var(--sp-5);}
-@media(max-width:860px){.tg2{grid-template-columns:1fr;}}
-.kc{background:var(--bg-card);border:1px solid var(--border-s);border-radius:var(--r-lg);box-shadow:var(--sh-sm);overflow:hidden;}
-.kc-hd{background:var(--bg-dark);padding:10px var(--sp-5);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);}
-.kc-t{font-family:var(--ff-serif);font-size:var(--fz-h4);font-weight:500;color:var(--fg-d);}
-.kc-b{font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);background:rgba(182,136,74,.12);border:1px solid rgba(182,136,74,.25);border-radius:20px;padding:4px 8px;}
-.kc-s{font-size:var(--fz-2xs);font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-top:1px;}
-.tw{overflow-x:auto;}
-table.kt{width:100%;border-collapse:collapse;font-size:var(--fz-sm);}
-table.kt thead tr{background:var(--navy-700);}
-table.kt thead th{padding:6px var(--sp-3);font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--fg-d2);text-align:right;white-space:nowrap;}
-table.kt thead th:first-child{text-align:left;}
-table.kt tbody tr{border-bottom:1px solid var(--border-s);transition:background 120ms;}
-table.kt tbody tr:nth-child(even){background:var(--bg-e);}
-table.kt tbody tr:hover{background:var(--ivory-200);}
-table.kt tbody td{padding:7px var(--sp-3);color:var(--fg-2);text-align:right;}
-table.kt tbody td:first-child{text-align:left;font-weight:600;color:var(--fg-1);}
-table.kt tfoot tr{background:var(--ivory-300);border-top:2px solid var(--accent);}
-table.kt tfoot td{padding:7px var(--sp-3);font-weight:700;color:var(--fg-1);text-align:right;}
-table.kt tfoot td:first-child{text-align:left;}
-.ec{text-align:center!important;padding:var(--sp-6)!important;color:var(--fg-3);}
-
-/* DATA ENTRY */
-.de-tb{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-3);margin-bottom:var(--sp-5);}
-.de-tb-t{font-family:var(--ff-serif);font-size:var(--fz-h3);font-weight:500;color:var(--fg-1);}
-.btn{font-family:var(--ff-sans);font-size:var(--fz-sm);font-weight:600;padding:8px 18px;border-radius:var(--r-md);border:none;cursor:pointer;transition:all 160ms;display:inline-flex;align-items:center;gap:6px;}
-.btn-p{background:var(--bg-dark);color:var(--fg-d);}
-.btn-p:hover{background:var(--navy-700);}
-.btn-s{background:var(--bg-e);color:var(--fg-2);border:1px solid var(--border);}
-.btn-s:hover{background:var(--ivory-200);}
-.bi{padding:5px 7px;border-radius:var(--r-md);background:transparent;border:1px solid var(--border);cursor:pointer;color:var(--fg-3);font-size:13px;transition:all 160ms;}
-.bi:hover{background:var(--ivory-200);color:var(--fg-1);}
-
-.dtw{background:var(--bg-card);border:1px solid var(--border-s);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-sm);}
-table.dt{width:100%;border-collapse:collapse;font-size:var(--fz-sm);}
-table.dt thead tr{background:var(--bg-dark);}
-table.dt thead th{padding:8px var(--sp-3);font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--fg-d2);text-align:left;white-space:nowrap;}
-table.dt thead th.r{text-align:right;}
-table.dt thead th.c{text-align:center;width:80px;}
-table.dt tbody tr{border-bottom:1px solid var(--border-s);}
-table.dt tbody tr:nth-child(even){background:var(--bg-e);}
-table.dt tbody tr:hover{background:var(--ivory-200);}
-table.dt tbody td{padding:6px var(--sp-3);color:var(--fg-2);vertical-align:middle;}
-table.dt tbody td.r{text-align:right;}
-table.dt tbody td.c{text-align:center;}
-
-/* MODAL */
-.ovl{display:none;position:fixed;inset:0;background:rgba(14,31,61,.45);z-index:200;align-items:flex-start;justify-content:center;padding:48px var(--g);overflow-y:auto;}
-.ovl.open{display:flex;}
-.modal{background:var(--bg-card);border-radius:var(--r-lg);box-shadow:var(--sh-md);width:100%;max-width:700px;}
-.mhd{background:var(--bg-dark);padding:var(--sp-4) var(--sp-5);display:flex;align-items:center;justify-content:space-between;border-radius:var(--r-lg) var(--r-lg) 0 0;}
-.mhd-t{font-family:var(--ff-serif);font-size:var(--fz-h4);font-weight:500;color:var(--fg-d);}
-.mcl{background:transparent;border:none;color:var(--fg-d2);font-size:20px;cursor:pointer;line-height:1;padding:4px;}
-.mcl:hover{color:var(--fg-d);}
-.mbody{padding:var(--sp-5);}
-.mft{padding:var(--sp-4) var(--sp-5);border-top:1px solid var(--border-s);display:flex;justify-content:flex-end;gap:var(--sp-3);}
-
-/* FORM */
-.fg2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);}
-.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-4);}
-@media(max-width:580px){.fg2,.fg3{grid-template-columns:1fr;}}
-.fi{display:flex;flex-direction:column;gap:4px;}
-.fi.s2{grid-column:1/-1;}
-.fi label{font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--fg-4);}
-.fi input,.fi select,.fi textarea{font-family:var(--ff-sans);font-size:var(--fz-sm);color:var(--fg-1);
-  background:var(--bg-e);border:1px solid var(--border);border-radius:var(--r-md);
-  padding:8px var(--sp-3);outline:none;transition:border-color 180ms;width:100%;}
-.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--accent);}
-.fi select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%237A7669' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
-.fi textarea{min-height:64px;resize:vertical;}
-.fi-hint{font-size:var(--fz-2xs);color:var(--fg-3);margin-top:2px;}
-
-/* BADGE */
-.bdg{display:inline-block;font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 8px;border-radius:20px;}
-.b-green{background:#e8f5e9;color:#2e7d32;}
-.b-blue{background:#e3f2fd;color:#1565c0;}
-.b-amber{background:#fff8e1;color:#f57f17;}
-.b-gray{background:var(--bg-e);color:var(--fg-3);border:1px solid var(--border);}
-.b-red{background:#fce4ec;color:#c62828;}
-
-/* SEARCH */
-.srw{position:relative;}
-.srw input{padding-left:30px;width:220px;}
-.sri{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--fg-3);font-size:13px;pointer-events:none;}
-
-/* TOAST */
-.toast{position:fixed;bottom:var(--sp-5);right:var(--sp-5);background:var(--bg-dark);color:var(--fg-d);
-  padding:var(--sp-3) var(--sp-5);border-radius:var(--r-lg);border-left:3px solid var(--accent);
-  font-size:var(--fz-sm);font-weight:500;z-index:999;box-shadow:var(--sh-md);
-  transform:translateY(12px);opacity:0;transition:all 260ms ease;pointer-events:none;}
-.toast.on{transform:translateY(0);opacity:1;}
-
-footer{background:var(--bg-dark);margin-top:48px;padding:var(--sp-4) var(--g);border-top:1px solid var(--accent);}
-.fin{max-width:var(--max);margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-4);}
-.fb{font-family:var(--ff-serif);font-size:var(--fz-h4);font-weight:500;color:var(--fg-d);}
-.fm{font-size:var(--fz-xs);color:var(--fg-d2);}
-.num{font-variant-numeric:tabular-nums;}
-/* ROW SELECTION (copy to clipboard) */
-table.rt tbody tr.row-selected,table.dt tbody tr.row-selected{
-  background:rgba(182,136,74,.18)!important;outline:1px solid var(--accent);}
-.copy-bar{display:none;position:fixed;bottom:60px;right:var(--sp-5);z-index:300;
-  background:var(--bg-dark);color:var(--fg-d);border:1px solid var(--accent);
-  border-radius:var(--r-lg);padding:8px 16px;font-size:var(--fz-sm);font-weight:600;
-  gap:var(--sp-3);align-items:center;box-shadow:var(--sh-md);}
-.copy-bar.show{display:flex;}
-.copy-bar button{font-family:var(--ff-sans);font-size:var(--fz-xs);font-weight:700;
-  padding:4px 12px;border-radius:4px;border:none;cursor:pointer;}
-.copy-bar .cb-copy{background:var(--accent);color:#fff;}
-.copy-bar .cb-clear{background:transparent;color:var(--fg-d2);border:1px solid rgba(255,255,255,.2);}
-
-/* DATE RANGE FILTER */
-.filter-range{display:flex;gap:2px;align-items:center;}
-.filter-range input{width:88px!important;padding:3px 4px!important;}
-.filter-range span{color:var(--fg-d2);font-size:10px;}
-
-/* TECH PIVOT (KPI) */
-.tp-grp{}
-.tp-hdr td{background:var(--navy-700)!important;font-weight:700;font-size:var(--fz-xs);
-  color:var(--fg-d)!important;cursor:pointer;user-select:none;}
-.tp-hdr td *{color:var(--fg-d)!important;}
-.tp-hdr td:first-child::before{content:'▾ ';font-size:10px;color:var(--accent);}
-.tp-hdr.collapsed td:first-child::before{content:'▸ ';}
-.tp-child{transition:none;}
-.tp-child td{padding-left:24px!important;font-size:var(--fz-xs);background:var(--bg-e)!important;color:var(--fg-2)!important;}
-.tp-child td:first-child{color:var(--fg-3)!important;}
-
-/* DRILL ACTIVE INDICATOR */
-.drill-active-bar{display:none;background:rgba(182,136,74,.12);border:1px solid var(--accent);
-  border-radius:var(--r-md);padding:6px 14px;margin-bottom:var(--sp-3);
-  font-size:var(--fz-xs);font-weight:600;color:var(--accent-strong);
-  display:flex;align-items:center;gap:var(--sp-3);}
-.drill-active-bar button{font-family:var(--ff-sans);font-size:var(--fz-xs);
-  background:transparent;border:1px solid var(--accent);border-radius:3px;
-  color:var(--accent);cursor:pointer;padding:2px 8px;}
-
-/* INLINE IDVAL SELECT */
-.idval-wrap{display:flex;align-items:center;gap:3px;}
-.idval-sel{font-family:var(--ff-sans);font-size:var(--fz-xs);font-weight:600;color:var(--fg-1);
-  background:var(--bg-e);border:1px solid var(--border);border-radius:3px;
-  padding:2px 4px;outline:none;cursor:pointer;max-width:70px;
-  appearance:none;-webkit-appearance:none;}
-.idval-sel:focus{border-color:var(--accent);}
-.idval-btn{font-size:11px;padding:2px 5px;border-radius:3px;border:1px solid var(--accent);
-  background:transparent;color:var(--accent);cursor:pointer;line-height:1;font-weight:700;
-  transition:all 140ms;flex-shrink:0;}
-.idval-btn:hover{background:var(--accent);color:#fff;}
-/* CIFRAS PINCHABLES */
-.drill{cursor:pointer;border-radius:3px;padding:0 2px;transition:all 140ms;}
-.drill:hover{color:var(--navy-900)!important;font-weight:700;outline:2px solid #c0392b;outline-offset:1px;background:rgba(192,57,43,.06);}
-/* DRAG ROW */
-tr.drag-over{background:var(--ivory-200)!important;outline:2px dashed var(--accent);}
-tr.dragging{opacity:.4;}
-/* RESIZABLE STICKY TABLES */
-.rtw{overflow:auto;max-height:calc(100vh - 220px);border-radius:var(--r-lg);border:1px solid var(--border-s);box-shadow:var(--sh-sm);}
-table.rt{width:max-content;min-width:100%;border-collapse:collapse;font-size:var(--fz-sm);table-layout:fixed;}
-table.rt thead{position:sticky;top:0;z-index:10;}
-table.rt .hdr-row th{background:var(--bg-dark);padding:7px var(--sp-3);font-size:var(--fz-xs);font-weight:700;
-  text-transform:uppercase;letter-spacing:.1em;color:var(--fg-d2);text-align:left;white-space:nowrap;
-  position:relative;user-select:none;overflow:hidden;}
-table.rt .hdr-row th.r{text-align:right;}
-table.rt .hdr-row th.ac-col{text-align:center;width:72px;}
-table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);padding:3px 4px;}
-.filter-row input,.filter-row select{
-  font-family:var(--ff-sans);font-size:var(--fz-xs);color:var(--fg-1);
-  background:var(--bg-e);border:1px solid var(--border);border-radius:3px;
-  padding:3px 6px;width:100%;outline:none;box-sizing:border-box;}
-.filter-row input:focus,.filter-row select:focus{border-color:var(--accent);}
-.filter-row .ac-col{width:72px;}
-table.rt tbody tr{border-bottom:1px solid var(--border-s);transition:background 100ms;}
-table.rt tbody tr:nth-child(even){background:var(--bg-e);}
-table.rt tbody tr:hover{background:var(--ivory-200);}
-table.rt tbody td{padding:6px var(--sp-3);color:var(--fg-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-table.rt tbody td.r{text-align:right;}
-table.rt tbody td.c{text-align:center;}
-/* Resize handle */
-.rh{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;
-  background:transparent;z-index:1;}
-.rh:hover,.rh.dragging{background:var(--accent);opacity:.6;}
-@media(pointer:coarse){.rh{width:12px;right:-4px;}}
-
-/* LINKS */
-.hl{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:3px;
-  font-size:11px;color:var(--fg-4);text-decoration:none;border:1px solid var(--border);background:var(--bg-e);
-  transition:all 140ms;vertical-align:middle;margin-left:2px;}
-.hl:hover{color:var(--accent);border-color:var(--accent);background:rgba(182,136,74,.08);}
-.hl-row{display:flex;align-items:center;gap:2px;flex-wrap:nowrap;}
-
-@keyframes fu{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-.anim{animation:fu 260ms ease forwards;}
+*{box-sizing:border-box} body{margin:0;font-family:var(--ff-sans);background:var(--bg);color:var(--fg-2)}
+.hdr,.nav,footer{padding:16px 24px}.hdr,footer{background:var(--bg-dark);color:var(--fg-d)}.nav{background:var(--navy-800)}
+.sec{max-width:1100px;margin:0 auto;padding:24px}.card{background:#fff;border:1px solid var(--border-s);border-radius:10px;padding:24px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg-dark);color:var(--fg-d);padding:12px 18px;border-radius:10px;opacity:0;transform:translateY(10px);transition:.2s}.toast.on{opacity:1;transform:none}
+.muted{color:var(--ink-500)} .ok{color:#2e7d32} .err{color:#c62828}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-<header class="hdr">
-  <div class="hdr-brand">
-    <span class="hdr-logo">JM<span>REY</span></span>
-    <span class="hdr-sub">Cuadro de Mando · Dpto. BC</span>
+<header class="hdr"><strong>JMREY</strong> · Cuadro de Mando BC</header>
+<nav class="nav">Carga prioritaria desde Supabase</nav>
+<section class="sec">
+  <div class="card">
+    <h1 style="margin-top:0">Estado de carga</h1>
+    <p id="status" class="muted">Inicializando…</p>
+    <pre id="summary" style="white-space:pre-wrap"></pre>
   </div>
-  <div class="hdr-meta"><strong>Borja González</strong><span>bg@jmrey.com</span></div>
-</header>
-
-<nav class="nav">
-  <button class="nav-tab active" data-sec="kpis">📊 KPIs</button>
-  <button class="nav-tab" data-sec="servicios">📋 Servicios</button>
-  <button class="nav-tab" data-sec="valoraciones">⭐ Valoraciones</button>
-  <button class="nav-tab" data-sec="clientes">🏢 Clientes</button>
-</nav>
-
-<section id="sec-kpis" class="sec active"></section>
-<section id="sec-servicios" class="sec"></section>
-<section id="sec-valoraciones" class="sec"></section>
-<section id="sec-clientes" class="sec"></section>
-
+</section>
+<footer>JMREY Business</footer>
 <div class="toast" id="toast"></div>
-
-<footer><div class="fin">
-  <span class="fb">JMREY Business</span>
-  <span class="fm" id="footer-lbl">Cuadro de Mando · Departamento BC</span>
-</div></footer>
-
 <script>
 const MASTER = window.MASTER || { clientes: [], tecnicos: [] };
 const SEED = window.SEED || { servicios: [], valoraciones: [] };
-const DIRECTOR = 'bg@jmrey.com';
-const MESES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 const SUPABASE_PLACEHOLDER_URL = 'https://YOUR_PROJECT.supabase.co';
 const SUPABASE_PLACEHOLDER_KEY = 'YOUR_SUPABASE_ANON_KEY';
@@ -333,25 +59,25 @@ const SUPABASE_TABLES = {
 
 function ls(k,fb){try{const v=localStorage.getItem('jmr_'+k);return v?JSON.parse(v):fb;}catch{return fb;}}
 function ssLocal(k,v){try{localStorage.setItem('jmr_'+k,JSON.stringify(v));}catch{}}
-const LS_TO_COLLECTION = {svc:'servicios', val:'valoraciones', cli:'clientes', tec:'tecnicos'};
-const SUPABASE_DELETE_FIELD = {servicios:'id', valoraciones:'id_svc', clientes:'partner', tecnicos:'email'};
-const SUPABASE_BATCH_SIZE = 500;
-const SUPABASE_SYNC_DEBOUNCE_MS = 1000;
 let _sbClient = null;
 let _sbWarned = false;
 let _sbLibWarned = false;
-const _sbSyncTimers = {};
-let _dbReady = false;
 
 function toast(msg){
   const el = document.getElementById('toast');
-  if(!el) return;
   el.textContent = msg;
   el.classList.add('on');
   clearTimeout(el._timer);
   el._timer = setTimeout(()=>el.classList.remove('on'), 2200);
 }
-
+function setStatus(msg, cls='muted'){
+  const el = document.getElementById('status');
+  el.className = cls;
+  el.textContent = msg;
+}
+function setSummary(obj){
+  document.getElementById('summary').textContent = JSON.stringify(obj, null, 2);
+}
 function hasSupabaseConfig(){
   return !!SUPABASE_URL && !!SUPABASE_ANON_KEY
     && SUPABASE_URL !== SUPABASE_PLACEHOLDER_URL
@@ -360,64 +86,20 @@ function hasSupabaseConfig(){
 function getSupabaseClient(){
   if(_sbClient) return _sbClient;
   if(!window.supabase?.createClient){
-    notifySupabaseLibraryMissingOnce();
+    if(!_sbLibWarned){
+      _sbLibWarned = true;
+      console.error('Supabase SDK no cargado');
+    }
     return null;
   }
   if(!hasSupabaseConfig()) return null;
   _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   return _sbClient;
 }
-function notifySupabaseLibraryMissingOnce(){
-  if(_sbLibWarned) return;
-  _sbLibWarned = true;
-  console.error('Supabase SDK no cargado: window.supabase.createClient no disponible');
-  toast('Error: no se cargó la librería de Supabase');
-}
-function notifySupabaseFallbackOnce(){
+function notifySupabaseFallbackOnce(reason){
   if(_sbWarned) return;
   _sbWarned = true;
-  toast('Supabase no disponible; usando caché local/seed');
-}
-
-async function syncCollectionToSupabase(collection, rows){
-  const client = getSupabaseClient();
-  if(!client) return false;
-  const table = SUPABASE_TABLES[collection] || collection;
-  const deleteField = SUPABASE_DELETE_FIELD[collection];
-  try{
-    if(deleteField){
-      const { error: delErr } = await client.from(table).delete().not(deleteField, 'is', null);
-      if(delErr) throw delErr;
-    }
-    const data = Array.isArray(rows) ? rows : [];
-    for(let i=0;i<data.length;i+=SUPABASE_BATCH_SIZE){
-      const chunk = data.slice(i,i+SUPABASE_BATCH_SIZE);
-      const { error: insErr } = await client.from(table).insert(chunk);
-      if(insErr) throw insErr;
-    }
-    return true;
-  }catch(err){
-    console.error('Supabase sync error ['+collection+']', err);
-    toast('Error de sincronización en Supabase ('+collection+')');
-    return false;
-  }
-}
-
-function queueSupabaseSyncByLocalKey(k, rows){
-  const collection = LS_TO_COLLECTION[k];
-  if(!collection) return;
-  clearTimeout(_sbSyncTimers[collection]);
-  _sbSyncTimers[collection] = setTimeout(()=>{ syncCollectionToSupabase(collection, rows); }, SUPABASE_SYNC_DEBOUNCE_MS);
-}
-
-function ss(k,v){
-  ssLocal(k,v);
-  const client = getSupabaseClient();
-  if(!client){
-    if(!hasSupabaseConfig()) notifySupabaseFallbackOnce();
-    return;
-  }
-  queueSupabaseSyncByLocalKey(k,v);
+  toast(reason || 'Usando datos locales');
 }
 
 async function loadCollectionFromSupabase(collection, fallbackRows){
@@ -426,15 +108,15 @@ async function loadCollectionFromSupabase(collection, fallbackRows){
   const table = SUPABASE_TABLES[collection] || collection;
   const { data, error } = await client.from(table).select('*');
   if(error) throw error;
-  if(Array.isArray(data)) return data;
+  if(Array.isArray(data) && data.length >= 0) return data;
   return fallbackRows;
 }
 
 let DB = {
-  servicios: SEED.servicios || [],
-  valoraciones: SEED.valoraciones || [],
-  clientes: MASTER.clientes || [],
-  tecnicos: MASTER.tecnicos || [],
+  servicios: [],
+  valoraciones: [],
+  clientes: [],
+  tecnicos: [],
 };
 
 async function hydrateDBFromSupabase(){
@@ -445,11 +127,10 @@ async function hydrateDBFromSupabase(){
     tecnicos: ls('tec', MASTER.tecnicos || []),
   };
 
-  DB = { ...fallback };
-
   if(!hasSupabaseConfig()){
-    notifySupabaseFallbackOnce();
-    return false;
+    DB = { ...fallback };
+    notifySupabaseFallbackOnce('Supabase no configurado; usando localStorage/seed');
+    return { source: 'fallback', db: DB };
   }
 
   try{
@@ -467,32 +148,33 @@ async function hydrateDBFromSupabase(){
     ssLocal('cli', DB.clientes);
     ssLocal('tec', DB.tecnicos);
 
-    toast(`Datos cargados desde Supabase: ${DB.servicios.length} servicios, ${DB.valoraciones.length} valoraciones`);
-    return true;
+    return { source: 'supabase', db: DB };
   }catch(err){
     console.error('Supabase load error', err);
-    notifySupabaseFallbackOnce();
-    return false;
+    DB = { ...fallback };
+    notifySupabaseFallbackOnce('Error leyendo Supabase; usando localStorage/seed');
+    return { source: 'fallback', db: DB, error: String(err?.message || err) };
   }
 }
 
-function renderStub(){
-  document.getElementById('sec-kpis').innerHTML = '<div class="sc"><div class="sc-lbl">Estado</div><div class="sc-val">Dashboard listo</div><div class="sc-sub">La app ahora intenta leer primero desde Supabase y solo usa localStorage/seed como respaldo.</div></div>';
-}
-
-document.querySelectorAll('.nav-tab').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('sec-'+btn.dataset.sec).classList.add('active');
-  });
-});
-
 (async function init(){
-  await hydrateDBFromSupabase();
-  _dbReady = true;
-  renderStub();
+  const result = await hydrateDBFromSupabase();
+  if(result.source === 'supabase'){
+    setStatus('Datos cargados desde Supabase', 'ok');
+    toast('Cargado desde Supabase');
+  } else {
+    setStatus('Cargado desde localStorage/seed como respaldo', 'err');
+  }
+  setSummary({
+    source: result.source,
+    counts: {
+      servicios: DB.servicios.length,
+      valoraciones: DB.valoraciones.length,
+      clientes: DB.clientes.length,
+      tecnicos: DB.tecnicos.length,
+    },
+    error: result.error || null
+  });
 })();
 </script>
 </body>
