@@ -283,6 +283,7 @@ table.rt tbody td.c{text-align:center;}
 @keyframes fu{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 .anim{animation:fu 260ms ease forwards;}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -558,8 +559,124 @@ const E_COL = {entregado:'b-green',aceptado:'b-blue',enDesarrollo:'b-blue',acept
   ValoradoTecnico:'b-amber',rechazado:'b-red',Cancelado:'b-red',StandBy:'b-gray'};
 
 // ── PERSISTENCIA ─────────────────────────────────────
+// Supabase config (GitHub Pages friendly, no build step)
+const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_TABLES = {
+  servicios: 'servicios',
+  valoraciones: 'valoraciones',
+  clientes: 'clientes',
+  tecnicos: 'tecnicos',
+};
+// Supabase tables expected (minimal fields):
+// - servicios: id + current servicio fields used in this file
+// - valoraciones: id_svc, id_val + current valoración fields
+// - clientes: partner, cliente + current cliente fields
+// - tecnicos: email + current técnico fields
+
 function ls(k,fb){try{const v=localStorage.getItem('jmr_'+k);return v?JSON.parse(v):fb;}catch{return fb;}}
-function ss(k,v){try{localStorage.setItem('jmr_'+k,JSON.stringify(v));}catch{}}
+function ssLocal(k,v){try{localStorage.setItem('jmr_'+k,JSON.stringify(v));}catch{}}
+const LS_TO_COLLECTION = {svc:'servicios', val:'valoraciones', cli:'clientes', tec:'tecnicos'};
+const SUPABASE_DELETE_FIELD = {servicios:'id', valoraciones:'id_svc', clientes:'partner', tecnicos:'email'};
+let _sbClient = null;
+let _sbWarned = false;
+const _sbSyncTimers = {};
+
+function hasSupabaseConfig(){
+  return !!SUPABASE_URL && !!SUPABASE_ANON_KEY
+    && !SUPABASE_URL.includes('YOUR_PROJECT')
+    && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE_ANON_KEY');
+}
+function getSupabaseClient(){
+  if(_sbClient) return _sbClient;
+  if(!window.supabase?.createClient) return null;
+  if(!hasSupabaseConfig()) return null;
+  _sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return _sbClient;
+}
+function notifySupabaseFallbackOnce(){
+  if(_sbWarned) return;
+  _sbWarned = true;
+  toast('Supabase no configurado: usando datos locales', 'err');
+}
+
+async function syncCollectionToSupabase(collection, rows){
+  const client = getSupabaseClient();
+  if(!client) return false;
+  const table = SUPABASE_TABLES[collection] || collection;
+  const deleteField = SUPABASE_DELETE_FIELD[collection];
+  try{
+    if(deleteField){
+      const { error: delErr } = await client.from(table).delete().not(deleteField, 'is', null);
+      if(delErr) throw delErr;
+    }
+    const data = Array.isArray(rows) ? rows : [];
+    for(let i=0;i<data.length;i+=500){
+      const chunk = data.slice(i,i+500);
+      const { error: insErr } = await client.from(table).insert(chunk);
+      if(insErr) throw insErr;
+    }
+    return true;
+  }catch(err){
+    console.error('Supabase sync error ['+collection+']', err);
+    toast('Error de sincronización en Supabase ('+collection+')', 'err');
+    return false;
+  }
+}
+
+function queueSupabaseSyncByLocalKey(k, rows){
+  const collection = LS_TO_COLLECTION[k];
+  if(!collection) return;
+  clearTimeout(_sbSyncTimers[collection]);
+  _sbSyncTimers[collection] = setTimeout(()=>{ syncCollectionToSupabase(collection, rows); }, 250);
+}
+
+function ss(k,v){
+  ssLocal(k,v);
+  const client = getSupabaseClient();
+  if(!client){
+    if(!hasSupabaseConfig()) notifySupabaseFallbackOnce();
+    return;
+  }
+  queueSupabaseSyncByLocalKey(k,v);
+}
+
+async function loadCollectionFromSupabase(collection, fallbackRows){
+  const client = getSupabaseClient();
+  if(!client) return fallbackRows;
+  const table = SUPABASE_TABLES[collection] || collection;
+  const { data, error } = await client.from(table).select('*');
+  if(error) throw error;
+  if(Array.isArray(data) && data.length) return data;
+  return fallbackRows;
+}
+
+async function hydrateDBFromSupabase(){
+  if(!hasSupabaseConfig()){
+    notifySupabaseFallbackOnce();
+    return;
+  }
+  try{
+    const [servicios, valoraciones, clientes, tecnicos] = await Promise.all([
+      loadCollectionFromSupabase('servicios', DB.servicios),
+      loadCollectionFromSupabase('valoraciones', DB.valoraciones),
+      loadCollectionFromSupabase('clientes', DB.clientes),
+      loadCollectionFromSupabase('tecnicos', DB.tecnicos),
+    ]);
+    DB.servicios = servicios;
+    DB.valoraciones = valoraciones;
+    DB.clientes = clientes;
+    DB.tecnicos = tecnicos;
+    ssLocal('svc', DB.servicios);
+    ssLocal('val', DB.valoraciones);
+    ssLocal('cli', DB.clientes);
+    ssLocal('tec', DB.tecnicos);
+    toast('Datos cargados desde Supabase');
+  }catch(err){
+    console.error('Supabase load error', err);
+    toast('No se pudo cargar Supabase; usando datos locales', 'err');
+  }
+}
 
 // Seed version — bump this string whenever seed data changes structurally
 const SEED_VERSION = 'v5-hjmrey';
@@ -1793,10 +1910,17 @@ document.addEventListener('mousedown', e=>{
   }
 });
 // ── INIT ─────────────────────────────────────────────
-populateSvcSelects();
-populateValSelects();
-populateCliSelects();
-renderKPI();
+async function initApp(){
+  await hydrateDBFromSupabase();
+  populateSvcSelects();
+  populateValSelects();
+  populateCliSelects();
+  renderSvc();
+  renderVal();
+  renderCli();
+  renderKPI();
+}
+initApp();
 </script>
 </body>
 </html>
