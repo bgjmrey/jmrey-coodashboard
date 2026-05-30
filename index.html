@@ -704,7 +704,12 @@ async function hydrateDBFromSupabase(){
 // Reset servicios/valoraciones cache when embedded seed changes (preserve clientes/tecnicos edits)
 function computeSeedSignature(){
   try{
-    return JSON.stringify({servicios: SEED.servicios, valoraciones: SEED.valoraciones});
+    const json = JSON.stringify({servicios: SEED.servicios, valoraciones: SEED.valoraciones});
+    let hash = 5381;
+    for(let i=0;i<json.length;i++){
+      hash = ((hash << 5) + hash) ^ json.charCodeAt(i);
+    }
+    return 'seed-'+(hash>>>0).toString(16);
   }catch{
     return 'seed-signature-fallback';
   }
