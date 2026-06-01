@@ -470,6 +470,7 @@ table.rt tbody td.c{text-align:center;}
       <div class="de-tb-t">Servicios <span id="svc-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div></div>
     <div style="display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap;">
       <button class="btn btn-s btn-sm" onclick="clearSvcFilters()">✕ Limpiar filtros</button>
+      <button class="btn btn-s btn-sm" onclick="exportTableXLS('tbl-svc','servicios')">⬇ Excel</button>
       <button class="btn btn-p" onclick="openMod('svc')">＋ Nuevo servicio</button>
     </div>
   </div>
@@ -511,6 +512,7 @@ table.rt tbody td.c{text-align:center;}
       <div class="de-tb-t">Valoraciones <span id="val-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div></div>
     <div style="display:flex;gap:var(--sp-3);flex-wrap:wrap;">
       <button class="btn btn-s btn-sm" onclick="clearValFilters()">✕ Limpiar filtros</button>
+      <button class="btn btn-s btn-sm" onclick="exportTableXLS('tbl-val','valoraciones')">⬇ Excel</button>
       <button class="btn btn-p" onclick="openMod('val')">＋ Nueva valoración</button>
     </div>
   </div>
@@ -542,9 +544,10 @@ table.rt tbody td.c{text-align:center;}
   <div class="de-tb">
     <div><div class="seh-ey">Gestión de datos</div>
       <div class="de-tb-t">Clientes &amp; Tarifas</div></div>
+    <button class="btn btn-s" onclick="exportTableXLS('tbl-cli','clientes')">⬇ Excel</button>
     <button class="btn btn-p" onclick="openMod('cli')">＋ Nuevo cliente</button>
   </div>
-  <div class="dtw"><div class="tw"><table class="dt">
+  <div class="dtw"><div class="tw"><table class="dt" id="tbl-cli">
     <thead><tr><th>Partner</th><th>Cliente</th><th>Técnico director</th><th class="r">€/hora técnico</th><th class="r">% Margen</th><th class="c">Acc.</th></tr></thead>
     <tbody id="tbody-cli"></tbody>
   </table></div></div>
@@ -2227,6 +2230,45 @@ function sendKpiEmail(){
     }, 200);
 
   }, 300);
+}
+
+
+// ── EXPORTAR TABLA A EXCEL (TSV) ─────────────────────
+function exportTableXLS(tableId, filename){
+  const table = document.getElementById(tableId);
+  if(!table){ toast('Tabla no encontrada'); return; }
+  const rows = [];
+  // Cabeceras (fila hdr-row, excluir última columna de acciones)
+  const hdrRow = table.querySelector('.hdr-row');
+  if(hdrRow){
+    const headers = Array.from(hdrRow.querySelectorAll('th'))
+      .map(th=>(th.innerText||th.textContent||'').replace(/\s+/g,' ').trim());
+    // Quitar última columna si es "Acc." o está vacía
+    const last = headers[headers.length-1];
+    if(!last || last==='Acc.' || last==='Acc') headers.pop();
+    rows.push(headers.join('	'));
+  }
+  // Filas de datos (tbody, excluir última celda de acciones)
+  table.querySelectorAll('tbody tr').forEach(tr=>{
+    if(tr.querySelector('.ec')) return; // skip empty-state rows
+    const cells = Array.from(tr.cells);
+    const vals = cells.map(td=>{
+      // Usar texto visible, limpiar espacios y tabulaciones
+      return (td.innerText||td.textContent||'').replace(/\s+/g,' ').replace(/	/g,' ').trim();
+    });
+    rows.push(vals.join('	'));
+  });
+  const tsv = '\uFEFF' + rows.join('\n'); // BOM para Excel UTF-8
+  const blob = new Blob([tsv], {type:'text/tab-separated-values;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename + '_' + new Date().toISOString().slice(0,10) + '.xls';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Exportado: ' + a.download);
 }
 
 // ── INIT ─────────────────────────────────────────────
