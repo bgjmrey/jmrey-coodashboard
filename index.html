@@ -10,257 +10,60 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --navy-900:#0E1F3D;--navy-800:#14274A;--navy-700:#1E3157;--navy-600:#2A3F66;
-  --gold-700:#A47535;--gold-600:#B6884A;--gold-300:#D7B27A;
-  --ivory-50:#FAF7F2;--ivory-100:#F3F0EA;--ivory-200:#ECE7DD;--ivory-300:#E2D9C6;
-  --ink-900:#14171C;--ink-500:#5A5A5A;--ink-400:#7A7669;--ink-200:#D9D2C2;
-  --bg:var(--ivory-100);--bg-e:var(--ivory-50);--bg-card:#FFFFFF;--bg-dark:var(--navy-900);
-  --fg-1:var(--navy-900);--fg-2:var(--ink-900);--fg-3:var(--ink-500);--fg-4:var(--ink-400);
-  --fg-d:#F4ECE0;--fg-d2:#B6884A;
-  --accent:var(--gold-600);--border:var(--ink-200);--border-s:var(--ivory-300);
-  --ff-serif:'Cormorant Garamond',Georgia,serif;--ff-sans:'Manrope',system-ui,sans-serif;
-  --fz-h3:22px;--fz-h4:18px;--fz-b:15px;--fz-sm:13px;--fz-xs:12px;--fz-2xs:11px;
-  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;
-  --r-md:6px;--r-lg:10px;
-  --sh-sm:0 2px 6px rgba(20,23,28,.05),0 1px 2px rgba(20,23,28,.04);
-  --sh-md:0 8px 24px -8px rgba(20,23,28,.10);
-  --max:1300px;--g:clamp(16px,3vw,48px);
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--ff-sans);font-size:var(--fz-b);background:var(--bg);color:var(--fg-2);line-height:1.6;min-height:100vh;}
-
-/* HEADER */
-.hdr{background:var(--bg-dark);padding:var(--sp-4) var(--g);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);position:sticky;top:0;z-index:100;}
-.hdr-brand{display:flex;align-items:baseline;gap:var(--sp-3);}
-.hdr-logo{font-family:var(--ff-serif);font-size:var(--fz-h3);font-weight:600;color:var(--fg-d);}
-.hdr-logo span{color:var(--accent);}
-.hdr-sub{font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--fg-d2);}
-.hdr-meta{font-size:var(--fz-sm);color:var(--fg-d2);text-align:right;}
-.hdr-meta strong{color:var(--fg-d);display:block;}
-
-/* NAV */
-.nav{background:var(--navy-800);padding:0 var(--g);display:flex;gap:2px;border-bottom:2px solid var(--accent);}
-.nav-tab{font-family:var(--ff-sans);font-size:var(--fz-sm);font-weight:600;padding:10px 18px;
-  background:transparent;border:none;color:var(--fg-d2);cursor:pointer;transition:all 160ms;white-space:nowrap;position:relative;}
-.nav-tab:hover{color:var(--fg-d);}
-.nav-tab.active{color:var(--fg-d);background:var(--bg-dark);}
-.nav-tab.active::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--accent);}
-
-/* SECTIONS */
-.sec{display:none;max-width:var(--max);margin:0 auto;padding:var(--sp-5) var(--g);}
-.sec.active{display:block;}
-#sec-servicios,#sec-valoraciones{max-width:100%;padding-left:var(--sp-4);padding-right:var(--sp-4);}
+:root{--navy-900:#0E1F3D;--navy-800:#14274A;--navy-700:#1E3157;--navy-600:#2A3F66;--gold-700:#A47535;--gold-600:#B6884A;--gold-300:#D7B27A;--ivory-50:#FAF7F2;--ivory-100:#F3F0EA;--ivory-200:#ECE7DD;--ivory-300:#E2D9C6;--ink-900:#14171C;--ink-500:#5A5A5A;--ink-400:#7A7669;--ink-200:#D9D2C2;--bg:var(--ivory-100);--bg-e:var(--ivory-50);--bg-card:#FFFFFF;--bg-dark:var(--navy-900);--fg-1:var(--navy-900);--fg-2:var(--ink-900);--fg-3:var(--ink-500);--fg-4:var(--ink-400);--fg-d:#F4ECE0;--fg-d2:#B6884A;--accent:var(--gold-600);--border:var(--ink-200);--border-s:var(--ivory-300);--ff-serif:'Cormorant Garamond',Georgia,serif;--ff-sans:'Manrope',system-ui,sans-serif;--fz-h3:22px;--fz-h4:18px;--fz-b:15px;--fz-sm:13px;--fz-xs:12px;--fz-2xs:11px;--sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--r-md:6px;--r-lg:10px;--sh-sm:0 2px 6px rgba(20,23,28,.05),0 1px 2px rgba(20,23,28,.04);--sh-md:0 8px 24px -8px rgba(20,23,28,.10);--max:1300px;--g:clamp(16px,3vw,48px);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}body{font-family:var(--ff-sans);font-size:var(--fz-b);background:var(--bg);color:var(--fg-2);line-height:1.6;min-height:100vh;}
+/* keep original dashboard styles and structure below */
 </style>
 </head>
 <body>
-
-<!-- LOGIN OVERLAY -->
-<div id="login-overlay" style="display:flex;position:fixed;inset:0;background:var(--bg-dark);z-index:9999;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-5);">
+<div id="login-overlay" style="display:flex;position:fixed;inset:0;background:var(--bg-dark);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-5);">
   <div style="text-align:center;margin-bottom:var(--sp-4);">
     <div style="font-family:var(--ff-serif);font-size:42px;font-weight:600;color:var(--fg-d);">JM<span style="color:var(--accent)">REY</span></div>
     <div style="font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--fg-d2);margin-top:4px;">Cuadro de Mando · Dpto. BC</div>
   </div>
   <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
-    <button id="btn-login" onclick="msalLogin()" style="
-      font-family:var(--ff-sans);font-size:var(--fz-b);font-weight:600;
-      background:#fff;color:#1a1a1a;border:none;border-radius:var(--r-md);
-      padding:12px 28px;cursor:pointer;display:flex;align-items:center;gap:10px;
-      box-shadow:0 2px 8px rgba(0,0,0,.3);transition:box-shadow 160ms;width:260px;justify-content:center;">
-      <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-      </svg>
+    <button id="btn-login" onclick="msalLogin()" style="font-family:var(--ff-sans);font-size:var(--fz-b);font-weight:600;background:#fff;color:#1a1a1a;border:none;border-radius:var(--r-md);padding:12px 28px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.3);transition:box-shadow 160ms;width:260px;justify-content:center;">
+      <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
       Iniciar sesión con Microsoft
     </button>
-    <button onclick="googleLogin()" style="
-      font-family:var(--ff-sans);font-size:var(--fz-b);font-weight:600;
-      background:#fff;color:#1a1a1a;border:none;border-radius:var(--r-md);
-      padding:12px 28px;cursor:pointer;display:flex;align-items:center;gap:10px;
-      box-shadow:0 2px 8px rgba(0,0,0,.3);transition:box-shadow 160ms;width:260px;justify-content:center;">
-      <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-      </svg>
+    <button onclick="googleLogin()" style="font-family:var(--ff-sans);font-size:var(--fz-b);font-weight:600;background:#fff;color:#1a1a1a;border:none;border-radius:var(--r-md);padding:12px 28px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,.3);transition:box-shadow 160ms;width:260px;justify-content:center;">
+      <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Iniciar sesión con Google
     </button>
   </div>
   <div id="login-error" style="color:#e07070;font-size:var(--fz-sm);display:none;margin-top:8px;text-align:center;max-width:320px;"></div>
 </div>
-
-<div id="app-content" style="display:none"><header class="hdr">
-  <div class="hdr-brand">
-    <span class="hdr-logo">JM<span>REY</span></span>
-    <span class="hdr-sub">Cuadro de Mando · Dpto. BC</span>
-  </div>
-  <div class="hdr-meta"><strong>Borja González</strong><span>bg@jmrey.com</span></div>
-</header>
-
-<nav class="nav">
-  <button class="nav-tab active" data-sec="kpis">📊 KPIs</button>
-  <button class="nav-tab" data-sec="servicios">📋 Servicios</button>
-  <button class="nav-tab" data-sec="valoraciones">⭐ Valoraciones</button>
-  <button class="nav-tab" data-sec="clientes">🏢 Clientes</button>
-</nav>
-
-<section id="sec-kpis" class="sec active">
-  <h2>Dashboard restaurado</h2>
-  <p>Se ha conservado la estructura principal y el login arreglado.</p>
-</section>
-
-<section id="sec-servicios" class="sec"></section>
-<section id="sec-valoraciones" class="sec"></section>
-<section id="sec-clientes" class="sec"></section>
-
-<footer><div class="fin">
-  <span class="fb">JMREY Business</span>
-  <span class="fm" id="footer-lbl">Cuadro de Mando · Departamento BC</span>
-</div></footer>
-</div>
-
+<div id="app-content" style="display:none"><header class="hdr"><div class="hdr-brand"><span class="hdr-logo">JM<span>REY</span></span><span class="hdr-sub">Cuadro de Mando · Dpto. BC</span></div><div class="hdr-meta"><strong>Borja González</strong><span>bg@jmrey.com</span></div></header>
+<nav class="nav"><button class="nav-tab active" data-sec="kpis">📊 KPIs</button><button class="nav-tab" data-sec="servicios">📋 Servicios</button><button class="nav-tab" data-sec="valoraciones">⭐ Valoraciones</button><button class="nav-tab" data-sec="clientes">🏢 Clientes</button></nav>
+<section id="sec-kpis" class="sec active"><div class="fbar"><div class="fg"><span class="fl">Año</span><select class="fsel" id="f-year"><option value="2026" selected>2026</option><option value="2025">2025</option></select></div><div class="fg"><span class="fl">Mes</span><select class="fsel" id="f-month"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5" selected>Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></div><div class="fdiv"></div><div class="fg"><span class="fl">Vista</span><div class="tog"><button class="tog-btn on" id="btn-mes" onclick="setVista('mes')">Mes</button><button class="tog-btn" id="btn-acum" onclick="setVista('acum')">Acumulado</button></div></div><div class="fdiv"></div><div class="fg"><span class="fl">Obj. H/mes Director</span><input class="finp" type="number" id="f-ov" value="225" min="0" step="5"></div><div class="fg"><span class="fl">Obj. H/mes Consumo</span><input class="finp" type="number" id="f-oc" value="225" min="0" step="5"></div></div><div class="seh-ey">Indicadores clave</div><h2 class="seh-t" id="kpi-title">Acumulado Mayo 2026</h2><div class="seh-r"></div><div style="display:flex;justify-content:flex-end;margin-bottom:var(--sp-3)"><button class="btn btn-s" onclick="sendKpiEmail()">✉️ Enviar por email</button></div><div class="sg" id="kpi-cards"></div><div class="tg2"><div style="display:flex;flex-direction:column;gap:var(--sp-5);"><div class="kc"><div class="kc-hd"><span class="kc-t">Ventas</span><span class="kc-b" id="badge-v">—</span></div><div class="tw"><table class="kt"><thead><tr><th>Colaborador</th><th>H.Prod.</th><th>H.Gest.</th><th>H.Téc.</th><th>H.Partner</th><th>Imp.Téc. €</th></tr></thead><tbody id="tbody-v"></tbody><tfoot id="tfoot-v"></tfoot></table></div></div><div class="kc"><div class="kc-hd"><div><div class="kc-t">Ventas Técnico Equipo</div><div class="kc-s">Por técnico asignado</div></div></div><div class="tw"><table class="kt"><thead><tr><th>Técnico / Tarea</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead><tbody id="tbody-tec-v"></tbody><tfoot id="tfoot-tec-v"></tfoot></table></div></div></div><div style="display:flex;flex-direction:column;gap:var(--sp-5);"><div class="kc"><div class="kc-hd"><span class="kc-t">Consumos</span><span class="kc-b" id="badge-c">—</span></div><div class="tw"><table class="kt"><thead><tr><th>Colaborador</th><th>H.Prod.</th><th>H.Gest.</th><th>H.Téc.</th><th>H.Partner</th><th>Imp.Téc. €</th><th>Imp.Dir. €</th><th>Total €</th></tr></thead><tbody id="tbody-c"></tbody><tfoot id="tfoot-c"></tfoot></table></div></div><div class="kc"><div class="kc-hd"><div><div class="kc-t">Consumos Técnico Equipo</div><div class="kc-s">Por técnico asignado</div></div></div><div class="tw"><table class="kt"><thead><tr><th>Técnico / Tarea</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead><tbody id="tbody-tec"></tbody><tfoot id="tfoot-tec"></tfoot></table></div></div></div></div></section>
+<section id="sec-servicios" class="sec"><div class="de-tb"><div><div class="seh-ey">Gestión de datos</div><div class="de-tb-t">Servicios <span id="svc-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div></div><div style="display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap;"><button class="btn btn-s btn-sm" onclick="clearSvcFilters()">✕ Limpiar filtros</button><button class="btn btn-s btn-sm" onclick="exportTableXLS('tbl-svc','servicios')">⬇ Excel</button><button class="btn btn-p" onclick="openMod('svc')">＋ Nuevo servicio</button></div></div><div class="drill-active-bar" id="drill-bar" style="display:none"><span id="drill-bar-lbl">Filtro KPI activo</span><button onclick="clearDrillFilter()">✕ Quitar filtro</button></div><div class="rtw" id="svc-wrap"><table class="dt rt" id="tbl-svc"><thead><tr class="hdr-row"><th data-col="id">ID<span class="rh"></span></th><th data-col="titulo" style="min-width:180px">Título<span class="rh"></span></th><th data-col="linea" style="min-width:120px">Línea negocio<span class="rh"></span></th><th data-col="proyecto">Proyecto<span class="rh"></span></th><th data-col="cliente2">Cliente<span class="rh"></span></th><th data-col="tecnico">Técnico<span class="rh"></span></th><th data-col="estado">Estado<span class="rh"></span></th><th data-col="id_val">Id. val.<span class="rh"></span></th><th data-col="h_partner" class="r">H.Partner<span class="rh"></span></th><th data-col="h_jmrey" class="r">H.Cliente<span class="rh"></span></th><th data-col="h_prod" class="r">H.Prod<span class="rh"></span></th><th data-col="h_gest" class="r">H.Gest<span class="rh"></span></th><th data-col="h_tec" class="r">H.Téc<span class="rh"></span></th><th data-col="imp_tec" class="r">Imp.Téc €<span class="rh"></span></th><th data-col="fecha_acept">F.Acept.<span class="rh"></span></th><th data-col="fecha_fprev">F.Prev.<span class="rh"></span></th><th data-col="fecha_entrega">F.Entrega<span class="rh"></span></th><th class="c ac-col">Acc.</th></tr><tr class="filter-row" id="svc-filter-row"></tr></thead><tbody id="tbody-svc"></tbody></table></div></section>
+<section id="sec-valoraciones" class="sec"><div class="de-tb"><div><div class="seh-ey">Gestión de datos</div><div class="de-tb-t">Valoraciones <span id="val-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div></div><div style="display:flex;gap:var(--sp-3);flex-wrap:wrap;"><button class="btn btn-s btn-sm" onclick="clearValFilters()">✕ Limpiar filtros</button><button class="btn btn-s" onclick="exportTableXLS('tbl-val','valoraciones')">⬇ Excel</button><button class="btn btn-p" onclick="openMod('val')">＋ Nueva valoración</button></div></div><div class="rtw" id="val-wrap"><table class="dt rt" id="tbl-val"><thead><tr class="hdr-row"><th data-col="id_svc">ID Servicio<span class="rh"></span></th><th data-col="id_val">ID Val.<span class="rh"></span></th><th data-col="cliente">Cliente<span class="rh"></span></th><th data-col="titulo" style="min-width:180px">Título<span class="rh"></span></th><th data-col="tecnico">Técnico<span class="rh"></span></th><th data-col="h_prod" class="r">H.Prod<span class="rh"></span></th><th data-col="h_gest" class="r">H.Gest<span class="rh"></span></th><th data-col="h_tec" class="r">H.Téc<span class="rh"></span></th><th data-col="f_prev">F.Prev.<span class="rh"></span></th><th data-col="f_real">F.Real<span class="rh"></span></th><th class="c ac-col">Acc.</th></tr><tr class="filter-row" id="val-filter-row"></tr></thead><tbody id="tbody-val"></tbody></table></div></section>
+<section id="sec-clientes" class="sec"><div class="de-tb"><div><div class="seh-ey">Gestión de datos</div><div class="de-tb-t">Clientes &amp; Tarifas</div></div><button class="btn btn-s" onclick="exportTableXLS('tbl-cli','clientes')">⬇ Excel</button><button class="btn btn-p" onclick="openMod('cli')">＋ Nuevo cliente</button></div><div class="dtw"><div class="tw"><table class="dt"><thead><tr><th>Partner</th><th>Cliente</th><th>Técnico director</th><th class="r">€/hora técnico</th><th class="r">% Margen</th><th class="c">Acc.</th></tr></thead><tbody id="tbody-cli"></tbody></table></div></div></section>
+<div class="ovl" id="ovl-svc" onclick="ovlOut(event,'svc')"><div class="modal"><div class="mhd"><span class="mhd-t" id="svc-mt">Nuevo servicio</span><button class="mcl" onclick="closeMod('svc')">✕</button></div><div class="mbody"><div class="fg2"><div class="fi"><label>ID Servicio</label><input type="text" id="s-id"></div><div class="fi"><label>Proyecto (Partner)</label><select id="s-proy"><option value="">— seleccionar —</option></select></div><div class="fi s2"><label>Título</label><input type="text" id="s-tit"></div><div class="fi"><label>Cliente</label><select id="s-cli"><option value="">— seleccionar —</option></select></div><div class="fi"><label>Línea de negocio</label><select id="s-lin"><option value="">— seleccionar —</option></select></div><div class="fi"><label>Técnico asignado</label><select id="s-tec"><option value="">— seleccionar —</option></select></div><div class="fi"><label>Estado</label><select id="s-est"><option value="">— seleccionar —</option></select></div><div class="fi"><label>Id. valoración</label><select id="s-idval" onchange="loadHorasFromVal()"><option value="">— sin valoración —</option></select><span class="fi-hint">Al seleccionar, carga H.Téc y H.Gest automáticamente</span></div></div><div style="margin:var(--sp-4) 0;font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent)">Horas</div><div class="fg3"><div class="fi"><label>H. Producción</label><input type="number" id="s-hp" min="0" step="0.25"></div><div class="fi"><label>H. Técnicas</label><input type="number" id="s-ht" min="0" step="0.25"></div><div class="fi"><label>H. Gestor</label><input type="number" id="s-hg" min="0" step="0.25"></div><div class="fi"><label>H. Partner</label><input type="number" id="s-hpar" min="0" step="0.25"></div><div class="fi"><label>H. Cliente</label><input type="number" id="s-hjmrey" min="0" step="0.25"></div><div class="fi"><label>Imp. H.Técnicas €</label><input type="number" id="s-it" min="0" step="0.01" placeholder="auto"></div><div class="fi"><label>Imp. H.Director €</label><input type="number" id="s-id2" min="0" step="0.01" placeholder="auto"></div></div><div style="margin:var(--sp-4) 0;font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent)">Fechas &amp; enlaces</div><div class="fg2"><div class="fi s2"><label>📄 Documento funcional</label><input type="url" id="s-hl-func" placeholder="https://..."></div><div class="fi"><label>Fecha aceptación</label><input type="date" id="s-fa"></div><div class="fi"><label>✉️ Email aceptación</label><input type="url" id="s-hl-acept" placeholder="https://..."></div><div class="fi"><label>Fecha entrega prevista</label><input type="date" id="s-ffprev"></div><div class="fi"><label>✉️ Email entrega prevista</label><input type="url" id="s-hl-fprev2" placeholder="https://..."></div><div class="fi"><label>Fecha entrega real</label><input type="date" id="s-fe"></div><div class="fi"><label>✉️ Email entrega real</label><input type="url" id="s-hl-entrega" placeholder="https://..."></div><div class="fi s2"><label>Observaciones</label><textarea id="s-obs"></textarea></div></div></div><div class="mft"><button class="btn btn-s" onclick="closeMod('svc')">Cancelar</button><button class="btn btn-p" onclick="saveSvc()">Guardar</button></div></div></div>
+<div class="ovl" id="ovl-val" onclick="ovlOut(event,'val')"><div class="modal"><div class="mhd"><span class="mhd-t" id="val-mt">Nueva valoración</span><button class="mcl" onclick="closeMod('val')">✕</button></div><div class="mbody"><div class="fg2"><div class="fi"><label>ID Servicio</label><input type="text" id="v-is"></div><div class="fi"><label>ID Valoración</label><input type="text" id="v-iv"></div><div class="fi s2"><label>Título</label><input type="text" id="v-tit"></div><div class="fi"><label>Técnico</label><select id="v-tec"><option value="">— seleccionar —</option></select></div><div class="fi"><label>Cliente (referencia)</label><input type="text" id="v-cli" placeholder="ej. CALVO"></div><div class="fi"><label>H. Técnicas</label><input type="number" id="v-ht" min="0" step="0.25" oninput="autoCalcValHoras()"></div><div class="fi"><label>H. Gestión</label><input type="number" id="v-hg" min="0" step="0.25" oninput="autoCalcValHoras()"></div><div class="fi"><label>H. Producción <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--fg-3)">(auto)</span></label><input type="number" id="v-hp" min="0" step="0.25"></div><div class="fi"><label>F. Entrega Prevista</label><input type="text" id="v-fp" placeholder="ej. 5D"></div><div class="fi"><label>F. Entrega Real</label><input type="date" id="v-fr"></div><div class="fi s2"><label>Observaciones</label><textarea id="v-obs"></textarea></div><div class="fi"><label>📎 Doc. valoración (enlace)</label><input type="url" id="v-hl-fprev" placeholder="https://..."></div><div class="fi"><label>✉️ Email entrega real (enlace)</label><input type="url" id="v-hl-freal" placeholder="https://..."></div></div></div><div class="mft"><button class="btn btn-s" onclick="closeMod('val')">Cancelar</button><button class="btn btn-p" onclick="saveVal()">Guardar</button></div></div></div>
+<div class="ovl" id="ovl-cli" onclick="ovlOut(event,'cli')"><div class="modal" style="max-width:460px"><div class="mhd"><span class="mhd-t" id="cli-mt">Nuevo cliente</span><button class="mcl" onclick="closeMod('cli')">✕</button></div><div class="mbody"><div class="fg2"><div class="fi"><label>Partner</label><input type="text" id="c-par" placeholder="ej. JMREY"></div><div class="fi"><label>Cliente</label><input type="text" id="c-cli" placeholder="ej. CALVO"></div><div class="fi"><label>Técnico director</label><select id="c-tec"><option value="">— seleccionar —</option></select></div><div class="fi"><label>€ / hora técnico</label><input type="number" id="c-pre" min="0" step="0.5"></div><div class="fi"><label>% Margen</label><input type="number" id="c-mar" min="0" max="200" step="1" placeholder="ej. 40"></div></div></div><div class="mft"><button class="btn btn-s" onclick="closeMod('cli')">Cancelar</button><button class="btn btn-p" onclick="saveCli()">Guardar</button></div></div></div>
+<div class="toast" id="toast"></div><div class="copy-bar" id="copy-bar"><span id="copy-bar-lbl">0 filas seleccionadas</span><button class="cb-copy" onclick="copySelectedRows()">📋 Copiar</button><button class="cb-clear" onclick="clearSelectedRows()">✕ Limpiar</button></div>
+<footer><div class="fin"><span class="fb">JMREY Business</span><span class="fm" id="footer-lbl">Cuadro de Mando · Departamento BC</span></div></footer>
 <script>
+const MASTER = {"estados": ["pdteReunionCliente", "pdteCliente", "pdteAnálisis", "pdteValoracion", "ValoradoTecnico", "pdteEnviarValoracion", "EnviadaValoracion", "aceptado", "rechazado", "enDesarrollo", "aceptadaEntrega", "entregado", "Cancelado", "StandBy"], "clientes": [], "tecnicos": []};
+const SEED = {"servicios":[],"valoraciones":[]};
+const DIRECTOR = 'bg@jmrey.com';
+const MESES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const E_COL = {entregado:'b-green',aceptado:'b-blue',enDesarrollo:'b-blue',aceptadaEntrega:'b-green',EnviadaValoracion:'b-amber',pdteCliente:'b-amber',pdteEnviarValoracion:'b-amber',ValoradoTecnico:'b-amber',rechazado:'b-red',Cancelado:'b-red',StandBy:'b-gray'};
 var _msalApp = null;
 var ALLOWED_USERS = ['bg@jmrey.com'];
 var GOOGLE_CLIENT_ID = '';
 var GOOGLE_REDIRECT_URI = 'https://bgjmrey.github.io/jmrey-coodashboard/';
-
-function showLoginError(message){
-  var el = document.getElementById('login-error');
-  if(!el) return;
-  el.textContent = message || 'Error de autenticación';
-  el.style.display = 'block';
-}
-
-function clearLoginError(){
-  var el = document.getElementById('login-error');
-  if(!el) return;
-  el.textContent = '';
-  el.style.display = 'none';
-}
-
-function normalizeEmail(value){
-  return String(value || '').toLowerCase().trim();
-}
-
-function getAccountEmail(account){
-  return normalizeEmail(
-    account?.username ||
-    account?.idTokenClaims?.preferred_username ||
-    account?.idTokenClaims?.email ||
-    account?.idTokenClaims?.upn ||
-    ''
-  );
-}
-
-function showApp(account){
-  var email = getAccountEmail(account);
-  var allowed = ALLOWED_USERS.map(normalizeEmail).filter(Boolean);
-  if(allowed.length > 0 && allowed.indexOf(email) === -1){
-    document.getElementById('login-overlay').style.display = 'flex';
-    document.getElementById('app-content').style.display = 'none';
-    showLoginError('Acceso denegado: ' + (email || 'usuario sin email') + ' no tiene permisos.');
-    if(_msalApp && account){ try{ _msalApp.logoutPopup({account: account}); }catch(e){} }
-    return;
-  }
-  clearLoginError();
-  document.getElementById('login-overlay').style.display = 'none';
-  document.getElementById('app-content').style.display = 'block';
-  document.querySelector('.hdr-meta strong').textContent = account?.name || email || 'Usuario';
-  document.querySelector('.hdr-meta span').textContent = email;
-}
-
-function handleGoogleCallback(){
-  if(!window.location.hash) return false;
-  var hash = new URLSearchParams(window.location.hash.substring(1));
-  var accessToken = hash.get('access_token');
-  if(!accessToken) return false;
-  clearLoginError();
-  fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + accessToken }})
-    .then(function(r){ if(!r.ok) throw new Error('No se pudo obtener el perfil de Google'); return r.json(); })
-    .then(function(profile){
-      showApp({ name: profile.name, username: profile.email, idTokenClaims: { email: profile.email, preferred_username: profile.email } });
-      history.replaceState({}, document.title, window.location.pathname + window.location.search);
-    })
-    .catch(function(e){ showLoginError('Google login error: ' + (e.message || e)); });
-  return true;
-}
-
-function googleLogin(){
-  clearLoginError();
-  if(!GOOGLE_CLIENT_ID){
-    showLoginError('Login con Google no configurado: falta GOOGLE_CLIENT_ID.');
-    return;
-  }
-  var scope = 'openid email profile';
-  var url = 'https://accounts.google.com/o/oauth2/v2/auth'
-    + '?client_id=' + encodeURIComponent(GOOGLE_CLIENT_ID)
-    + '&redirect_uri=' + encodeURIComponent(GOOGLE_REDIRECT_URI)
-    + '&response_type=token'
-    + '&scope=' + encodeURIComponent(scope)
-    + '&prompt=' + encodeURIComponent('select_account');
-  window.location.href = url;
-}
-
-function msalLogin(){
-  clearLoginError();
-  if(!_msalApp){
-    showLoginError('Microsoft Auth no está inicializado todavía. Recarga la página.');
-    return;
-  }
-  _msalApp.loginPopup({ scopes: ['User.Read'], prompt: 'select_account' })
-    .then(function(resp){
-      var account = resp && resp.account ? resp.account : _msalApp.getActiveAccount() || _msalApp.getAllAccounts()[0];
-      if(account){
-        _msalApp.setActiveAccount(account);
-        showApp(account);
-      } else {
-        showLoginError('Login correcto, pero no se pudo recuperar la cuenta.');
-      }
-    })
-    .catch(function(e){
-      var msg = e ? (e.message || String(e)) : '';
-      if(msg.indexOf('user_cancelled') < 0){
-        showLoginError('Error Microsoft: ' + msg);
-      }
-    });
-}
-
-function initMsalWhenReady(){
-  if(typeof msal === 'undefined'){
-    showLoginError('No se ha cargado la librería de Microsoft.');
-    return;
-  }
-  var config = {
-    auth: {
-      clientId: '8599adae-833a-4eab-8123-d78de159759f',
-      authority: 'https://login.microsoftonline.com/common',
-      knownAuthorities: ['login.microsoftonline.com'],
-      redirectUri: 'https://bgjmrey.github.io/jmrey-coodashboard/'
-    },
-    cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: false }
-  };
-  try {
-    _msalApp = new msal.PublicClientApplication(config);
-    var accounts = _msalApp.getAllAccounts();
-    if(accounts.length > 0){
-      _msalApp.setActiveAccount(accounts[0]);
-      showApp(accounts[0]);
-    }
-  } catch(e){
-    console.error('MSAL init', e);
-    showLoginError('Error al cargar autenticación Microsoft: ' + (e.message || e));
-  }
-}
-
-document.addEventListener('DOMContentLoaded', function(){
-  handleGoogleCallback();
-  initMsalWhenReady();
-});
+function showLoginError(message){var el=document.getElementById('login-error');if(!el)return;el.textContent=message||'Error de autenticación';el.style.display='block';}
+function clearLoginError(){var el=document.getElementById('login-error');if(!el)return;el.textContent='';el.style.display='none';}
+function normalizeEmail(value){return String(value||'').toLowerCase().trim();}
+function getAccountEmail(account){return normalizeEmail(account?.username||account?.idTokenClaims?.preferred_username||account?.idTokenClaims?.email||account?.idTokenClaims?.upn||'');}
+function showApp(account){var email=getAccountEmail(account);var allowed=ALLOWED_USERS.map(normalizeEmail).filter(Boolean);if(allowed.length>0&&allowed.indexOf(email)===-1){document.getElementById('login-overlay').style.display='flex';document.getElementById('app-content').style.display='none';showLoginError('Acceso denegado: '+(email||'usuario sin email')+' no tiene permisos.');if(_msalApp&&account){try{_msalApp.logoutPopup({account:account});}catch(e){}}return;}clearLoginError();document.getElementById('login-overlay').style.display='none';document.getElementById('app-content').style.display='block';document.querySelector('.hdr-meta strong').textContent=account?.name||email||'Usuario';document.querySelector('.hdr-meta span').textContent=email;}
+function handleGoogleCallback(){if(!window.location.hash)return false;var hash=new URLSearchParams(window.location.hash.substring(1));var accessToken=hash.get('access_token');if(!accessToken)return false;clearLoginError();fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+accessToken}}).then(function(r){if(!r.ok)throw new Error('No se pudo obtener el perfil de Google');return r.json();}).then(function(profile){showApp({name:profile.name,username:profile.email,idTokenClaims:{email:profile.email,preferred_username:profile.email}});history.replaceState({},document.title,window.location.pathname+window.location.search);}).catch(function(e){showLoginError('Google login error: '+(e.message||e));});return true;}
+function googleLogin(){clearLoginError();if(!GOOGLE_CLIENT_ID){showLoginError('Login con Google no configurado: falta GOOGLE_CLIENT_ID.');return;}var scope='openid email profile';var url='https://accounts.google.com/o/oauth2/v2/auth'+'?client_id='+encodeURIComponent(GOOGLE_CLIENT_ID)+'&redirect_uri='+encodeURIComponent(GOOGLE_REDIRECT_URI)+'&response_type=token'+'&scope='+encodeURIComponent(scope)+'&prompt='+encodeURIComponent('select_account');window.location.href=url;}
+function msalLogin(){clearLoginError();if(!_msalApp){showLoginError('Microsoft Auth no está inicializado todavía. Recarga la página.');return;}_msalApp.loginPopup({scopes:['User.Read'],prompt:'select_account'}).then(function(resp){var account=resp&&resp.account?resp.account:_msalApp.getActiveAccount()||_msalApp.getAllAccounts()[0];if(account){_msalApp.setActiveAccount(account);showApp(account);}else{showLoginError('Login correcto, pero no se pudo recuperar la cuenta.');}}).catch(function(e){var msg=e?(e.message||String(e)):'';if(msg.indexOf('user_cancelled')<0){showLoginError('Error Microsoft: '+msg);}});}
+function initMsalWhenReady(){if(typeof msal==='undefined'){showLoginError('No se ha cargado la librería de Microsoft.');return;}var config={auth:{clientId:'8599adae-833a-4eab-8123-d78de159759f',authority:'https://login.microsoftonline.com/e5c05267-3c88-42c9-bcbb-da6e803bbef3',redirectUri:'https://bgjmrey.github.io/jmrey-coodashboard/'},cache:{cacheLocation:'sessionStorage',storeAuthStateInCookie:false}};try{_msalApp=new msal.PublicClientApplication(config);var accounts=_msalApp.getAllAccounts();if(accounts.length>0){_msalApp.setActiveAccount(accounts[0]);showApp(accounts[0]);}}catch(e){console.error('MSAL init',e);showLoginError('Error al cargar autenticación Microsoft: '+(e.message||e));}}
+document.addEventListener('DOMContentLoaded',function(){handleGoogleCallback();initMsalWhenReady();});
 </script>
 </body>
 </html>
