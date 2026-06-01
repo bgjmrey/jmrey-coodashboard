@@ -789,9 +789,7 @@ async function sbUpdate(table, row){
     const bk=SB_BK[table]||['id'];
     const allOk=bk.every(k=>row[k]!=null&&row[k]!=='');
     if(!allOk){
-      // Missing business key — try insert instead
-      console.info('sbUpdate: missing business key for '+table+', trying insert instead');
-      sbInsert(table, row);
+      console.warn('sbUpdate: faltan claves para', table);
       return;
     }
     bk.forEach(k=>{ q=q.eq(k,row[k]); });
@@ -1546,8 +1544,7 @@ function saveSvc(){
   if(!o.titulo){toast('El título es obligatorio','err');return;}
   const _newSvc=editSvc===null;
   if(!_newSvc) DB.servicios[editSvc]=o; else DB.servicios.push(o);
-  // If editing but row has no row_id, treat as insert
-  const _svcOp = _newSvc ? 'insert' : (o.row_id ? 'update' : 'insert');
+  const _svcOp = _newSvc ? 'insert' : 'update';
   ss('svc',DB.servicios,o,_svcOp);
   closeMod('svc'); renderSvc(); renderKPI();
   toast(_newSvc?'Servicio creado':'Servicio actualizado');
@@ -1799,7 +1796,7 @@ function saveVal(){
       svc.imp_dir = (svc.h_gest||0) * 30;
     }
     const _svcRow = DB.servicios[svcIdx];
-    ss('svc', DB.servicios, _svcRow, _svcRow.row_id ? 'update' : 'insert');
+    ss('svc', DB.servicios, _svcRow, 'update');
   }
   delete window._editValForSvc;
 
