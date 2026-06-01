@@ -424,7 +424,7 @@ table.rt tbody td.c{text-align:center;}
   <div class="seh-r"></div>
   <div class="sg" id="kpi-cards"></div>
   <div class="tg2">
-    <div style="display:flex;flex-direction:column;gap:var(--sp-5);">
+    <div style="display:flex;flex-direction:column;gap:var(--sp-5);align-items:stretch;">
       <div class="kc">
         <div class="kc-hd"><span class="kc-t">Ventas</span><span class="kc-b" id="badge-v">—</span></div>
         <div class="tw"><table class="kt">
@@ -440,7 +440,7 @@ table.rt tbody td.c{text-align:center;}
         </table></div>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:var(--sp-5);">
+    <div style="display:flex;flex-direction:column;gap:var(--sp-5);align-items:stretch;">
       <div class="kc">
         <div class="kc-hd"><span class="kc-t">Consumos</span><span class="kc-b" id="badge-c">—</span></div>
         <div class="tw"><table class="kt">
@@ -1255,6 +1255,7 @@ function renderKPI(){
   const vTotP=tecPivotV.reduce((a,r)=>a+r.h_prod,0);
   const vTotT=tecPivotV.reduce((a,r)=>a+r.h_tec,0);
   const vTotG=tecPivotV.reduce((a,r)=>a+r.h_gest,0);
+  console.log('[KPI] tecPivotV:', tecPivotV?.length, 'svcsV:', svcsV?.length);
   renderTecPivot(tecPivotV, svcsV, vTotP, vTotT, vTotG, 'tbody-tec-v', 'tfoot-tec-v');
 }
 
