@@ -672,7 +672,21 @@ function showLoginError(msg){
 
 function msalLogin(){
   document.getElementById('login-error').style.display = 'none';
-  if(!_msalApp){ showLoginError('Autenticación no lista, recarga la página.'); return; }
+  // If not ready yet, wait up to 3 seconds
+  if(!_msalApp){
+    var attempts = 0;
+    var wait = setInterval(function(){
+      attempts++;
+      if(_msalApp){
+        clearInterval(wait);
+        msalLogin();
+      } else if(attempts > 30){
+        clearInterval(wait);
+        showLoginError('No se pudo cargar la autenticación. Recarga la página.');
+      }
+    }, 100);
+    return;
+  }
   _msalApp.loginPopup({scopes: ['User.Read']}).then(function(resp){
     if(resp && resp.account) showApp(resp.account);
   }).catch(function(e){
@@ -688,7 +702,7 @@ function initMsalWhenReady(){
     auth: {
       clientId: '8599adae-833a-4eab-8123-d78de159759f',
       authority: 'https://login.microsoftonline.com/e5c05267-3c88-42c9-bcbb-da6e803bbef3',
-      redirectUri: window.location.origin + window.location.pathname
+      redirectUri: 'https://bgjmrey.github.io/jmrey-coodashboard/'
     },
     cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: false }
   };
