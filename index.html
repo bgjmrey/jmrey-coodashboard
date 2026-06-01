@@ -781,20 +781,23 @@ async function sbInsert(table, row){
 }
 async function sbUpdate(table, row){
   const sb=getSB(); if(!sb) return;
-  const r=Object.assign({},row); delete r.row_id;
-  let q=sb.from(table).update(r);
-  if(row.row_id){
-    q=q.eq('row_id',row.row_id);
-  } else {
-    const bk=SB_BK[table]||['id'];
-    const allOk=bk.every(k=>row[k]!=null&&row[k]!=='');
-    if(!allOk){
-      console.warn('sbUpdate: faltan claves para', table);
-      return;
-    }
+  // Solo actualizar si el registro tiene row_id (vino de Supabase)
+  // Registros sin row_id son del seed/local y no deben modificarse en Supabase
+  if(!row.row_id){
+    // Para tablas sin row_id (val, cli, tec) usar business keys
+    const bk = SB_BK[table] || [];
+    if(bk.length === 0) return;
+    const allOk = bk.every(k=>row[k]!=null&&row[k]!=='');
+    if(!allOk){ console.warn('sbUpdate: sin row_id ni BK para', table); return; }
+    const r=Object.assign({},row); delete r.row_id;
+    let q=sb.from(table).update(r);
     bk.forEach(k=>{ q=q.eq(k,row[k]); });
+    const {error}=await q;
+    if(error){ console.error('sbUpdate',table,JSON.stringify(error)); toast('Error al actualizar: '+(error.message||error.code||JSON.stringify(error))); }
+    return;
   }
-  const {error}=await q;
+  const r=Object.assign({},row); delete r.row_id;
+  const {error}=await sb.from(table).update(r).eq('row_id',row.row_id);
   if(error){ console.error('sbUpdate',table,JSON.stringify(error)); toast('Error al actualizar: '+(error.message||error.code||JSON.stringify(error))); }
   else { console.log('[sbUpdate] OK',table); }
 }
@@ -1033,6 +1036,7 @@ function saveIdVal(ri, val){
         if(error) toast('Error: '+(error.message||error.code));
       });
   }
+  // Sin row_id: registro no está en Supabase, solo se guarda en localStorage
 }
 
 // Open new valoracion modal pre-filled with svcId
