@@ -364,20 +364,35 @@ table.rt tbody td.c{text-align:center;}
     <div style="font-family:var(--ff-serif);font-size:42px;font-weight:600;color:var(--fg-d);">JM<span style="color:var(--accent)">REY</span></div>
     <div style="font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--fg-d2);margin-top:4px;">Cuadro de Mando · Dpto. BC</div>
   </div>
-  <button id="btn-login" onclick="msalLogin()" style="
-    font-family:var(--ff-sans);font-size:var(--fz-b);font-weight:600;
-    background:#fff;color:#1a1a1a;border:none;border-radius:var(--r-md);
-    padding:12px 28px;cursor:pointer;display:flex;align-items:center;gap:10px;
-    box-shadow:0 2px 8px rgba(0,0,0,.3);transition:box-shadow 160ms;">
-    <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-      <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-      <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-      <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-    </svg>
-    Iniciar sesión con Microsoft
-  </button>
-  <div id="login-error" style="color:#e07070;font-size:var(--fz-sm);display:none;"></div>
+  <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+    <button id="btn-login" onclick="msalLogin()" style="
+      font-family:var(--ff-sans);font-size:var(--fz-b);font-weight:600;
+      background:#fff;color:#1a1a1a;border:none;border-radius:var(--r-md);
+      padding:12px 28px;cursor:pointer;display:flex;align-items:center;gap:10px;
+      box-shadow:0 2px 8px rgba(0,0,0,.3);transition:box-shadow 160ms;width:260px;justify-content:center;">
+      <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+      </svg>
+      Iniciar sesión con Microsoft
+    </button>
+    <button onclick="googleLogin()" style="
+      font-family:var(--ff-sans);font-size:var(--fz-b);font-weight:600;
+      background:#fff;color:#1a1a1a;border:none;border-radius:var(--r-md);
+      padding:12px 28px;cursor:pointer;display:flex;align-items:center;gap:10px;
+      box-shadow:0 2px 8px rgba(0,0,0,.3);transition:box-shadow 160ms;width:260px;justify-content:center;">
+      <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      Iniciar sesión con Google
+    </button>
+  </div>
+  <div id="login-error" style="color:#e07070;font-size:var(--fz-sm);display:none;margin-top:8px;text-align:center;max-width:320px;"></div>
 </div>
 
 <div id="app-content" style="display:none"><header class="hdr">
@@ -422,29 +437,43 @@ table.rt tbody td.c{text-align:center;}
   <div class="seh-ey">Indicadores clave</div>
   <h2 class="seh-t" id="kpi-title">Acumulado Mayo 2026</h2>
   <div class="seh-r"></div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:var(--sp-3)">
+    <button class="btn btn-s" onclick="sendKpiEmail()">✉️ Enviar por email</button>
+  </div>
   <div class="sg" id="kpi-cards"></div>
   <div class="tg2">
-    <div class="kc">
-      <div class="kc-hd"><span class="kc-t">Ventas</span><span class="kc-b" id="badge-v">—</span></div>
-      <div class="tw"><table class="kt">
-        <thead><tr><th>Colaborador</th><th>H.Prod.</th><th>H.Gest.</th><th>H.Téc.</th><th>H.Partner</th><th>Imp.Téc. €</th></tr></thead>
-        <tbody id="tbody-v"></tbody><tfoot id="tfoot-v"></tfoot>
-      </table></div>
+    <div style="display:flex;flex-direction:column;gap:var(--sp-5);">
+      <div class="kc">
+        <div class="kc-hd"><span class="kc-t">Ventas</span><span class="kc-b" id="badge-v">—</span></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Colaborador</th><th>H.Prod.</th><th>H.Gest.</th><th>H.Téc.</th><th>H.Partner</th><th>Imp.Téc. €</th></tr></thead>
+          <tbody id="tbody-v"></tbody><tfoot id="tfoot-v"></tfoot>
+        </table></div>
+      </div>
+      <div class="kc">
+        <div class="kc-hd"><div><div class="kc-t">Ventas Técnico Equipo</div><div class="kc-s">Por técnico asignado</div></div></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Técnico / Tarea</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead>
+          <tbody id="tbody-tec-v"></tbody><tfoot id="tfoot-tec-v"></tfoot>
+        </table></div>
+      </div>
     </div>
-    <div class="kc">
-      <div class="kc-hd"><span class="kc-t">Consumos</span><span class="kc-b" id="badge-c">—</span></div>
-      <div class="tw"><table class="kt">
-        <thead><tr><th>Colaborador</th><th>H.Prod.</th><th>H.Gest.</th><th>H.Téc.</th><th>H.Partner</th><th>Imp.Téc. €</th><th>Imp.Dir. €</th><th>Total €</th></tr></thead>
-        <tbody id="tbody-c"></tbody><tfoot id="tfoot-c"></tfoot>
-      </table></div>
+    <div style="display:flex;flex-direction:column;gap:var(--sp-5);">
+      <div class="kc">
+        <div class="kc-hd"><span class="kc-t">Consumos</span><span class="kc-b" id="badge-c">—</span></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Colaborador</th><th>H.Prod.</th><th>H.Gest.</th><th>H.Téc.</th><th>H.Partner</th><th>Imp.Téc. €</th><th>Imp.Dir. €</th><th>Total €</th></tr></thead>
+          <tbody id="tbody-c"></tbody><tfoot id="tfoot-c"></tfoot>
+        </table></div>
+      </div>
+      <div class="kc">
+        <div class="kc-hd"><div><div class="kc-t">Consumos Técnico Equipo</div><div class="kc-s">Por técnico asignado</div></div></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Técnico / Tarea</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead>
+          <tbody id="tbody-tec"></tbody><tfoot id="tfoot-tec"></tfoot>
+        </table></div>
+      </div>
     </div>
-  </div>
-  <div class="kc">
-    <div class="kc-hd"><div><div class="kc-t">Consumos Técnico Equipo</div><div class="kc-s">Por técnico asignado</div></div></div>
-    <div class="tw"><table class="kt">
-      <thead><tr><th>Técnico / Tarea</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead>
-      <tbody id="tbody-tec"></tbody><tfoot id="tfoot-tec"></tfoot>
-    </table></div>
   </div>
 </section>
 
@@ -455,6 +484,7 @@ table.rt tbody td.c{text-align:center;}
       <div class="de-tb-t">Servicios <span id="svc-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div></div>
     <div style="display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap;">
       <button class="btn btn-s btn-sm" onclick="clearSvcFilters()">✕ Limpiar filtros</button>
+    <button class="btn btn-s btn-sm" onclick="exportTableXLS('tbl-svc','servicios')">⬇ Excel</button>
       <button class="btn btn-p" onclick="openMod('svc')">＋ Nuevo servicio</button>
     </div>
   </div>
@@ -496,7 +526,8 @@ table.rt tbody td.c{text-align:center;}
       <div class="de-tb-t">Valoraciones <span id="val-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div></div>
     <div style="display:flex;gap:var(--sp-3);flex-wrap:wrap;">
       <button class="btn btn-s btn-sm" onclick="clearValFilters()">✕ Limpiar filtros</button>
-      <button class="btn btn-p" onclick="openMod('val')">＋ Nueva valoración</button>
+      <button class="btn btn-s" onclick="exportTableXLS('tbl-val','valoraciones')">⬇ Excel</button>
+    <button class="btn btn-p" onclick="openMod('val')">＋ Nueva valoración</button>
     </div>
   </div>
   <div class="rtw" id="val-wrap">
@@ -527,6 +558,7 @@ table.rt tbody td.c{text-align:center;}
   <div class="de-tb">
     <div><div class="seh-ey">Gestión de datos</div>
       <div class="de-tb-t">Clientes &amp; Tarifas</div></div>
+    <button class="btn btn-s" onclick="exportTableXLS('tbl-cli','clientes')">⬇ Excel</button>
     <button class="btn btn-p" onclick="openMod('cli')">＋ Nuevo cliente</button>
   </div>
   <div class="dtw"><div class="tw"><table class="dt">
@@ -657,25 +689,20 @@ const E_COL = {entregado:'b-green',aceptado:'b-blue',enDesarrollo:'b-blue',acept
 // ── MICROSOFT AUTH (MSAL) ────────────────────────────
 var _msalApp = null;
 
-// ── LISTA DE USUARIOS AUTORIZADOS ────────────────────
-// Añade o elimina emails según necesites
+// ── USUARIOS AUTORIZADOS ──────────────────────────────
+// Añade aquí los emails con acceso. Si la lista está vacía, permite todos.
 var ALLOWED_USERS = [
   'bg@jmrey.com',
-  // Añade aquí más emails: 'usuario@jmrey.com',
 ];
 
 function showApp(account){
   var email = (account.username || '').toLowerCase().trim();
   var allowed = ALLOWED_USERS.map(function(e){ return e.toLowerCase().trim(); });
   if(allowed.length > 0 && allowed.indexOf(email) === -1){
-    // Usuario autenticado pero no autorizado
     document.getElementById('login-overlay').style.display = 'flex';
     document.getElementById('app-content').style.display = 'none';
-    showLoginError('Acceso denegado. El usuario ' + email + ' no tiene permisos para acceder a esta aplicación.');
-    // Force logout to clear the session
-    if(_msalApp){
-      _msalApp.logoutPopup({account: account, postLogoutRedirectUri: 'https://bgjmrey.github.io/jmrey-coodashboard/'}).catch(function(){});
-    }
+    showLoginError('Acceso denegado: ' + email + ' no tiene permisos.');
+    if(_msalApp){ try{ _msalApp.logoutPopup({account: account}); }catch(e){} }
     return;
   }
   document.getElementById('login-overlay').style.display = 'none';
@@ -684,10 +711,21 @@ function showApp(account){
   document.querySelector('.hdr-meta span').textContent   = account.username;
 }
 
-function showLoginError(msg){
-  var el = document.getElementById('login-error');
-  el.textContent = msg;
-  el.style.display = 'block';
+function googleLogin(){
+  // Google OAuth via redirect — no SDK needed
+  var clientId = ''; // Add Google OAuth client ID if needed
+  var redirectUri = 'https://bgjmrey.github.io/jmrey-coodashboard/';
+  var scope = 'email profile openid';
+  var url = 'https://accounts.google.com/o/oauth2/v2/auth'
+    + '?client_id=' + encodeURIComponent(clientId)
+    + '&redirect_uri=' + encodeURIComponent(redirectUri)
+    + '&response_type=token'
+    + '&scope=' + encodeURIComponent(scope);
+  if(!clientId){
+    showLoginError('Login con Google no configurado aún. Usa Microsoft por ahora.');
+    return;
+  }
+  window.location.href = url;
 }
 
 function msalLogin(){
@@ -721,7 +759,8 @@ function initMsalWhenReady(){
   var config = {
     auth: {
       clientId: '8599adae-833a-4eab-8123-d78de159759f',
-      authority: 'https://login.microsoftonline.com/e5c05267-3c88-42c9-bcbb-da6e803bbef3',
+      authority: 'https://login.microsoftonline.com/common',
+      knownAuthorities: ['login.microsoftonline.com'],
       redirectUri: 'https://bgjmrey.github.io/jmrey-coodashboard/'
     },
     cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: false }
@@ -740,6 +779,7 @@ function initMsalWhenReady(){
   }
 }
 document.addEventListener('DOMContentLoaded', initMsalWhenReady);
+// Pre-load allowed users as early as possible
 
 const SB_URL  = 'https://bpxeyugyadcgyewrpcde.supabase.co';
 const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweGV5dWd5YWRjZ3lld3JwY2RlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxMjUwOTgsImV4cCI6MjA5NTcwMTA5OH0.0KtvmfGD3BgJLY9INw0fikxFLJ-7BWAGowC7m3eBMac';
@@ -997,6 +1037,47 @@ function clearDrillFilter(){
   document.getElementById('drill-bar').style.display = 'none';
   buildSvcFilterRow();
   renderSvc();
+}
+
+// Drill from Consumos Técnico Equipo
+function drillKPIExactTec(tec, campo, tipo){
+  window._kpiProyecto = null;
+  // Override scope to filter by specific tecnico
+  const year  = parseInt(document.getElementById('f-year').value);
+  const month = parseInt(document.getElementById('f-month').value);
+  const isAcum = document.getElementById('btn-acum').classList.contains('on');
+  const rng = isAcum ? acumRange(year, month) : mesRange(year, month);
+  const dateCol = (tipo==='ventas') ? 'fecha_acept' : 'fecha_entrega';
+  const iniStr = rng.ini.toISOString().slice(0,10);
+  const finStr = rng.fin.toISOString().slice(0,10);
+  svcFilters = {};
+  svcFilters[dateCol] = {from: iniStr, to: finStr};
+  svcFilters['tecnico'] = tec;
+  window._drillScopeFilter = null;
+  window._drillProyFilter  = null;
+  document.querySelector('.nav-tab[data-sec="servicios"]').click();
+  requestAnimationFrame(()=>{
+    resetSvcFilterRowDOM();
+    buildSvcFilterRow();
+    const fr = document.getElementById('svc-filter-row');
+    const cells = Array.from(fr.querySelectorAll('td'));
+    const dateIdx = SVC_COLS.indexOf(dateCol);
+    if(dateIdx >= 0){
+      const wrap = cells[dateIdx]?.querySelector('.filter-range');
+      if(wrap){ wrap.children[0].value = iniStr; wrap.children[2].value = finStr; }
+    }
+    const tecIdx = SVC_COLS.indexOf('tecnico');
+    if(tecIdx >= 0){
+      const sel = cells[tecIdx]?.querySelector('select');
+      if(sel) sel.value = tec;
+    }
+    renderSvc();
+    const bar = document.getElementById('drill-bar');
+    bar.style.display = 'flex';
+    const tipoLabel = tipo==='ventas'?'Ventas':'Consumos';
+    document.getElementById('drill-bar-lbl').textContent = '🔍 ' + tipoLabel + ' · ' + shortMail(tec);
+    toast(tipoLabel + ' de ' + shortMail(tec));
+  });
 }
 
 // Drill filtered also by proyecto
@@ -1547,7 +1628,7 @@ function saveSvc(){
   const _newSvc=editSvc===null;
   if(!_newSvc) DB.servicios[editSvc]=o; else DB.servicios.push(o);
   // If editing but row has no row_id, treat as insert
-  const _svcOp = _newSvc ? 'insert' : (o.row_id ? 'update' : 'insert');
+  const _svcOp = _newSvc ? 'insert' : 'update';
   ss('svc',DB.servicios,o,_svcOp);
   closeMod('svc'); renderSvc(); renderKPI();
   toast(_newSvc?'Servicio creado':'Servicio actualizado');
@@ -1799,7 +1880,7 @@ function saveVal(){
       svc.imp_dir = (svc.h_gest||0) * 30;
     }
     const _svcRow = DB.servicios[svcIdx];
-    ss('svc', DB.servicios, _svcRow, _svcRow.row_id ? 'update' : 'insert');
+    ss('svc', DB.servicios, _svcRow, 'update');
   }
   delete window._editValForSvc;
 
@@ -1931,10 +2012,11 @@ function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;
 // ── TÉCNICO PIVOT (expandible) ────────────────────────
 const _tecExpanded = new Set(); // técnicos expandidos
 
-function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG){
+function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId, tipo){
+  tbId = tbId || 'tbody-tec'; tfId = tfId || 'tfoot-tec'; tipo = tipo || 'consumos';
   svcsC = svcsC || window._lastSvcsC || [];
-  const tb = document.getElementById('tbody-tec');
-  const tf = document.getElementById('tfoot-tec');
+  const tb = document.getElementById(tbId);
+  const tf = document.getElementById(tfId);
   if(!tecPivot.length){ tb.innerHTML=`<tr><td colspan="4" class="ec">Sin datos</td></tr>`; tf.innerHTML=''; return; }
 
   let html = '';
@@ -1968,10 +2050,12 @@ function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG){
 function toggleTec(tec){
   if(_tecExpanded.has(tec)) _tecExpanded.delete(tec);
   else _tecExpanded.add(tec);
-  // Re-render only the pivot without full KPI recalc
   const tp = calcTecPivot(window._lastSvcsC||[]);
   const tP=tp.reduce((a,r)=>a+r.h_prod,0), tT=tp.reduce((a,r)=>a+r.h_tec,0), tG=tp.reduce((a,r)=>a+r.h_gest,0);
-  renderTecPivot(tp, window._lastSvcsC||[], tP, tT, tG);
+  renderTecPivot(tp, window._lastSvcsC||[], tP, tT, tG, 'tbody-tec', 'tfoot-tec', 'consumos');
+  const tpV = calcTecPivot(window._lastSvcsV||[]);
+  const vP=tpV.reduce((a,r)=>a+r.h_prod,0), vT=tpV.reduce((a,r)=>a+r.h_tec,0), vG=tpV.reduce((a,r)=>a+r.h_gest,0);
+  renderTecPivot(tpV, window._lastSvcsV||[], vP, vT, vG, 'tbody-tec-v', 'tfoot-tec-v', 'ventas');
 }
 
 // ── COLUMN RESIZE (mouse + touch) ─────────────────────
@@ -2111,6 +2195,64 @@ document.addEventListener('mousedown', e=>{
     // Let default happen so text is selectable; row select only on click (not drag)
   }
 });
+// ── EXPORT TABLE TO XLS ───────────────────────────────
+function exportTableXLS(tableId, filename){
+  const table = document.getElementById(tableId);
+  if(!table) return;
+  const rows = [];
+  // Headers
+  const headers = Array.from(table.querySelectorAll('.hdr-row th'))
+    .map(th=>(th.innerText||th.textContent||'').replace(/\s+/g,' ').trim());
+  rows.push(headers.join('\t'));
+  // Body rows
+  table.querySelectorAll('tbody tr').forEach(tr=>{
+    const cells = Array.from(tr.cells).map(td=>{
+      // Get visible text, skip action buttons
+      const txt = (td.innerText||td.textContent||'').replace(/\s+/g,' ').replace(/\t/g,' ').trim();
+      return txt;
+    });
+    rows.push(cells.join('\t'));
+  });
+  const tsv = rows.join('\n');
+  const blob = new Blob(['\ufeff'+tsv], {type:'text/tab-separated-values;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename+'_'+new Date().toISOString().slice(0,10)+'.xls';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ── EMAIL KPI ─────────────────────────────────────────
+function sendKpiEmail(){
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth()+1).padStart(2,'0');
+  const day   = String(now.getDate()).padStart(2,'0');
+  const MESES_ES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const monthName = MESES_ES[now.getMonth()];
+  const isCierre = now.getDate() === 26;
+  const cierre = isCierre ? ' (CIERRE)' : '';
+  const subject = encodeURIComponent(`Técnico / Cuadro de mando COO / ${year} ${month} ${monthName} ${day}${cierre}`);
+
+  // Build email body from current KPI values
+  const cards = document.getElementById('kpi-cards');
+  const tables = document.querySelector('#sec-kpis .tg2');
+  const bodyLines = [];
+  bodyLines.push('Hola, te envío los KPIs de esta semana.');
+  bodyLines.push('');
+  // Extract card values
+  if(cards){
+    cards.querySelectorAll('.sc').forEach(sc=>{
+      const lbl = sc.querySelector('.sc-lbl')?.textContent || '';
+      const val = sc.querySelector('.sc-val')?.textContent || '';
+      if(lbl && val) bodyLines.push(lbl + ': ' + val.trim());
+    });
+  }
+  bodyLines.push('');
+  bodyLines.push('Un saludo.');
+  const body = encodeURIComponent(bodyLines.join('\n'));
+  window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+}
+
 // ── INIT ─────────────────────────────────────────────
 (async function(){
   // Auto-set month: if day > 26 use next month (period 27-26)
