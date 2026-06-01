@@ -165,7 +165,7 @@ body{font-family:var(--ff-sans);font-size:var(--fz-b);background:var(--bg);color
 
 /* KPI TABLES */
 .tg2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-5);margin-bottom:var(--sp-5);}
-@media(max-width:860px){.tg2{grid-template-columns:1fr;}}
+@media(max-width:860px){.tg2{grid-template-columns:1fr;}.tg2>div{width:100%;}}
 .kc{background:var(--bg-card);border:1px solid var(--border-s);border-radius:var(--r-lg);box-shadow:var(--sh-sm);overflow:hidden;}
 .kc-hd{background:var(--bg-dark);padding:10px var(--sp-5);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);}
 .kc-t{font-family:var(--ff-serif);font-size:var(--fz-h4);font-weight:500;color:var(--fg-d);}
@@ -1255,7 +1255,6 @@ function renderKPI(){
   const vTotP=tecPivotV.reduce((a,r)=>a+r.h_prod,0);
   const vTotT=tecPivotV.reduce((a,r)=>a+r.h_tec,0);
   const vTotG=tecPivotV.reduce((a,r)=>a+r.h_gest,0);
-  console.log('[KPI] tecPivotV:', tecPivotV?.length, 'svcsV:', svcsV?.length);
   renderTecPivot(tecPivotV, svcsV, vTotP, vTotT, vTotG, 'tbody-tec-v', 'tfoot-tec-v');
 }
 
