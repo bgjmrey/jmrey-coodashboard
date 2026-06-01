@@ -424,27 +424,38 @@ table.rt tbody td.c{text-align:center;}
   <div class="seh-r"></div>
   <div class="sg" id="kpi-cards"></div>
   <div class="tg2">
-    <div class="kc">
-      <div class="kc-hd"><span class="kc-t">Ventas</span><span class="kc-b" id="badge-v">—</span></div>
-      <div class="tw"><table class="kt">
-        <thead><tr><th>Colaborador</th><th>H.Prod.</th><th>H.Gest.</th><th>H.Téc.</th><th>H.Partner</th><th>Imp.Téc. €</th></tr></thead>
-        <tbody id="tbody-v"></tbody><tfoot id="tfoot-v"></tfoot>
-      </table></div>
+    <div style="display:flex;flex-direction:column;gap:var(--sp-5);">
+      <div class="kc">
+        <div class="kc-hd"><span class="kc-t">Ventas</span><span class="kc-b" id="badge-v">—</span></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Colaborador</th><th>H.Prod.</th><th>H.Gest.</th><th>H.Téc.</th><th>H.Partner</th><th>Imp.Téc. €</th></tr></thead>
+          <tbody id="tbody-v"></tbody><tfoot id="tfoot-v"></tfoot>
+        </table></div>
+      </div>
+      <div class="kc">
+        <div class="kc-hd"><div><div class="kc-t">Ventas Técnico Equipo</div><div class="kc-s">Por técnico asignado</div></div></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Técnico / Tarea</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead>
+          <tbody id="tbody-tec-v"></tbody><tfoot id="tfoot-tec-v"></tfoot>
+        </table></div>
+      </div>
     </div>
-    <div class="kc">
-      <div class="kc-hd"><span class="kc-t">Consumos</span><span class="kc-b" id="badge-c">—</span></div>
-      <div class="tw"><table class="kt">
-        <thead><tr><th>Colaborador</th><th>H.Prod.</th><th>H.Gest.</th><th>H.Téc.</th><th>H.Partner</th><th>Imp.Téc. €</th><th>Imp.Dir. €</th><th>Total €</th></tr></thead>
-        <tbody id="tbody-c"></tbody><tfoot id="tfoot-c"></tfoot>
-      </table></div>
+    <div style="display:flex;flex-direction:column;gap:var(--sp-5);">
+      <div class="kc">
+        <div class="kc-hd"><span class="kc-t">Consumos</span><span class="kc-b" id="badge-c">—</span></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Colaborador</th><th>H.Prod.</th><th>H.Gest.</th><th>H.Téc.</th><th>H.Partner</th><th>Imp.Téc. €</th><th>Imp.Dir. €</th><th>Total €</th></tr></thead>
+          <tbody id="tbody-c"></tbody><tfoot id="tfoot-c"></tfoot>
+        </table></div>
+      </div>
+      <div class="kc">
+        <div class="kc-hd"><div><div class="kc-t">Consumos Técnico Equipo</div><div class="kc-s">Por técnico asignado</div></div></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Técnico / Tarea</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead>
+          <tbody id="tbody-tec"></tbody><tfoot id="tfoot-tec"></tfoot>
+        </table></div>
+      </div>
     </div>
-  </div>
-  <div class="kc">
-    <div class="kc-hd"><div><div class="kc-t">Consumos Técnico Equipo</div><div class="kc-s">Por técnico asignado</div></div></div>
-    <div class="tw"><table class="kt">
-      <thead><tr><th>Técnico / Tarea</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead>
-      <tbody id="tbody-tec"></tbody><tfoot id="tfoot-tec"></tfoot>
-    </table></div>
   </div>
 </section>
 
@@ -1176,8 +1187,10 @@ function renderKPI(){
   const {rows:cRows,tot:cTot} = calcKPI(svcsC);
   const dirV = calcDirector(svcsV);
   const dirC = calcDirector(svcsC);
-  const tecPivot = calcTecPivot(svcsC);
+  const tecPivot  = calcTecPivot(svcsC);
+  const tecPivotV = calcTecPivot(svcsV);
   window._lastSvcsC = svcsC;
+  window._lastSvcsV = svcsV;
 
   const mesNom = MESES[month];
   const lbl = vista==='mes'
@@ -1237,7 +1250,12 @@ function renderKPI(){
   const tTotP=tecPivot.reduce((a,r)=>a+r.h_prod,0);
   const tTotT=tecPivot.reduce((a,r)=>a+r.h_tec,0);
   const tTotG=tecPivot.reduce((a,r)=>a+r.h_gest,0);
-  renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG);
+  renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, 'tbody-tec', 'tfoot-tec');
+
+  const vTotP=tecPivotV.reduce((a,r)=>a+r.h_prod,0);
+  const vTotT=tecPivotV.reduce((a,r)=>a+r.h_tec,0);
+  const vTotG=tecPivotV.reduce((a,r)=>a+r.h_gest,0);
+  renderTecPivot(tecPivotV, svcsV, vTotP, vTotT, vTotG, 'tbody-tec-v', 'tfoot-tec-v');
 }
 
 // Map col → {tipo, campo, scope} for drill-down
@@ -1932,10 +1950,12 @@ function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;
 // ── TÉCNICO PIVOT (expandible) ────────────────────────
 const _tecExpanded = new Set(); // técnicos expandidos
 
-function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG){
+function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId){
+  tbId = tbId || 'tbody-tec'; tfId = tfId || 'tfoot-tec';
   svcsC = svcsC || window._lastSvcsC || [];
-  const tb = document.getElementById('tbody-tec');
-  const tf = document.getElementById('tfoot-tec');
+  const tb = document.getElementById(tbId);
+  const tf = document.getElementById(tfId);
+  if(!tb||!tf) return;
   if(!tecPivot.length){ tb.innerHTML=`<tr><td colspan="4" class="ec">Sin datos</td></tr>`; tf.innerHTML=''; return; }
 
   let html = '';
