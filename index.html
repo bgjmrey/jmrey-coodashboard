@@ -418,6 +418,10 @@ table.rt tbody td.c{text-align:center;}
       <input class="finp" type="number" id="f-ov" value="225" min="0" step="5"></div>
     <div class="fg"><span class="fl">Obj. H/mes Consumo</span>
       <input class="finp" type="number" id="f-oc" value="225" min="0" step="5"></div>
+    <div class="fdiv"></div>
+    <div class="fg" style="justify-content:flex-end"><span class="fl">&nbsp;</span>
+      <button class="btn btn-s" onclick="sendKpiEmail()" style="white-space:nowrap">✉️ Enviar por email</button>
+    </div>
   </div>
   <div class="seh-ey">Indicadores clave</div>
   <h2 class="seh-t" id="kpi-title">Acumulado Mayo 2026</h2>
@@ -2132,6 +2136,40 @@ document.addEventListener('mousedown', e=>{
     // Let default happen so text is selectable; row select only on click (not drag)
   }
 });
+
+// ── ENVIAR KPI POR EMAIL ──────────────────────────────
+function sendKpiEmail(){
+  const now = new Date();
+  const year  = now.getFullYear();
+  const month = String(now.getMonth()+1).padStart(2,'0');
+  const day   = String(now.getDate()).padStart(2,'0');
+  const MESES_ES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                    'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const monthName = MESES_ES[now.getMonth()];
+  const isCierre  = now.getDate() === 26;
+  const cierre    = isCierre ? ' (CIERRE)' : '';
+
+  const subject = encodeURIComponent(
+    'Técnico / Cuadro de mando COO / ' + year + ' ' + month + ' ' + monthName + ' ' + day + cierre
+  );
+
+  // Construir cuerpo con los valores actuales de los KPI cards
+  const lines = ['Hola, te envío los KPIs de esta semana.', ''];
+  const title = document.getElementById('kpi-title');
+  if(title) lines.push('Período: ' + title.textContent, '');
+
+  document.querySelectorAll('#kpi-cards .sc').forEach(sc => {
+    const lbl = (sc.querySelector('.sc-lbl')?.textContent || '').trim();
+    const val = (sc.querySelector('.sc-val')?.textContent || '').trim();
+    if(lbl && val) lines.push(lbl + ': ' + val);
+  });
+
+  lines.push('', 'Un saludo.');
+  const body = encodeURIComponent(lines.join('\n'));
+
+  window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+}
+
 // ── INIT ─────────────────────────────────────────────
 (async function(){
   // Auto-set month: if day > 26 use next month (period 27-26)
