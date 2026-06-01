@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JMREY · Cuadro de Mando BC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -284,6 +285,29 @@ table.rt tbody td.c{text-align:center;}
 </head>
 <body>
 
+<!-- LOGIN OVERLAY -->
+<div id="login-overlay" style="display:none;position:fixed;inset:0;background:var(--bg-dark);z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-5);">
+  <div style="text-align:center;margin-bottom:var(--sp-4);">
+    <div style="font-family:var(--ff-serif);font-size:42px;font-weight:600;color:var(--fg-d);">JM<span style="color:var(--accent)">REY</span></div>
+    <div style="font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--fg-d2);margin-top:4px;">Cuadro de Mando · Dpto. BC</div>
+  </div>
+  <button id="btn-login" onclick="msalLogin()" style="
+    font-family:var(--ff-sans);font-size:var(--fz-b);font-weight:600;
+    background:#fff;color:#1a1a1a;border:none;border-radius:var(--r-md);
+    padding:12px 28px;cursor:pointer;display:flex;align-items:center;gap:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,.3);transition:box-shadow 160ms;">
+    <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+      <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+      <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+      <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+    </svg>
+    Iniciar sesión con Microsoft
+  </button>
+  <div id="login-error" style="color:#e07070;font-size:var(--fz-sm);display:none;"></div>
+</div>
+
 <header class="hdr">
   <div class="hdr-brand">
     <span class="hdr-logo">JM<span>REY</span></span>
@@ -557,6 +581,50 @@ const E_COL = {entregado:'b-green',aceptado:'b-blue',enDesarrollo:'b-blue',acept
 
 // ── PERSISTENCIA ─────────────────────────────────────
 // ── SUPABASE ────────────────────────────────────────────
+
+// ── MICROSOFT AUTH (MSAL) ────────────────────────────
+const MSAL_CONFIG = {
+  auth: {
+    clientId: '8599adae-833a-4eab-8123-d78de159759f',
+    authority: 'https://login.microsoftonline.com/e5c05267-3c88-42c9-bcbb-da6e803bbef3',
+    redirectUri: window.location.origin + window.location.pathname,
+  },
+  cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: false }
+};
+
+const _msalApp = new msal.PublicClientApplication(MSAL_CONFIG);
+
+async function msalLogin(){
+  document.getElementById('login-error').style.display='none';
+  try {
+    const resp = await _msalApp.loginPopup({scopes: ['User.Read']});
+    if(resp && resp.account) showApp(resp.account);
+  } catch(e) {
+    const msg = e ? (e.message||'') : '';
+    if(!msg.includes('user_cancelled')){
+      document.getElementById('login-error').textContent = 'Error al iniciar sesión: '+msg;
+      document.getElementById('login-error').style.display = 'block';
+    }
+  }
+}
+
+function showApp(account){
+  document.getElementById('login-overlay').style.display = 'none';
+  document.querySelector('.hdr-meta strong').textContent = account.name || account.username;
+  document.querySelector('.hdr-meta span').textContent   = account.username;
+}
+
+function checkAuth(){
+  const accounts = _msalApp.getAllAccounts();
+  if(accounts.length > 0) showApp(accounts[0]);
+  else document.getElementById('login-overlay').style.display = 'flex';
+}
+
+_msalApp.handleRedirectPromise().then(function(resp){
+  if(resp && resp.account) showApp(resp.account);
+  else checkAuth();
+}).catch(function(){ checkAuth(); });
+
 const SB_URL  = 'https://bpxeyugyadcgyewrpcde.supabase.co';
 const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweGV5dWd5YWRjZ3lld3JwY2RlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxMjUwOTgsImV4cCI6MjA5NTcwMTA5OH0.0KtvmfGD3BgJLY9INw0fikxFLJ-7BWAGowC7m3eBMac';
 // Business keys per table (for UPDATE/DELETE when row_id absent)
