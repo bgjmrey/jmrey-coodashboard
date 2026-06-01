@@ -470,7 +470,7 @@ table.rt tbody td.c{text-align:center;}
       <div class="de-tb-t">Servicios <span id="svc-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div></div>
     <div style="display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap;">
       <button class="btn btn-s btn-sm" onclick="clearSvcFilters()">✕ Limpiar filtros</button>
-      <button class="btn btn-s btn-sm" onclick="exportTableXLS('tbl-svc','servicios')">⬇ Excel</button>
+      <button class="btn btn-s btn-sm" onclick="exportTableXLS('tbl-svc','servicios')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-5 4h2.5l1.5 2 1.5-2H16l-2.5 3.5L16 17h-2.5L12 15l-1.5 2H8l2.5-3.5L8 10z"/></svg>Excel</button>
       <button class="btn btn-p" onclick="openMod('svc')">＋ Nuevo servicio</button>
     </div>
   </div>
@@ -512,7 +512,7 @@ table.rt tbody td.c{text-align:center;}
       <div class="de-tb-t">Valoraciones <span id="val-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div></div>
     <div style="display:flex;gap:var(--sp-3);flex-wrap:wrap;">
       <button class="btn btn-s btn-sm" onclick="clearValFilters()">✕ Limpiar filtros</button>
-      <button class="btn btn-s btn-sm" onclick="exportTableXLS('tbl-val','valoraciones')">⬇ Excel</button>
+      <button class="btn btn-s btn-sm" onclick="exportTableXLS('tbl-val','valoraciones')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-5 4h2.5l1.5 2 1.5-2H16l-2.5 3.5L16 17h-2.5L12 15l-1.5 2H8l2.5-3.5L8 10z"/></svg>Excel</button>
       <button class="btn btn-p" onclick="openMod('val')">＋ Nueva valoración</button>
     </div>
   </div>
@@ -544,7 +544,7 @@ table.rt tbody td.c{text-align:center;}
   <div class="de-tb">
     <div><div class="seh-ey">Gestión de datos</div>
       <div class="de-tb-t">Clientes &amp; Tarifas</div></div>
-    <button class="btn btn-s" onclick="exportTableXLS('tbl-cli','clientes')">⬇ Excel</button>
+    <button class="btn btn-s" onclick="exportTableXLS('tbl-cli','clientes')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-5 4h2.5l1.5 2 1.5-2H16l-2.5 3.5L16 17h-2.5L12 15l-1.5 2H8l2.5-3.5L8 10z"/></svg>Excel</button>
     <button class="btn btn-p" onclick="openMod('cli')">＋ Nuevo cliente</button>
   </div>
   <div class="dtw"><div class="tw"><table class="dt" id="tbl-cli">
@@ -2142,94 +2142,31 @@ document.addEventListener('mousedown', e=>{
 
 // ── ENVIAR KPI POR EMAIL ──────────────────────────────
 function sendKpiEmail(){
-  var now = new Date();
-  var year  = now.getFullYear();
-  var month = String(now.getMonth()+1).padStart(2,'0');
-  var day   = String(now.getDate()).padStart(2,'0');
-  var MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
-               'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  var monthName = MESES[now.getMonth()];
-  var isCierre  = now.getDate() === 26;
-  var subj = 'Técnico / Cuadro de mando COO / '
-           + year + ' ' + month + ' ' + monthName + ' ' + day
-           + (isCierre ? ' (CIERRE)' : '');
+  const now = new Date();
+  const year  = now.getFullYear();
+  const month = String(now.getMonth()+1).padStart(2,'0');
+  const day   = String(now.getDate()).padStart(2,'0');
+  const MESES_ES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                    'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const monthName = MESES_ES[now.getMonth()];
+  const isCierre  = now.getDate() === 26;
+  const subjectTxt = 'Técnico / Cuadro de mando COO / '
+    + year + ' ' + month + ' ' + monthName + ' ' + day
+    + (isCierre ? ' (CIERRE)' : '');
 
-  var kpi = document.getElementById('sec-kpis');
-  if(!kpi){ toast('No se encontró la sección KPI'); return; }
+  // Extraer valores de los KPI cards para el cuerpo del email
+  const lines = ['Hola, te envío los KPIs de esta semana.', ''];
+  const title = document.getElementById('kpi-title');
+  if(title) lines.push('Período: ' + title.textContent.trim(), '');
+  document.querySelectorAll('#kpi-cards .sc').forEach(sc => {
+    const lbl = (sc.querySelector('.sc-lbl')?.textContent || '').trim();
+    const val = (sc.querySelector('.sc-val')?.textContent || '').trim();
+    if(lbl && val) lines.push(lbl + ': ' + val);
+  });
+  lines.push('', 'Un saludo.');
 
-  // Abrir Outlook con asunto pre-rellenado
-  var mailBody = 'Hola, te envío los KPIs de esta semana.\n\n[Pega aquí los KPIs con Ctrl+V]\n\nUn saludo.';
-  window.location.href = 'mailto:?subject=' + encodeURIComponent(subj)
-    + '&body=' + encodeURIComponent(mailBody);
-
-  // Mostrar overlay para que el usuario copie el contenido
-  // Usar setTimeout para que el mailto se abra antes del overlay
-  setTimeout(function(){
-    // Eliminar overlay anterior si existe
-    var prev = document.getElementById('kpi-email-overlay');
-    if(prev) prev.parentNode.removeChild(prev);
-
-    var overlay = document.createElement('div');
-    overlay.id = 'kpi-email-overlay';
-    overlay.style.cssText = [
-      'position:fixed','inset:0','z-index:99999',
-      'background:rgba(14,31,61,0.92)','overflow-y:auto','padding:20px'
-    ].join(';');
-
-    var bar = document.createElement('div');
-    bar.style.cssText = 'text-align:center;margin-bottom:12px;';
-    bar.innerHTML = '<span style="color:#F4ECE0;font-size:14px;font-weight:600;">'
-      + 'Selecciona todo el contenido y copia con Ctrl+C, luego pega en Outlook con Ctrl+V'
-      + '</span>';
-
-    var btnCopy = document.createElement('button');
-    btnCopy.textContent = '📋 Seleccionar todo y copiar';
-    btnCopy.style.cssText = 'margin-left:12px;padding:8px 18px;background:#B6884A;color:#fff;'
-      + 'border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;';
-    btnCopy.onclick = function(){
-      var sel = window.getSelection();
-      var range = document.createRange();
-      range.selectNodeContents(body);
-      sel.removeAllRanges();
-      sel.addRange(range);
-      try{ document.execCommand('copy'); }catch(e){}
-      toast('Seleccionado — ahora pega en Outlook con Ctrl+V');
-    };
-
-    var btnClose = document.createElement('button');
-    btnClose.textContent = '✕ Cerrar';
-    btnClose.style.cssText = 'margin-left:8px;padding:8px 18px;background:#0E1F3D;color:#F4ECE0;'
-      + 'border:1px solid #B6884A;border-radius:6px;cursor:pointer;font-size:13px;';
-    btnClose.onclick = function(){
-      overlay.parentNode.removeChild(overlay);
-    };
-
-    bar.appendChild(btnCopy);
-    bar.appendChild(btnClose);
-
-    var body = document.createElement('div');
-    body.style.cssText = 'background:#F3F0EA;padding:20px;border-radius:8px;margin-top:8px;';
-    body.innerHTML = '<p style="font-family:Manrope,sans-serif;font-size:14px;margin-bottom:16px;">'
-      + 'Hola, te envío los KPIs de esta semana.</p>'
-      + kpi.innerHTML
-      + '<p style="font-family:Manrope,sans-serif;font-size:14px;margin-top:16px;">Un saludo.</p>';
-
-    overlay.appendChild(bar);
-    overlay.appendChild(body);
-    document.body.appendChild(overlay);
-
-    // Auto-seleccionar al abrir
-    setTimeout(function(){
-      var sel = window.getSelection();
-      var range = document.createRange();
-      range.selectNodeContents(body);
-      sel.removeAllRanges();
-      sel.addRange(range);
-      try{ document.execCommand('copy'); toast('KPIs copiados — pega en Outlook con Ctrl+V'); }
-      catch(e){ toast('Pulsa "Seleccionar todo y copiar" y luego Ctrl+V en Outlook'); }
-    }, 200);
-
-  }, 300);
+  window.location.href = 'mailto:?subject=' + encodeURIComponent(subjectTxt)
+    + '&body=' + encodeURIComponent(lines.join('\n'));
 }
 
 
