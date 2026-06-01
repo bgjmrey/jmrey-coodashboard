@@ -689,49 +689,26 @@ const E_COL = {entregado:'b-green',aceptado:'b-blue',enDesarrollo:'b-blue',acept
 // ── MICROSOFT AUTH (MSAL) ────────────────────────────
 var _msalApp = null;
 
-// ── USUARIOS AUTORIZADOS (desde Supabase tabla users) ──
-var _allowedUsers = null; // null = no cargado aún, [] = cargado pero vacío
-
-async function loadAllowedUsers(){
-  const sb = getSB();
-  if(!sb){ _allowedUsers = []; return; }
-  try {
-    const { data, error } = await sb.from('users').select('email');
-    if(!error && Array.isArray(data) && data.length > 0){
-      _allowedUsers = data.map(function(u){ return (u.email||'').toLowerCase().trim(); });
-    } else {
-      // If table empty or error, allow all authenticated users
-      _allowedUsers = [];
-    }
-  } catch(e){
-    console.warn('No se pudo cargar tabla users, permitiendo todos los usuarios autenticados', e);
-    _allowedUsers = [];
-  }
-}
+// ── USUARIOS AUTORIZADOS ──────────────────────────────
+// Añade aquí los emails con acceso. Si la lista está vacía, permite todos.
+var ALLOWED_USERS = [
+  'bg@jmrey.com',
+];
 
 function showApp(account){
   var email = (account.username || '').toLowerCase().trim();
-  // If list not loaded yet, load it and show app (list loads in init before this runs)
-  var allowed = _allowedUsers || [];
+  var allowed = ALLOWED_USERS.map(function(e){ return e.toLowerCase().trim(); });
   if(allowed.length > 0 && allowed.indexOf(email) === -1){
     document.getElementById('login-overlay').style.display = 'flex';
     document.getElementById('app-content').style.display = 'none';
-    showLoginError('Acceso denegado. El usuario ' + email + ' no tiene permisos para acceder a esta aplicación.');
-    if(_msalApp){
-      try{ _msalApp.logoutPopup({account: account, postLogoutRedirectUri: 'https://bgjmrey.github.io/jmrey-coodashboard/'}); }catch(e){}
-    }
+    showLoginError('Acceso denegado: ' + email + ' no tiene permisos.');
+    if(_msalApp){ try{ _msalApp.logoutPopup({account: account}); }catch(e){} }
     return;
   }
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
   document.querySelector('.hdr-meta strong').textContent = account.name || account.username;
   document.querySelector('.hdr-meta span').textContent   = account.username;
-}
-
-function showLoginError(msg){
-  var el = document.getElementById('login-error');
-  el.textContent = msg;
-  el.style.display = 'block';
 }
 
 function googleLogin(){
@@ -803,7 +780,6 @@ function initMsalWhenReady(){
 }
 document.addEventListener('DOMContentLoaded', initMsalWhenReady);
 // Pre-load allowed users as early as possible
-loadAllowedUsers();
 
 const SB_URL  = 'https://bpxeyugyadcgyewrpcde.supabase.co';
 const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweGV5dWd5YWRjZ3lld3JwY2RlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxMjUwOTgsImV4cCI6MjA5NTcwMTA5OH0.0KtvmfGD3BgJLY9INw0fikxFLJ-7BWAGowC7m3eBMac';
