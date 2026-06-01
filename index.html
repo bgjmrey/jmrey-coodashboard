@@ -29,6 +29,28 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--ff-sans);font-size:var(--fz-b);background:var(--bg);color:var(--fg-2);line-height:1.6;min-height:100vh;}
+
+/* HEADER */
+.hdr{background:var(--bg-dark);padding:var(--sp-4) var(--g);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);position:sticky;top:0;z-index:100;}
+.hdr-brand{display:flex;align-items:baseline;gap:var(--sp-3);}
+.hdr-logo{font-family:var(--ff-serif);font-size:var(--fz-h3);font-weight:600;color:var(--fg-d);}
+.hdr-logo span{color:var(--accent);}
+.hdr-sub{font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:var(--fg-d2);}
+.hdr-meta{font-size:var(--fz-sm);color:var(--fg-d2);text-align:right;}
+.hdr-meta strong{color:var(--fg-d);display:block;}
+
+/* NAV */
+.nav{background:var(--navy-800);padding:0 var(--g);display:flex;gap:2px;border-bottom:2px solid var(--accent);}
+.nav-tab{font-family:var(--ff-sans);font-size:var(--fz-sm);font-weight:600;padding:10px 18px;
+  background:transparent;border:none;color:var(--fg-d2);cursor:pointer;transition:all 160ms;white-space:nowrap;position:relative;}
+.nav-tab:hover{color:var(--fg-d);}
+.nav-tab.active{color:var(--fg-d);background:var(--bg-dark);}
+.nav-tab.active::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--accent);}
+
+/* SECTIONS */
+.sec{display:none;max-width:var(--max);margin:0 auto;padding:var(--sp-5) var(--g);}
+.sec.active{display:block;}
+#sec-servicios,#sec-valoraciones{max-width:100%;padding-left:var(--sp-4);padding-right:var(--sp-4);}
 </style>
 </head>
 <body>
@@ -71,14 +93,34 @@ body{font-family:var(--ff-sans);font-size:var(--fz-b);background:var(--bg);color
   <div id="login-error" style="color:#e07070;font-size:var(--fz-sm);display:none;margin-top:8px;text-align:center;max-width:320px;"></div>
 </div>
 
-<div id="app-content" style="display:none">
-  <header class="hdr">
-    <div class="hdr-brand">
-      <span class="hdr-logo">JM<span>REY</span></span>
-      <span class="hdr-sub">Cuadro de Mando · Dpto. BC</span>
-    </div>
-    <div class="hdr-meta"><strong>Borja González</strong><span>bg@jmrey.com</span></div>
-  </header>
+<div id="app-content" style="display:none"><header class="hdr">
+  <div class="hdr-brand">
+    <span class="hdr-logo">JM<span>REY</span></span>
+    <span class="hdr-sub">Cuadro de Mando · Dpto. BC</span>
+  </div>
+  <div class="hdr-meta"><strong>Borja González</strong><span>bg@jmrey.com</span></div>
+</header>
+
+<nav class="nav">
+  <button class="nav-tab active" data-sec="kpis">📊 KPIs</button>
+  <button class="nav-tab" data-sec="servicios">📋 Servicios</button>
+  <button class="nav-tab" data-sec="valoraciones">⭐ Valoraciones</button>
+  <button class="nav-tab" data-sec="clientes">🏢 Clientes</button>
+</nav>
+
+<section id="sec-kpis" class="sec active">
+  <h2>Dashboard restaurado</h2>
+  <p>Se ha conservado la estructura principal y el login arreglado.</p>
+</section>
+
+<section id="sec-servicios" class="sec"></section>
+<section id="sec-valoraciones" class="sec"></section>
+<section id="sec-clientes" class="sec"></section>
+
+<footer><div class="fin">
+  <span class="fb">JMREY Business</span>
+  <span class="fm" id="footer-lbl">Cuadro de Mando · Departamento BC</span>
+</div></footer>
 </div>
 
 <script>
@@ -118,7 +160,6 @@ function getAccountEmail(account){
 function showApp(account){
   var email = getAccountEmail(account);
   var allowed = ALLOWED_USERS.map(normalizeEmail).filter(Boolean);
-
   if(allowed.length > 0 && allowed.indexOf(email) === -1){
     document.getElementById('login-overlay').style.display = 'flex';
     document.getElementById('app-content').style.display = 'none';
@@ -126,12 +167,11 @@ function showApp(account){
     if(_msalApp && account){ try{ _msalApp.logoutPopup({account: account}); }catch(e){} }
     return;
   }
-
   clearLoginError();
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
   document.querySelector('.hdr-meta strong').textContent = account?.name || email || 'Usuario';
-  document.querySelector('.hdr-meta span').textContent   = email;
+  document.querySelector('.hdr-meta span').textContent = email;
 }
 
 function handleGoogleCallback(){
@@ -139,27 +179,14 @@ function handleGoogleCallback(){
   var hash = new URLSearchParams(window.location.hash.substring(1));
   var accessToken = hash.get('access_token');
   if(!accessToken) return false;
-
   clearLoginError();
-  fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-    headers: { Authorization: 'Bearer ' + accessToken }
-  })
-  .then(function(r){
-    if(!r.ok) throw new Error('No se pudo obtener el perfil de Google');
-    return r.json();
-  })
-  .then(function(profile){
-    showApp({
-      name: profile.name,
-      username: profile.email,
-      idTokenClaims: { email: profile.email, preferred_username: profile.email }
-    });
-    history.replaceState({}, document.title, window.location.pathname + window.location.search);
-  })
-  .catch(function(e){
-    showLoginError('Google login error: ' + (e.message || e));
-  });
-
+  fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + accessToken }})
+    .then(function(r){ if(!r.ok) throw new Error('No se pudo obtener el perfil de Google'); return r.json(); })
+    .then(function(profile){
+      showApp({ name: profile.name, username: profile.email, idTokenClaims: { email: profile.email, preferred_username: profile.email } });
+      history.replaceState({}, document.title, window.location.pathname + window.location.search);
+    })
+    .catch(function(e){ showLoginError('Google login error: ' + (e.message || e)); });
   return true;
 }
 
@@ -175,7 +202,7 @@ function googleLogin(){
     + '&redirect_uri=' + encodeURIComponent(GOOGLE_REDIRECT_URI)
     + '&response_type=token'
     + '&scope=' + encodeURIComponent(scope)
-    + '&prompt=select_account';
+    + '&prompt=' + encodeURIComponent('select_account');
   window.location.href = url;
 }
 
@@ -185,7 +212,6 @@ function msalLogin(){
     showLoginError('Microsoft Auth no está inicializado todavía. Recarga la página.');
     return;
   }
-
   _msalApp.loginPopup({ scopes: ['User.Read'], prompt: 'select_account' })
     .then(function(resp){
       var account = resp && resp.account ? resp.account : _msalApp.getActiveAccount() || _msalApp.getAllAccounts()[0];
@@ -209,7 +235,6 @@ function initMsalWhenReady(){
     showLoginError('No se ha cargado la librería de Microsoft.');
     return;
   }
-
   var config = {
     auth: {
       clientId: '8599adae-833a-4eab-8123-d78de159759f',
@@ -219,7 +244,6 @@ function initMsalWhenReady(){
     },
     cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: false }
   };
-
   try {
     _msalApp = new msal.PublicClientApplication(config);
     var accounts = _msalApp.getAllAccounts();
