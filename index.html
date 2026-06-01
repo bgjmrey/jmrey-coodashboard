@@ -420,7 +420,7 @@ table.rt tbody td.c{text-align:center;}
       <input class="finp" type="number" id="f-oc" value="225" min="0" step="5"></div>
     <div class="fdiv"></div>
     <div class="fg" style="justify-content:flex-end"><span class="fl">&nbsp;</span>
-      <button class="btn btn-s" onclick="sendKpiEmail()" style="white-space:nowrap">✉️ Enviar por email</button>
+      <button class="btn btn-s" onclick="sendKpiEmail()" style="white-space:nowrap" title="Copia los KPIs y abre Outlook. Pega con Ctrl+V en el cuerpo del email.">✉️ Enviar por email</button>
     </div>
   </div>
   <div class="seh-ey">Indicadores clave</div>
@@ -2148,26 +2148,64 @@ function sendKpiEmail(){
   const monthName = MESES_ES[now.getMonth()];
   const isCierre  = now.getDate() === 26;
   const cierre    = isCierre ? ' (CIERRE)' : '';
+  const subjectTxt = 'Técnico / Cuadro de mando COO / ' + year + ' ' + month + ' ' + monthName + ' ' + day + cierre;
 
-  const subject = encodeURIComponent(
-    'Técnico / Cuadro de mando COO / ' + year + ' ' + month + ' ' + monthName + ' ' + day + cierre
-  );
+  // Capturar sección KPI completa con estilos inline
+  const kpiSection = document.getElementById('sec-kpis');
+  if(!kpiSection){ toast('No se encontró la sección KPI'); return; }
 
-  // Construir cuerpo con los valores actuales de los KPI cards
-  const lines = ['Hola, te envío los KPIs de esta semana.', ''];
-  const title = document.getElementById('kpi-title');
-  if(title) lines.push('Período: ' + title.textContent, '');
+  // Serializar estilos CSS relevantes para que el email mantenga el diseño
+  const styleRules = [];
+  for(const sheet of document.styleSheets){
+    try{
+      for(const rule of sheet.cssRules){
+        styleRules.push(rule.cssText);
+      }
+    }catch(e){}
+  }
 
-  document.querySelectorAll('#kpi-cards .sc').forEach(sc => {
-    const lbl = (sc.querySelector('.sc-lbl')?.textContent || '').trim();
-    const val = (sc.querySelector('.sc-val')?.textContent || '').trim();
-    if(lbl && val) lines.push(lbl + ': ' + val);
-  });
+  const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+${styleRules.join('\n')}
+/* Reset para email */
+body{background:#F3F0EA;font-family:Manrope,sans-serif;font-size:13px;color:#14171C;margin:0;padding:16px;}
+</style></head><body>
+<p style="font-family:Manrope,sans-serif;font-size:14px;margin-bottom:16px;">Hola, te envío los KPIs de esta semana.</p>
+${kpiSection.innerHTML}
+<p style="font-family:Manrope,sans-serif;font-size:14px;margin-top:16px;">Un saludo.</p>
+</body></html>`;
 
-  lines.push('', 'Un saludo.');
-  const body = encodeURIComponent(lines.join('\n'));
+  // Copiar al portapapeles como texto enriquecido (HTML)
+  const blob = new Blob([htmlContent], {type: 'text/html'});
+  const blobPlain = new Blob([subjectTxt + '\n\nHola, te envío los KPIs de esta semana.\n\n(Pega aquí el contenido copiado)'], {type: 'text/plain'});
 
-  window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+  if(navigator.clipboard && window.ClipboardItem){
+    navigator.clipboard.write([
+      new ClipboardItem({'text/html': blob, 'text/plain': blobPlain})
+    ]).then(()=>{
+      toast('✅ KPIs copiados — pega en el email (Ctrl+V). Asunto: ' + subjectTxt);
+      // También abrir el cliente de email con el asunto pre-rellenado
+      setTimeout(()=>{
+        window.location.href = 'mailto:?subject=' + encodeURIComponent(subjectTxt)
+          + '&body=' + encodeURIComponent('Hola, te envío los KPIs de esta semana.\n\n[Pega aquí el contenido copiado con Ctrl+V]');
+      }, 800);
+    }).catch(err=>{
+      console.error('Clipboard error:', err);
+      toast('Error al copiar. Prueba desde el navegador (no desde archivo local).');
+    });
+  } else {
+    // Fallback: abrir mailto con texto plano
+    const lines = ['Hola, te envío los KPIs de esta semana.',''];
+    const title = document.getElementById('kpi-title');
+    if(title) lines.push('Período: ' + title.textContent, '');
+    document.querySelectorAll('#kpi-cards .sc').forEach(sc=>{
+      const lbl=(sc.querySelector('.sc-lbl')?.textContent||'').trim();
+      const val=(sc.querySelector('.sc-val')?.textContent||'').trim();
+      if(lbl&&val) lines.push(lbl+': '+val);
+    });
+    lines.push('','Un saludo.');
+    window.location.href='mailto:?subject='+encodeURIComponent(subjectTxt)+'&body='+encodeURIComponent(lines.join('\n'));
+  }
 }
 
 // ── INIT ─────────────────────────────────────────────
