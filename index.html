@@ -797,24 +797,26 @@ async function sbInsert(table, row){
     if(error){ console.error('sbInsert',table,JSON.stringify(error)); toast('Error al insertar: '+(error.message||error.code||JSON.stringify(error))); }
   }
 }
-async function sbUpdate(table, row){
+async function sbUpdate(table, row, origKeys){
+  // origKeys: optional object with original PK values before edit (for PK changes)
   const sb=getSB(); if(!sb) return;
   const r=Object.assign({},row); delete r.row_id;
 
   if(row.row_id){
-    // Caso normal: registro cargado desde Supabase, tiene row_id
+    // Best case: have row_id, always accurate
     const {error}=await sb.from(table).update(r).eq('row_id',row.row_id);
     if(error){ console.error('sbUpdate',table,JSON.stringify(error)); toast('Error al actualizar: '+(error.message||error.code||JSON.stringify(error))); }
     return;
   }
 
-  // Sin row_id: usar business keys para el WHERE
+  // No row_id: use original business keys for WHERE (handles PK field changes)
   const bk = SB_BK[table] || [];
   if(bk.length === 0){ console.warn('sbUpdate: sin row_id ni BK para', table); return; }
-  const allOk = bk.every(k=>row[k]!=null&&row[k]!=='');
-  if(!allOk){ console.warn('sbUpdate: BK incompleta para', table, row); return; }
+  const whereKeys = origKeys || row; // use origKeys if provided, else current values
+  const allOk = bk.every(k=>whereKeys[k]!=null&&whereKeys[k]!=='');
+  if(!allOk){ console.warn('sbUpdate: BK incompleta para', table, whereKeys); return; }
   let q=sb.from(table).update(r);
-  bk.forEach(k=>{ q=q.eq(k,row[k]); });
+  bk.forEach(k=>{ q=q.eq(k,whereKeys[k]); });
   const {error}=await q;
   if(error){ console.error('sbUpdate',table,JSON.stringify(error)); toast('Error al actualizar: '+(error.message||error.code||JSON.stringify(error))); }
 }
@@ -835,7 +837,7 @@ async function sbDel(table, row){
 }
 
 // ── ss: localStorage + Supabase individual ──────────────
-function ss(k, arr, row, op){
+function ss(k, arr, row, op, origKeys){
   ssLocal(k, arr);
   const tbl=SB_TBL[k]; if(!tbl||!row||!op) return;
   if(op==='insert'){
@@ -847,9 +849,7 @@ function ss(k, arr, row, op){
     }
   }
   else if(op==='update'){
-    // Con row_id: UPDATE directo y seguro
-    // Sin row_id: intentar UPDATE por business key (pueden ser registros del seed ya en Supabase)
-    sbUpdate(tbl, row);
+    sbUpdate(tbl, row, origKeys);
   }
   else if(op==='delete') sbDel(tbl, row);
 }
@@ -1518,6 +1518,7 @@ function autoCalc(){
 
 function editSvcFn(i){
   editSvc=i; const r=DB.servicios[i];
+  window._origSvcId = r.id; // original id for UPDATE WHERE
   document.getElementById('svc-mt').textContent='Editar servicio';
   document.getElementById('s-id').value=r.id||'';
   document.getElementById('s-tit').value=r.titulo||'';
@@ -1581,7 +1582,8 @@ function saveSvc(){
   const _newSvc=editSvc===null;
   if(!_newSvc) DB.servicios[editSvc]=o; else DB.servicios.push(o);
   const _svcOp = _newSvc ? 'insert' : 'update';
-  ss('svc',DB.servicios,o,_svcOp);
+  const _svcOrig = _newSvc ? null : {id: window._origSvcId};
+  ss('svc',DB.servicios,o,_svcOp,_svcOrig);
   closeMod('svc'); renderSvc(); renderKPI();
   toast(_newSvc?'Servicio creado':'Servicio actualizado');
   editSvc=null;
@@ -1768,6 +1770,7 @@ document.getElementById('v-is').addEventListener('change', fillValFromSvc);
 
 function editValFn(i){
   editVal=i; const r=DB.valoraciones[i];
+  window._origValKey = {id_svc: r.id_svc, id_val: r.id_val}; // original keys
   document.getElementById('val-mt').textContent='Editar valoración';
   document.getElementById('v-is').value=r.id_svc||'';
   document.getElementById('v-iv').value=r.id_val||'';
@@ -1871,6 +1874,7 @@ function populateCliSelects(){
 
 function editCliFn(i){
   editCli=i; const r=DB.clientes[i];
+  window._origCliKey = {partner: r.partner, cliente: r.cliente}; // original keys
   document.getElementById('cli-mt').textContent='Editar cliente';
   document.getElementById('c-par').value=r.partner||'';
   document.getElementById('c-cli').value=r.cliente||'';
@@ -2177,109 +2181,170 @@ function sendKpiEmail(){
 }
 
 
-// ── EXPORTAR TABLA A XLSX (HTML+estilos JMREY) ───────
+// ── EXPORTAR TABLA A EXCEL (SpreadsheetML XML) ───────
 function exportTableXLS(tableId, filename){
   const table = document.getElementById(tableId);
   if(!table){ toast('Tabla no encontrada'); return; }
 
-  // ── Cabeceras (excluir col acciones) ──
+  // Cabeceras (excluir col acciones)
   const hdrRow = table.querySelector('.hdr-row');
   const thCells = hdrRow ? Array.from(hdrRow.querySelectorAll('th'))
     .filter(th => !th.classList.contains('ac-col')) : [];
   const headers = thCells.map(th => (th.innerText||th.textContent||'').replace(/\s+/g,' ').trim());
 
-  // ── Filas de datos ──
+  // Detectar tipo por nombre de columna
+  function colType(h){
+    const n = h.toUpperCase();
+    if(n==='ID' || n==='ID SERVICIO') return 'int';
+    if(n==='ID.VAL.' || n==='ID VAL' || n==='ID.VAL' || n==='ID_VAL') return 'idval';
+    if(n.match(/^H\.(PARTNER|CLIENTE|PROD|GEST|TÉC|TEC)\.?$/)) return 'dec2';
+    if(n.match(/IMP.*€/) || n.match(/€/)) return 'currency';
+    if(n.match(/^F\.(ACEPT|PREV|ENTREGA)\.?$/) || n.match(/FECHA/)) return 'date';
+    return 'text';
+  }
+
+  const colTypes = headers.map(colType);
+
+  // Filas de datos
   const dataRows = [];
   table.querySelectorAll('tbody tr').forEach(tr => {
     if(tr.querySelector('.ec')) return;
-    // Excluir última celda si es columna de acciones (solo botones)
     let cells = Array.from(tr.cells);
-    const last = cells[cells.length - 1];
+    const last = cells[cells.length-1];
     if(last && last.classList.contains('c') && last.querySelector('button')){
-      cells = cells.slice(0, -1);
+      cells = cells.slice(0,-1);
     }
-    dataRows.push(cells.map(td => {
-      const txt = (td.innerText||td.textContent||'').replace(/\s+/g,' ').trim();
-      // Buscar primer hipervínculo real en la celda
-      let href = null;
-      td.querySelectorAll('a').forEach(a => {
-        if(a.href && a.href !== window.location.href && !a.href.startsWith('javascript'))
-          href = href || a.href;
-      });
-      return { text: txt, href };
+    dataRows.push(cells.map((td,ci) => {
+      const raw = (td.innerText||td.textContent||'').replace(/\s+/g,' ').trim();
+      const type = colTypes[ci] || 'text';
+      return { raw, type };
     }));
   });
 
-  // ── Generar HTML con diseño JMREY ──
+  // Estilos JMREY en SpreadsheetML
   const now = new Date();
   const dateStr = now.toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
 
-  let thead = '<thead><tr>';
+  function escXml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function cellXml(val, type, styleId){
+    const v = escXml(val);
+    if(type==='int'){
+      const n = parseInt(v.replace(/[^\d-]/g,''));
+      if(!isNaN(n)) return `<Cell ss:StyleID="s${styleId}"><Data ss:Type="Number">${n}</Data></Cell>`;
+    }
+    if(type==='idval'){
+      // Solo el número: extraer dígitos
+      const m = v.match(/\d+/);
+      return `<Cell ss:StyleID="s${styleId}"><Data ss:Type="String">${m?m[0]:v}</Data></Cell>`;
+    }
+    if(type==='dec2' || type==='currency'){
+      const n = parseFloat(v.replace(',','.').replace(/[^\d.-]/g,''));
+      if(!isNaN(n)) return `<Cell ss:StyleID="s${styleId}"><Data ss:Type="Number">${n}</Data></Cell>`;
+    }
+    if(type==='date'){
+      // Parse YYYY-MM-DD
+      const m = v.match(/(\d{4})-(\d{2})-(\d{2})/);
+      if(m) return `<Cell ss:StyleID="s${styleId}"><Data ss:Type="DateTime">${m[1]}-${m[2]}-${m[3]}T00:00:00.000</Data></Cell>`;
+    }
+    return `<Cell ss:StyleID="s${styleId}"><Data ss:Type="String">${v}</Data></Cell>`;
+  }
+
+  // StyleIDs: 1=header, 2=text, 3=int, 4=dec2, 5=currency, 6=date
+  function styleForType(type){
+    if(type==='int') return 3;
+    if(type==='dec2') return 4;
+    if(type==='currency') return 5;
+    if(type==='date') return 6;
+    return 2; // text / idval
+  }
+
+  let rowsXml = '';
+  // Header row
+  rowsXml += '<Row ss:StyleID="s1">';
   headers.forEach(h => {
-    thead += `<th>${h}</th>`;
+    rowsXml += `<Cell ss:StyleID="s1"><Data ss:Type="String">${escXml(h)}</Data></Cell>`;
   });
-  thead += '</tr></thead>';
-
-  let tbody = '<tbody>';
+  rowsXml += '</Row>\n';
+  // Data rows
   dataRows.forEach((row, ri) => {
-    tbody += `<tr class="${ri%2===0?'even':'odd'}">`;
-    row.forEach(cell => {
-      const isNum = cell.text !== '' && /^[\d.,\-\s%€]+$/.test(cell.text);
-      const align = isNum ? 'right' : 'left';
-      if(cell.href){
-        tbody += `<td style="text-align:${align}"><a href="${cell.href}">${cell.text||'🔗'}</a></td>`;
-      } else {
-        tbody += `<td style="text-align:${align}">${cell.text}</td>`;
-      }
+    const bg = ri%2===0 ? 's2' : 's7'; // alternating rows
+    rowsXml += '<Row>';
+    row.forEach((cell, ci) => {
+      const type = colTypes[ci] || 'text';
+      const sid = styleForType(type) + (ri%2===0 ? 0 : 10); // even/odd offset
+      rowsXml += cellXml(cell.raw, type, styleForType(type));
     });
-    tbody += '</tr>';
+    rowsXml += '</Row>\n';
   });
-  tbody += '</tbody>';
 
-  const htmlDoc = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
-<title>${filename}</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:#F3F0EA;font-family:'Manrope',system-ui,sans-serif;font-size:12px;color:#14171C;padding:28px 32px;}
-.doc-header{margin-bottom:24px;}
-.eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:#B6884A;margin-bottom:6px;}
-h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:500;color:#0E1F3D;margin-bottom:4px;}
-.rule{width:48px;height:2px;background:#B6884A;margin:10px 0 14px;}
-.meta{font-size:11px;color:#7A7669;}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;
-  box-shadow:0 2px 6px rgba(20,23,28,.06);}
-thead tr{background:#0E1F3D;}
-thead th{padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.08em;color:#B6884A;text-align:left;white-space:nowrap;}
-tbody tr.even{background:#F3F0EA;}
-tbody tr.odd{background:#FAF7F2;}
-tbody tr{border-bottom:1px solid #E2D9C6;}
-tbody td{padding:6px 12px;color:#14171C;vertical-align:middle;}
-a{color:#B6884A;text-decoration:none;}
-a:hover{text-decoration:underline;}
-</style>
-</head><body>
-<div class="doc-header">
-  <div class="eyebrow">JMREY · Cuadro de Mando BC</div>
-  <h1>${filename.charAt(0).toUpperCase()+filename.slice(1)}</h1>
-  <div class="rule"></div>
-  <div class="meta">Exportado: ${dateStr} &nbsp;·&nbsp; ${dataRows.length} registros</div>
-</div>
-<table>${thead}${tbody}</table>
-</body></html>`;
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:x="urn:schemas-microsoft-com:office:excel">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Title>${escXml(filename)}</Title>
+  <Created>${now.toISOString()}</Created>
+ </DocumentProperties>
+ <Styles>
+  <Style ss:ID="s1">
+   <Alignment ss:Horizontal="Left"/>
+   <Font ss:Bold="1" ss:Color="#F4ECE0" ss:Size="11"/>
+   <Interior ss:Color="#0E1F3D" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s2">
+   <Alignment ss:Horizontal="Left"/>
+   <Font ss:Color="#14171C" ss:Size="11"/>
+   <Interior ss:Color="#F3F0EA" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s3">
+   <Alignment ss:Horizontal="Right"/>
+   <Font ss:Color="#14171C" ss:Size="11"/>
+   <Interior ss:Color="#F3F0EA" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="0"/>
+  </Style>
+  <Style ss:ID="s4">
+   <Alignment ss:Horizontal="Right"/>
+   <Font ss:Color="#14171C" ss:Size="11"/>
+   <Interior ss:Color="#F3F0EA" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="0.00"/>
+  </Style>
+  <Style ss:ID="s5">
+   <Alignment ss:Horizontal="Right"/>
+   <Font ss:Color="#14171C" ss:Size="11"/>
+   <Interior ss:Color="#F3F0EA" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="#,##0.00 €"/>
+  </Style>
+  <Style ss:ID="s6">
+   <Alignment ss:Horizontal="Center"/>
+   <Font ss:Color="#14171C" ss:Size="11"/>
+   <Interior ss:Color="#F3F0EA" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="dd/mm/yyyy"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="${escXml(filename.slice(0,31))}">
+  <Table>
+   ${rowsXml}
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>1</SplitHorizontal>
+   <TopRowBottomPane>1</TopRowBottomPane>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>`;
 
-  const blob = new Blob([htmlDoc], {type:'application/vnd.ms-excel;charset=utf-8'});
+  const blob = new Blob([xml], {type:'application/vnd.ms-excel;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = filename + '_' + now.toISOString().slice(0,10) + '.xlsx';
+  a.download = filename + '_' + now.toISOString().slice(0,10) + '.xls';
   document.body.appendChild(a); a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  toast('Exportado: ' + filename + '.xlsx');
+  toast('Exportado: ' + filename + '.xls');
 }
 
 // ── INIT ─────────────────────────────────────────────
