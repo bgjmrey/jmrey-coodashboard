@@ -2181,152 +2181,126 @@ function sendKpiEmail(){
 }
 
 
-// ── EXPORTAR TABLA A EXCEL (SpreadsheetML XML) ───────
+// ── EXPORTAR TABLA A EXCEL (.xlsx.html) ─────────────
 function exportTableXLS(tableId, filename){
   const table = document.getElementById(tableId);
   if(!table){ toast('Tabla no encontrada'); return; }
 
-  // Cabeceras — usar data-col attr para detectar tipo exacto
   const hdrRow = table.querySelector('.hdr-row');
   const thCells = hdrRow ? Array.from(hdrRow.querySelectorAll('th'))
     .filter(th => !th.classList.contains('ac-col')) : [];
+
   const headers = thCells.map(th => {
-    // Strip resize handle text
     const clone = th.cloneNode(true);
     clone.querySelectorAll('.rh').forEach(el=>el.remove());
     return (clone.innerText||clone.textContent||'').replace(/\s+/g,' ').trim();
   });
   const dataCols = thCells.map(th => th.getAttribute('data-col')||'');
 
-  // Tipo por data-col (exacto) o por header
-  function colType(dataCol, header){
-    if(dataCol==='id') return 'int';
-    if(dataCol==='id_val') return 'idval';
-    if(['h_partner','h_jmrey','h_prod','h_gest','h_tec'].includes(dataCol)) return 'dec2';
-    if(dataCol==='imp_tec' || dataCol==='imp_dir') return 'currency';
-    if(['fecha_acept','fecha_fprev','fecha_entrega','f_real'].includes(dataCol)) return 'date';
+  function colType(dc){
+    if(dc==='id') return 'int';
+    if(dc==='id_val') return 'idval';
+    if(['h_partner','h_jmrey','h_prod','h_gest','h_tec'].includes(dc)) return 'dec2';
+    if(['imp_tec','imp_dir'].includes(dc)) return 'currency';
+    if(['fecha_acept','fecha_fprev','fecha_entrega','f_real'].includes(dc)) return 'date';
     return 'text';
   }
-  const colTypes = thCells.map((th,i) => colType(dataCols[i], headers[i]));
+  const colTypes = dataCols.map(colType);
 
-  // Filas de datos
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function styleForType(type, odd){
+    const base = {text:2,idval:2,int:3,dec2:4,currency:5,date:6}[type]||2;
+    return 's'+(odd ? base+10 : base);
+  }
+
+  function cellXml(raw, type, style){
+    if(type==='int'){
+      const n=parseInt(raw.replace(/[^\d-]/g,''));
+      if(!isNaN(n)) return `<td class="${style}">${n}</td>`;
+    }
+    if(type==='idval'){
+      const m=raw.match(/\d+/);
+      return `<td class="${style}">${esc(m?m[0]:raw)}</td>`;
+    }
+    if(type==='dec2'||type==='currency'){
+      const n=parseFloat(raw.replace(',','.').replace(/[^\d.-]/g,''));
+      if(!isNaN(n)) return `<td class="${style}" x:num="${n}">${n.toFixed(2).replace('.',',')}</td>`;
+    }
+    if(type==='date'){
+      const m=raw.match(/(\d{4})-(\d{2})-(\d{2})/);
+      if(m) return `<td class="${style}">${m[3]}/${m[2]}/${m[1]}</td>`;
+    }
+    return `<td class="${style}">${esc(raw)}</td>`;
+  }
+
+  // Build data rows
   const dataRows = [];
   table.querySelectorAll('tbody tr').forEach(tr => {
     if(tr.querySelector('.ec')) return;
     let cells = Array.from(tr.cells);
     const last = cells[cells.length-1];
-    if(last && last.classList.contains('c') && last.querySelector('button')){
-      cells = cells.slice(0,-1);
-    }
+    if(last && last.classList.contains('c') && last.querySelector('button')) cells = cells.slice(0,-1);
     dataRows.push(cells.map((td,ci) => {
       const clone = td.cloneNode(true);
       clone.querySelectorAll('a,button,select,.rh,.idval-btn,.idval-sel').forEach(el=>el.remove());
-      const raw = (clone.innerText||clone.textContent||'').replace(/\s+/g,' ').replace(/[✉️📄🔗]/g,'').trim();
-      return { raw, type: colTypes[ci]||'text' };
+      return (clone.innerText||clone.textContent||'').replace(/\s+/g,' ').trim();
     }));
   });
 
-  function escXml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  let tbody = '';
+  dataRows.forEach((row,ri) => {
+    const odd = ri%2!==0;
+    tbody += '<tr>';
+    row.forEach((val,ci) => {
+      tbody += cellXml(val, colTypes[ci]||'text', styleForType(colTypes[ci]||'text', odd));
+    });
+    tbody += '</tr>\n';
+  });
 
-  // StyleID map: 1=header, 2=text(even), 3=int(even), 4=dec2(even), 5=currency(even), 6=date(even)
-  //              12=text(odd), 13=int(odd), 14=dec2(odd), 15=currency(odd), 16=date(odd)
-  function styleId(type, odd){
-    const base = {text:2, idval:2, int:3, dec2:4, currency:5, date:6}[type]||2;
-    return odd ? base+10 : base;
-  }
-
-  function cellXml(raw, type, sid){
-    const v = escXml(raw);
-    if(type==='int'){
-      const n = parseInt(raw.replace(/[^\d-]/g,''));
-      if(!isNaN(n)) return `<Cell ss:StyleID="s${sid}"><Data ss:Type="Number">${n}</Data></Cell>`;
-    }
-    if(type==='idval'){
-      const m = raw.match(/\d+/);
-      const val = m ? m[0] : raw;
-      return `<Cell ss:StyleID="s${sid}"><Data ss:Type="String">${escXml(val)}</Data></Cell>`;
-    }
-    if(type==='dec2'||type==='currency'){
-      const n = parseFloat(raw.replace(',','.').replace(/[^\d.-]/g,''));
-      if(!isNaN(n)) return `<Cell ss:StyleID="s${sid}"><Data ss:Type="Number">${n}</Data></Cell>`;
-    }
-    if(type==='date'){
-      const m = raw.match(/(\d{4})-(\d{2})-(\d{2})/);
-      if(m) return `<Cell ss:StyleID="s${sid}"><Data ss:Type="DateTime">${m[1]}-${m[2]}-${m[3]}T00:00:00.000</Data></Cell>`;
-    }
-    return `<Cell ss:StyleID="s${sid}"><Data ss:Type="String">${v}</Data></Cell>`;
-  }
+  let thead = '<tr class="hdr">' + headers.map(h=>`<th>${esc(h)}</th>`).join('') + '</tr>';
 
   const now = new Date();
-  let rowsXml = '';
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+<x:Name>${esc(filename.slice(0,31))}</x:Name>
+<x:WorksheetOptions><x:FreezePanes/><x:SplitHorizontal>1</x:SplitHorizontal><x:TopRowBottomPane>1</x:TopRowBottomPane></x:WorksheetOptions>
+</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+<style>
+body{font-family:Calibri,sans-serif;font-size:11pt;}
+table{border-collapse:collapse;width:100%;}
+.hdr th{background:#0E1F3D;color:#F4ECE0;font-weight:bold;padding:6px 10px;border-bottom:2px solid #B6884A;}
+tr:nth-child(even) td{background:#F3F0EA;}
+tr:nth-child(odd) td{background:#FAF7F2;}
+td,th{padding:5px 10px;border:1px solid #E2D9C6;}
+.s2,.s12{text-align:left;}
+.s3,.s13{text-align:right;mso-number-format:0;}
+.s4,.s14{text-align:right;mso-number-format:"0\\.00";}
+.s5,.s15{text-align:right;mso-number-format:"#,##0.00\\ &quot;€&quot;";}
+.s6,.s16{text-align:center;mso-number-format:"dd/mm/yyyy";}
+</style>
+</head>
+<body>
+<table>
+<thead>${thead}</thead>
+<tbody>${tbody}</tbody>
+</table>
+</body></html>`;
 
-  // Header row
-  rowsXml += '<Row ss:StyleID="s1">';
-  headers.forEach(h => { rowsXml += `<Cell ss:StyleID="s1"><Data ss:Type="String">${escXml(h)}</Data></Cell>`; });
-  rowsXml += '</Row>\n';
-
-  // Data rows
-  dataRows.forEach((row, ri) => {
-    const odd = ri%2!==0;
-    rowsXml += '<Row>';
-    row.forEach((cell,ci) => {
-      rowsXml += cellXml(cell.raw, cell.type, styleId(cell.type, odd));
-    });
-    rowsXml += '</Row>\n';
-  });
-
-  // Column widths
-  let colWidths = '';
-  headers.forEach((h,i) => {
-    const t = colTypes[i];
-    const w = t==='date'?70 : t==='int'?55 : t==='currency'?80 : t==='dec2'?65 : Math.min(200, Math.max(80, h.length*9));
-    colWidths += `<Column ss:Width="${w}"/>\n`;
-  });
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:o="urn:schemas-microsoft-com:office:office">
- <Styles>
-  <Style ss:ID="s1">
-   <Font ss:Bold="1" ss:Color="#F4ECE0" ss:Size="11" ss:Name="Calibri"/>
-   <Interior ss:Color="#0E1F3D" ss:Pattern="Solid"/>
-   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
-   <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#B6884A"/></Borders>
-  </Style>
-  <Style ss:ID="s2"><Font ss:Size="11" ss:Name="Calibri"/><Interior ss:Color="#FAF7F2" ss:Pattern="Solid"/><Alignment ss:Vertical="Center"/></Style>
-  <Style ss:ID="s3"><Font ss:Size="11" ss:Name="Calibri"/><Interior ss:Color="#FAF7F2" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="0"/></Style>
-  <Style ss:ID="s4"><Font ss:Size="11" ss:Name="Calibri"/><Interior ss:Color="#FAF7F2" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="0.00"/></Style>
-  <Style ss:ID="s5"><Font ss:Size="11" ss:Name="Calibri"/><Interior ss:Color="#FAF7F2" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="#,##0.00 &quot;€&quot;"/></Style>
-  <Style ss:ID="s6"><Font ss:Size="11" ss:Name="Calibri"/><Interior ss:Color="#FAF7F2" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><NumberFormat ss:Format="dd/mm/yyyy"/></Style>
-  <Style ss:ID="s12"><Font ss:Size="11" ss:Name="Calibri"/><Interior ss:Color="#F3F0EA" ss:Pattern="Solid"/><Alignment ss:Vertical="Center"/></Style>
-  <Style ss:ID="s13"><Font ss:Size="11" ss:Name="Calibri"/><Interior ss:Color="#F3F0EA" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="0"/></Style>
-  <Style ss:ID="s14"><Font ss:Size="11" ss:Name="Calibri"/><Interior ss:Color="#F3F0EA" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="0.00"/></Style>
-  <Style ss:ID="s15"><Font ss:Size="11" ss:Name="Calibri"/><Interior ss:Color="#F3F0EA" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="#,##0.00 &quot;€&quot;"/></Style>
-  <Style ss:ID="s16"><Font ss:Size="11" ss:Name="Calibri"/><Interior ss:Color="#F3F0EA" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><NumberFormat ss:Format="dd/mm/yyyy"/></Style>
- </Styles>
- <Worksheet ss:Name="${escXml(filename.slice(0,31))}">
-  <Table>${colWidths}${rowsXml}</Table>
-  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <FreezePanes/><FrozenNoSplit/>
-   <SplitHorizontal>1</SplitHorizontal>
-   <TopRowBottomPane>1</TopRowBottomPane>
-  </WorksheetOptions>
- </Worksheet>
-</Workbook>`;
-
-  // Use .xls extension — Excel opens SpreadsheetML with this extension without issues
-  const blob = new Blob(['\uFEFF'+xml], {type:'text/html;charset=utf-8'});
+  const blob = new Blob(['\uFEFF'+html], {type:'application/vnd.ms-excel;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
+  const dateStr = now.toISOString().slice(0,10);
   a.href = url;
-  a.download = filename + '_' + now.toISOString().slice(0,10) + '.xlsx.html';
+  a.download = filename + '_' + dateStr + '.xlsx.html';
   document.body.appendChild(a); a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  toast('Exportado: ' + filename + '.xlsx.html');
+  toast('Exportado: ' + filename + '_' + dateStr + '.xlsx.html');
 }
 
 // ── INIT ─────────────────────────────────────────────
