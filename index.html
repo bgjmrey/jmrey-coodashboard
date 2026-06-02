@@ -940,8 +940,8 @@ function drillKPIExact(tipo, campo, scope){
   const proyFilt = window._kpiProyecto || null;
   delete window._kpiProyecto;
 
-  const iniStr = rng.ini.toISOString().slice(0,10);
-  const finStr = rng.fin.toISOString().slice(0,10);
+  const iniStr = dateToStr(rng.ini);
+  const finStr = dateToStr(rng.fin);
 
   const labels = {
     h_tec:'H.Técnicas', h_prod:'H.Producción', h_gest:'H.Gestión',
@@ -1122,6 +1122,11 @@ function mesRange(year,month){
   const ini = month===1 ? new Date(year-1,11,27) : new Date(year,month-2,27);
   const fin = new Date(year,month-1,26,23,59,59);
   return {ini,fin};
+}
+function dateToStr(d){
+  // Format date as YYYY-MM-DD using LOCAL time (not UTC) to avoid timezone shift
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+dd;
 }
 function acumRange(year,month){
   return {ini:new Date(year-1,11,27), fin:new Date(year,month-1,26,23,59,59)};
