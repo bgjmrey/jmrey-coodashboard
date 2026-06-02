@@ -1974,9 +1974,10 @@ function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;
 const _tecExpanded = new Set();  // consumos
 const _tecExpandedV = new Set(); // ventas
 
-function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId){
+function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId, tipo){
   tbId = tbId || 'tbody-tec'; tfId = tfId || 'tfoot-tec';
-  svcsC = svcsC || window._lastSvcsC || [];
+  tipo = tipo || 'consumos';
+  svcsC = svcsC || (tipo==='ventas' ? window._lastSvcsV : window._lastSvcsC) || [];
   const tb = document.getElementById(tbId);
   const tf = document.getElementById(tfId);
   if(!tb||!tf) return;
