@@ -1575,6 +1575,7 @@ function saveSvc(){
     hl_acept:document.getElementById('s-hl-acept').value.trim(),
     hl_entrega:document.getElementById('s-hl-entrega').value.trim(),
     hl_contacto:r0?.hl_contacto||'', hl_tecnico:r0?.hl_tecnico||'', hl_estado:r0?.hl_estado||'',
+    row_id:r0?.row_id||null,
   };
   if(!o.titulo){toast('El título es obligatorio','err');return;}
   const _newSvc=editSvc===null;
