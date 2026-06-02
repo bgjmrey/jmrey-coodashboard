@@ -2170,33 +2170,90 @@ function sendKpiEmail(){
 }
 
 
-// ── EXPORTAR TABLA A EXCEL (TSV) ─────────────────────
+// ── EXPORTAR TABLA A EXCEL (HTML formateado) ────────
 function exportTableXLS(tableId, filename){
   const table = document.getElementById(tableId);
   if(!table){ toast('Tabla no encontrada'); return; }
-  const rows = [];
-  // Cabeceras (fila hdr-row, excluir última columna de acciones)
+
+  // Recoger cabeceras (excluir col acciones)
   const hdrRow = table.querySelector('.hdr-row');
-  if(hdrRow){
-    const headers = Array.from(hdrRow.querySelectorAll('th'))
-      .map(th=>(th.innerText||th.textContent||'').replace(/\s+/g,' ').trim());
-    // Quitar última columna si es "Acc." o está vacía
-    const last = headers[headers.length-1];
-    if(!last || last==='Acc.' || last==='Acc') headers.pop();
-    rows.push(headers.join('	'));
-  }
-  // Filas de datos (tbody, excluir última celda de acciones)
+  const headers = hdrRow ? Array.from(hdrRow.querySelectorAll('th'))
+    .filter(th=>!th.classList.contains('ac-col'))
+    .map(th=>(th.innerText||th.textContent||'').replace(/\s+/g,' ').trim()) : [];
+
+  // Recoger filas de datos
+  const dataRows = [];
   table.querySelectorAll('tbody tr').forEach(tr=>{
-    if(tr.querySelector('.ec')) return; // skip empty-state rows
-    const cells = Array.from(tr.cells);
-    const vals = cells.map(td=>{
-      // Usar texto visible, limpiar espacios y tabulaciones
-      return (td.innerText||td.textContent||'').replace(/\s+/g,' ').replace(/	/g,' ').trim();
-    });
-    rows.push(vals.join('	'));
+    if(tr.querySelector('.ec')) return;
+    const cells = Array.from(tr.cells).filter(td=>!td.classList.contains('c')||!td.querySelector('button:only-child'));
+    // Excluir última celda si solo tiene botones de acción
+    const lastCell = cells[cells.length-1];
+    const isActionCell = lastCell && Array.from(lastCell.querySelectorAll('*')).every(el=>el.tagName==='BUTTON'||el.tagName==='SPAN');
+    const useCells = isActionCell ? cells.slice(0,-1) : cells;
+    dataRows.push(useCells.map(td=>{
+      // Detectar hipervínculos
+      const a = td.querySelector('a.hl');
+      const txt = (td.innerText||td.textContent||'').replace(/\s+/g,' ').trim();
+      return { text: txt, href: a ? a.href : null };
+    }));
   });
-  const tsv = '\uFEFF' + rows.join('\n'); // BOM para Excel UTF-8
-  const blob = new Blob([tsv], {type:'text/tab-separated-values;charset=utf-8'});
+
+  // Construir HTML con estilos JMREY
+  const colCount = Math.max(headers.length, dataRows[0]?.length||0);
+  let tableHTML = '<table style="border-collapse:collapse;width:100%;font-family:Manrope,system-ui,sans-serif;font-size:12px;">';
+
+  // Cabecera
+  tableHTML += '<thead><tr style="background:#0E1F3D;">';
+  headers.forEach(h=>{
+    tableHTML += '<th style="padding:7px 10px;font-size:11px;font-weight:700;text-transform:uppercase;'
+      + 'letter-spacing:.08em;color:#B6884A;text-align:left;white-space:nowrap;border:none;">'
+      + h + '</th>';
+  });
+  tableHTML += '</tr></thead>';
+
+  // Body
+  tableHTML += '<tbody>';
+  dataRows.forEach((row,ri)=>{
+    const bg = ri%2===0 ? '#F3F0EA' : '#FAF7F2';
+    tableHTML += '<tr style="background:' + bg + ';border-bottom:1px solid #E2D9C6;">';
+    row.forEach(cell=>{
+      const isNum = /^[\d.,\-\s%€]+$/.test(cell.text) && cell.text.length > 0;
+      const align = isNum ? 'right' : 'left';
+      tableHTML += '<td style="padding:6px 10px;color:#14171C;text-align:' + align + ';vertical-align:middle;">';
+      if(cell.href && cell.href !== 'javascript:void(0)' && cell.href !== window.location.href){
+        tableHTML += '<a href="' + cell.href + '" style="color:#B6884A;text-decoration:none;">'
+          + (cell.text||'🔗') + '</a>';
+      } else {
+        tableHTML += cell.text;
+      }
+      tableHTML += '</td>';
+    });
+    tableHTML += '</tr>';
+  });
+  tableHTML += '</tbody></table>';
+
+  // Documento HTML completo con estilos JMREY
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    + '<link rel="preconnect" href="https://fonts.googleapis.com">'
+    + '<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">'
+    + '<title>' + filename + '</title>'
+    + '<style>'
+    + 'body{background:#F3F0EA;font-family:Manrope,system-ui,sans-serif;margin:0;padding:20px;color:#14171C;}'
+    + 'h1{font-family:Georgia,serif;font-size:22px;font-weight:500;color:#0E1F3D;margin:0 0 4px;}'
+    + '.eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#B6884A;margin-bottom:16px;}'
+    + '.rule{width:48px;height:2px;background:#B6884A;margin-bottom:20px;}'
+    + '.meta{font-size:12px;color:#7A7669;margin-bottom:20px;}'
+    + 'table{box-shadow:0 2px 6px rgba(20,23,28,.05);border-radius:8px;overflow:hidden;}'
+    + '</style>'
+    + '</head><body>'
+    + '<div class="eyebrow">JMREY · Cuadro de Mando BC</div>'
+    + '<h1>' + filename.charAt(0).toUpperCase() + filename.slice(1) + '</h1>'
+    + '<div class="rule"></div>'
+    + '<div class="meta">Exportado: ' + new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}) + ' · ' + dataRows.length + ' registros</div>'
+    + tableHTML
+    + '</body></html>';
+
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
