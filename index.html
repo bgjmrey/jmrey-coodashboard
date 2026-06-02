@@ -2165,15 +2165,19 @@ function sendKpiEmail(){
     + year + ' ' + month + ' ' + monthName + ' ' + day
     + (isCierre ? ' (CIERRE)' : '');
 
-  // Extraer valores de los KPI cards para el cuerpo del email
-  const lines = ['Hola, te envío los KPIs de esta semana.', ''];
-  const title = document.getElementById('kpi-title');
-  if(title) lines.push('Período: ' + title.textContent.trim(), '');
+  // Recoger datos de los KPI cards
+  const title = (document.getElementById('kpi-title')?.textContent||'').trim();
+  const lines = ['Hola, te envío los KPIs de esta semana.', '', 'Período: ' + title, ''];
+
   document.querySelectorAll('#kpi-cards .sc').forEach(sc => {
-    const lbl = (sc.querySelector('.sc-lbl')?.textContent || '').trim();
-    const val = (sc.querySelector('.sc-val')?.textContent || '').trim();
-    if(lbl && val) lines.push(lbl + ': ' + val);
+    const lbl = (sc.querySelector('.sc-lbl')?.textContent||'').trim();
+    const val = (sc.querySelector('.sc-val')?.textContent||'').trim();
+    const sub = (sc.querySelector('.sc-sub')?.textContent||'').trim();
+    if(lbl && val){
+      lines.push(lbl + ': ' + val + (sub ? ' (' + sub + ')' : ''));
+    }
   });
+
   lines.push('', 'Un saludo.');
 
   window.location.href = 'mailto:?subject=' + encodeURIComponent(subjectTxt)
