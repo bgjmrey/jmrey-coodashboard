@@ -2017,9 +2017,9 @@ function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId, tipo){
     // Group header row
     html += `<tr class="tp-hdr${isExp?'':' collapsed'}" data-tec="${tec.replace(/"/g,'&quot;')}" data-tipo="${tipo||'consumos'}" onclick="toggleTec(this.dataset.tec,this.dataset.tipo)">
       <td>${shortMail(tec)}</td>
-      <td class="num">${fmt(row.h_prod)}</td>
-      <td class="num">${fmt(row.h_tec)}</td>
-      <td class="num">${fmt(row.h_gest)}</td>
+      <td class="num"><span class="drill" onclick="event.stopPropagation();drillKPIExactTec('${tec.replace(/'/g,"\'")}','h_prod','${tipo||'consumos'}')" title="Ver servicios">${fmt(row.h_prod)}</span></td>
+      <td class="num"><span class="drill" onclick="event.stopPropagation();drillKPIExactTec('${tec.replace(/'/g,"\'")}','h_tec','${tipo||'consumos'}')" title="Ver servicios">${fmt(row.h_tec)}</span></td>
+      <td class="num"><span class="drill" onclick="event.stopPropagation();drillKPIExactTec('${tec.replace(/'/g,"\'")}','h_gest','${tipo||'consumos'}')" title="Ver servicios">${fmt(row.h_gest)}</span></td>
     </tr>`;
     if(isExp){
       // Child rows: services assigned to this technician in current period
