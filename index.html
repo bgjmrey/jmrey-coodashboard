@@ -675,27 +675,47 @@ const E_COL = {entregado:'b-green',aceptado:'b-blue',enDesarrollo:'b-blue',acept
 // ── MICROSOFT AUTH (MSAL) ────────────────────────────
 var _msalApp = null;
 
-// ── LISTA DE USUARIOS AUTORIZADOS ────────────────────
-// Añade o elimina emails según necesites
-var ALLOWED_USERS = [
-  'bg@jmrey.com',
-  // Añade aquí más emails: 'usuario@jmrey.com',
-];
-
+// ── CONTROL DE ACCESO VIA SUPABASE (tabla users) ─────
 function showApp(account){
   var email = (account.username || '').toLowerCase().trim();
-  var allowed = ALLOWED_USERS.map(function(e){ return e.toLowerCase().trim(); });
-  if(allowed.length > 0 && allowed.indexOf(email) === -1){
-    // Usuario autenticado pero no autorizado
-    document.getElementById('login-overlay').style.display = 'flex';
-    document.getElementById('app-content').style.display = 'none';
-    showLoginError('Acceso denegado. El usuario ' + email + ' no tiene permisos para acceder a esta aplicación.');
-    // Force logout to clear the session
-    if(_msalApp){
-      _msalApp.logoutPopup({account: account, postLogoutRedirectUri: 'https://bgjmrey.github.io/jmrey-coodashboard/'}).catch(function(){});
-    }
+
+  // Consultar tabla users en Supabase
+  var sb = getSB();
+  if(!sb){
+    // Sin Supabase: denegar por seguridad
+    _denyAccess(account, email, 'No se pudo verificar el acceso. Inténtalo de nuevo.');
     return;
   }
+
+  sb.from('users').select('email').eq('email', email).maybeSingle()
+    .then(function(res){
+      if(res.error){
+        _denyAccess(account, email, 'Error al verificar acceso: ' + (res.error.message||res.error.code));
+        return;
+      }
+      if(!res.data){
+        // Usuario no encontrado en la tabla
+        _denyAccess(account, email, 'El usuario ' + email + ' no tiene permiso para acceder a esta aplicación.');
+        return;
+      }
+      // Usuario autorizado
+      _grantAccess(account);
+    })
+    .catch(function(e){
+      _denyAccess(account, email, 'Error de conexión: ' + (e.message||e));
+    });
+}
+
+function _denyAccess(account, email, msg){
+  document.getElementById('login-overlay').style.display = 'flex';
+  document.getElementById('app-content').style.display = 'none';
+  showLoginError(msg);
+  if(_msalApp){
+    _msalApp.logoutPopup({account: account, postLogoutRedirectUri: 'https://bgjmrey.github.io/jmrey-coodashboard/'}).catch(function(){});
+  }
+}
+
+function _grantAccess(account){
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
   document.querySelector('.hdr-meta strong').textContent = account.name || account.username;
