@@ -1966,7 +1966,8 @@ function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;
 
 
 // ── TÉCNICO PIVOT (expandible) ────────────────────────
-const _tecExpanded = new Set(); // técnicos expandidos
+const _tecExpanded = new Set();  // consumos
+const _tecExpandedV = new Set(); // ventas
 
 function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId){
   tbId = tbId || 'tbody-tec'; tfId = tfId || 'tfoot-tec';
@@ -1979,9 +1980,10 @@ function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId){
   let html = '';
   tecPivot.forEach(row=>{
     const tec = row.tecnico_asignado;
-    const isExp = _tecExpanded.has(tec);
+    const expSet = (tipo==='ventas') ? _tecExpandedV : _tecExpanded;
+    const isExp = expSet.has(tec);
     // Group header row
-    html += `<tr class="tp-hdr${isExp?'':' collapsed'}" onclick="toggleTec('${tec.replace(/'/g,"\'")}')">
+    html += `<tr class="tp-hdr${isExp?'':' collapsed'}" data-tec="${tec.replace(/"/g,'&quot;')}" data-tipo="${tipo||'consumos'}" onclick="toggleTec(this.dataset.tec,this.dataset.tipo)">
       <td>${shortMail(tec)}</td>
       <td class="num">${fmt(row.h_prod)}</td>
       <td class="num">${fmt(row.h_tec)}</td>
@@ -2004,13 +2006,16 @@ function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId){
   tf.innerHTML = `<tr><td>Total</td><td class="num">${fmt(tTotP)}</td><td class="num">${fmt(tTotT)}</td><td class="num">${fmt(tTotG)}</td></tr>`;
 }
 
-function toggleTec(tec){
-  if(_tecExpanded.has(tec)) _tecExpanded.delete(tec);
-  else _tecExpanded.add(tec);
-  // Re-render only the pivot without full KPI recalc
+function toggleTec(tec, tipo){
+  const expSet = (tipo==='ventas') ? _tecExpandedV : _tecExpanded;
+  if(expSet.has(tec)) expSet.delete(tec);
+  else expSet.add(tec);
   const tp = calcTecPivot(window._lastSvcsC||[]);
   const tP=tp.reduce((a,r)=>a+r.h_prod,0), tT=tp.reduce((a,r)=>a+r.h_tec,0), tG=tp.reduce((a,r)=>a+r.h_gest,0);
-  renderTecPivot(tp, window._lastSvcsC||[], tP, tT, tG);
+  renderTecPivot(tp, window._lastSvcsC||[], tP, tT, tG, 'tbody-tec', 'tfoot-tec', 'consumos');
+  const tpV = calcTecPivot(window._lastSvcsV||[]);
+  const vP=tpV.reduce((a,r)=>a+r.h_prod,0), vT=tpV.reduce((a,r)=>a+r.h_tec,0), vG=tpV.reduce((a,r)=>a+r.h_gest,0);
+  renderTecPivot(tpV, window._lastSvcsV||[], vP, vT, vG, 'tbody-tec-v', 'tfoot-tec-v', 'ventas');
 }
 
 // ── COLUMN RESIZE (mouse + touch) ─────────────────────
@@ -2166,40 +2171,16 @@ function sendKpiEmail(){
     + (isCierre ? ' (CIERRE)' : '');
 
   const title = (document.getElementById('kpi-title')?.textContent||'').trim();
-
-  // Construir HTML de los KPI cards con estilos inline para email
-  let cardsHtml = '';
+  const lines = ['Hola, te envío los KPIs de esta semana.', '', 'Período: ' + title, ''];
   document.querySelectorAll('#kpi-cards .sc').forEach(sc => {
     const lbl = (sc.querySelector('.sc-lbl')?.textContent||'').trim();
     const val = (sc.querySelector('.sc-val')?.textContent||'').trim();
-    const sub = (sc.querySelector('.sc-sub')?.textContent||'').trim();
-    if(!lbl||!val) return;
-    cardsHtml += '<td style="background:#FFFFFF;border:1px solid #E2D9C6;border-radius:8px;'
-      + 'padding:16px 20px;min-width:160px;text-align:center;vertical-align:top;">'
-      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;'
-      + 'color:#7A7669;margin-bottom:6px;">' + lbl + '</div>'
-      + '<div style="font-size:28px;font-weight:500;color:#0E1F3D;font-family:Georgia,serif;line-height:1;">' + val + '</div>'
-      + (sub ? '<div style="font-size:12px;color:#5A5A5A;margin-top:4px;">' + sub + '</div>' : '')
-      + '</td>';
+    if(lbl && val) lines.push(lbl + ': ' + val);
   });
+  lines.push('', 'Un saludo.');
 
-  const bodyHtml = '<div style="font-family:Calibri,Arial,sans-serif;background:#F3F0EA;padding:24px;">'
-    + '<div style="background:#0E1F3D;padding:12px 20px;margin-bottom:20px;border-radius:6px;">'
-    + '<span style="font-family:Georgia,serif;font-size:22px;color:#F4ECE0;font-weight:600;">JM<span style="color:#B6884A;">REY</span></span>'
-    + '<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#B6884A;margin-left:12px;">Cuadro de Mando · Dpto. BC</span>'
-    + '</div>'
-    + '<p style="font-size:14px;color:#14171C;margin-bottom:16px;">Hola, te envío los KPIs de esta semana.</p>'
-    + '<p style="font-size:13px;font-weight:700;color:#B6884A;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">Período: ' + title + '</p>'
-    + '<table cellspacing="8" cellpadding="0" style="border-collapse:separate;border-spacing:8px;"><tr>' + cardsHtml + '</tr></table>'
-    + '<p style="font-size:14px;color:#14171C;margin-top:20px;">Un saludo.</p>'
-    + '</div>';
-
-  // Outlook Web compose URL — body param accepts HTML
-  const owUrl = 'https://outlook.office.com/mail/deeplink/compose'
-    + '?subject=' + encodeURIComponent(subj)
-    + '&body=' + encodeURIComponent(bodyHtml);
-
-  window.open(owUrl, '_blank');
+  window.location.href = 'mailto:?subject=' + encodeURIComponent(subj)
+    + '&body=' + encodeURIComponent(lines.join('\n'));
 }
 
 
