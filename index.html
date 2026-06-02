@@ -836,15 +836,22 @@ async function sbDel(table, row){
 }
 
 // ── ss: localStorage + Supabase individual ──────────────
-// ss(k, arr)                   → solo localStorage (legacy)
-// ss(k, arr, row, 'insert')    → localStorage + INSERT
-// ss(k, arr, row, 'update')    → localStorage + UPDATE
-// ss(k, arr, row, 'delete')    → localStorage + DELETE
 function ss(k, arr, row, op){
   ssLocal(k, arr);
   const tbl=SB_TBL[k]; if(!tbl||!row||!op) return;
-  if(op==='insert') sbInsert(tbl, row);
-  else if(op==='update') sbUpdate(tbl, row);
+  if(op==='insert'){
+    // Si ya tiene row_id significa que existe en Supabase: hacer UPDATE no INSERT
+    if(tbl==='servicios' && row.row_id){
+      sbUpdate(tbl, row);
+    } else {
+      sbInsert(tbl, row);
+    }
+  }
+  else if(op==='update'){
+    // Registros sin row_id son del seed/local: no tocar Supabase
+    if(tbl==='servicios' && !row.row_id) return;
+    sbUpdate(tbl, row);
+  }
   else if(op==='delete') sbDel(tbl, row);
 }
 
@@ -1574,8 +1581,6 @@ function saveSvc(){
   const _newSvc=editSvc===null;
   if(!_newSvc) DB.servicios[editSvc]=o; else DB.servicios.push(o);
   const _svcOp = _newSvc ? 'insert' : 'update';
-  // Log para depurar cambio de ID
-  if(!_newSvc) console.log('[saveSvc] update, id='+o.id+', row_id='+o.row_id+', op='+_svcOp);
   ss('svc',DB.servicios,o,_svcOp);
   closeMod('svc'); renderSvc(); renderKPI();
   toast(_newSvc?'Servicio creado':'Servicio actualizado');
