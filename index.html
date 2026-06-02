@@ -799,25 +799,24 @@ async function sbInsert(table, row){
 }
 async function sbUpdate(table, row){
   const sb=getSB(); if(!sb) return;
-  // Solo actualizar si el registro tiene row_id (vino de Supabase)
-  // Registros sin row_id son del seed/local y no deben modificarse en Supabase
-  if(!row.row_id){
-    // Para tablas sin row_id (val, cli, tec) usar business keys
-    const bk = SB_BK[table] || [];
-    if(bk.length === 0) return;
-    const allOk = bk.every(k=>row[k]!=null&&row[k]!=='');
-    if(!allOk){ console.warn('sbUpdate: sin row_id ni BK para', table); return; }
-    const r=Object.assign({},row); delete r.row_id;
-    let q=sb.from(table).update(r);
-    bk.forEach(k=>{ q=q.eq(k,row[k]); });
-    const {error}=await q;
+  const r=Object.assign({},row); delete r.row_id;
+
+  if(row.row_id){
+    // Caso normal: registro cargado desde Supabase, tiene row_id
+    const {error}=await sb.from(table).update(r).eq('row_id',row.row_id);
     if(error){ console.error('sbUpdate',table,JSON.stringify(error)); toast('Error al actualizar: '+(error.message||error.code||JSON.stringify(error))); }
     return;
   }
-  const r=Object.assign({},row); delete r.row_id;
-  const {error}=await sb.from(table).update(r).eq('row_id',row.row_id);
+
+  // Sin row_id: usar business keys para el WHERE
+  const bk = SB_BK[table] || [];
+  if(bk.length === 0){ console.warn('sbUpdate: sin row_id ni BK para', table); return; }
+  const allOk = bk.every(k=>row[k]!=null&&row[k]!=='');
+  if(!allOk){ console.warn('sbUpdate: BK incompleta para', table, row); return; }
+  let q=sb.from(table).update(r);
+  bk.forEach(k=>{ q=q.eq(k,row[k]); });
+  const {error}=await q;
   if(error){ console.error('sbUpdate',table,JSON.stringify(error)); toast('Error al actualizar: '+(error.message||error.code||JSON.stringify(error))); }
-  else { console.log('[sbUpdate] OK',table); }
 }
 async function sbDel(table, row){
   const sb=getSB(); if(!sb) return;
@@ -848,8 +847,8 @@ function ss(k, arr, row, op){
     }
   }
   else if(op==='update'){
-    // Registros sin row_id son del seed/local: no tocar Supabase
-    if(tbl==='servicios' && !row.row_id) return;
+    // Con row_id: UPDATE directo y seguro
+    // Sin row_id: intentar UPDATE por business key (pueden ser registros del seed ya en Supabase)
     sbUpdate(tbl, row);
   }
   else if(op==='delete') sbDel(tbl, row);
