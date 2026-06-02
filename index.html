@@ -1574,6 +1574,8 @@ function saveSvc(){
   const _newSvc=editSvc===null;
   if(!_newSvc) DB.servicios[editSvc]=o; else DB.servicios.push(o);
   const _svcOp = _newSvc ? 'insert' : 'update';
+  // Log para depurar cambio de ID
+  if(!_newSvc) console.log('[saveSvc] update, id='+o.id+', row_id='+o.row_id+', op='+_svcOp);
   ss('svc',DB.servicios,o,_svcOp);
   closeMod('svc'); renderSvc(); renderKPI();
   toast(_newSvc?'Servicio creado':'Servicio actualizado');
