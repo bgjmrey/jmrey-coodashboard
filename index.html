@@ -1228,36 +1228,41 @@ function renderKPI(){
   const pctC = Math.min(100,objC>0?(dirC.consumo.h_total/objC)*100:0);
 
   document.getElementById('kpi-cards').innerHTML=`
-    <div class="sc anim">
-      <div class="sc-lbl">Horas vendidas Director</div>
-      <div class="sc-val num drill" onclick="drillKPIExact('ventas','h_tec','bg')" title="Ver líneas de H.Téc. Director vendidas">${fmt(dirV.ventas.h_tec,2)}</div>
-      <div class="sc-sub"><span class="drill" onclick="drillKPIExact('ventas','imp_tec','bg')" title="Ver líneas de importe vendido">${fmtE(dirV.ventas.imp_tec)}</span></div>
-      <div class="sc-prog"><div class="pr">
-        <span class="pr-l">Obj.</span><span class="pr-v num">${fmt(objV,0)} h</span>
-        <div class="pr-t"><div class="pr-f" style="width:${pctV}%"></div></div>
-        <span class="pr-p">${fmt(pctV,0)}%</span>
-      </div></div>
+    <div class="sg-col">
+      <div class="sc anim">
+        <div class="sc-lbl">Horas vendidas Director</div>
+        <div class="sc-val num drill" onclick="drillKPIExact('ventas','h_tec','bg')" title="Ver líneas de H.Téc. Director vendidas">${fmt(dirV.ventas.h_tec,2)}</div>
+        <div class="sc-sub"><span class="drill" onclick="drillKPIExact('ventas','imp_tec','bg')" title="Ver líneas de importe vendido">${fmtE(dirV.ventas.imp_tec)}</span></div>
+        <div class="sc-prog"><div class="pr">
+          <span class="pr-l">Obj.</span><span class="pr-v num">${fmt(objV,0)} h</span>
+          <div class="pr-t"><div class="pr-f" style="width:${pctV}%"></div></div>
+          <span class="pr-p">${fmt(pctV,0)}%</span>
+        </div></div>
+      </div>
+      <div class="sc anim" style="animation-delay:100ms">
+        <div class="sc-lbl">H. Producción Ventas</div>
+        <div class="sc-val num drill" onclick="drillKPIExact('ventas','h_prod','all')" title="Ver todas las líneas de ventas">${fmt(vTot.h_prod,2)}</div>
+        <div class="sc-sub">H.Téc. total: <span class="drill" onclick="drillKPIExact('ventas','h_tec','all')" title="Ver líneas H.Téc. ventas">${fmt(vTot.h_tec,2)}</span></div>
+      </div>
     </div>
-    <div class="sc anim" style="animation-delay:50ms">
-      <div class="sc-lbl">Horas consumidas Director</div>
-      <div class="sc-val num drill" onclick="drillKPIExact('consumos','h_total','director')" title="Ver líneas de H.Total consumidas Director">${fmt(dirC.consumo.h_total,2)}</div>
-      <div class="sc-sub">Téc: <span class="drill" onclick="drillKPIExact('consumos','h_tec','bg')" title="Ver líneas H.Téc. Director">${fmt(dirC.consumo.h_tec,2)}</span> + Gest: <span class="drill" onclick="drillKPIExact('consumos','h_gest','any')" title="Ver líneas con H.Gestión">${fmt(dirC.consumo.h_gest,2)}</span> · <span class="drill" onclick="drillKPIExact('consumos','imp_total','director')" title="Ver importe consumido Director">${fmtE(dirC.consumo.imp_total)}</span></div>
-      <div class="sc-prog"><div class="pr">
-        <span class="pr-l">Obj.</span><span class="pr-v num">${fmt(objC,0)} h</span>
-        <div class="pr-t"><div class="pr-f" style="width:${pctC}%"></div></div>
-        <span class="pr-p">${fmt(pctC,0)}%</span>
-      </div></div>
-    </div>
-    <div class="sc anim" style="animation-delay:100ms">
-      <div class="sc-lbl">H. Producción Ventas</div>
-      <div class="sc-val num drill" onclick="drillKPIExact('ventas','h_prod','all')" title="Ver todas las líneas de ventas">${fmt(vTot.h_prod,2)}</div>
-      <div class="sc-sub">H.Téc. total: <span class="drill" onclick="drillKPIExact('ventas','h_tec','all')" title="Ver líneas H.Téc. ventas">${fmt(vTot.h_tec,2)}</span></div>
-    </div>
-    <div class="sc anim" style="animation-delay:150ms">
-      <div class="sc-lbl">H. Producción Consumos</div>
-      <div class="sc-val num drill" onclick="drillKPIExact('consumos','h_prod','all')" title="Ver todas las líneas de consumos">${fmt(cTot.h_prod,2)}</div>
-      <div class="sc-sub">H.Téc. total: <span class="drill" onclick="drillKPIExact('consumos','h_tec','all')" title="Ver líneas H.Téc. consumos">${fmt(cTot.h_tec,2)}</span></div>
+    <div class="sg-col">
+      <div class="sc anim" style="animation-delay:50ms">
+        <div class="sc-lbl">Horas consumidas Director</div>
+        <div class="sc-val num drill" onclick="drillKPIExact('consumos','h_total','director')" title="Ver líneas de H.Total consumidas Director">${fmt(dirC.consumo.h_total,2)}</div>
+        <div class="sc-sub">Téc: <span class="drill" onclick="drillKPIExact('consumos','h_tec','bg')" title="Ver líneas H.Téc. Director">${fmt(dirC.consumo.h_tec,2)}</span> + Gest: <span class="drill" onclick="drillKPIExact('consumos','h_gest','any')" title="Ver líneas con H.Gestión">${fmt(dirC.consumo.h_gest,2)}</span> · <span class="drill" onclick="drillKPIExact('consumos','imp_total','director')" title="Ver importe consumido Director">${fmtE(dirC.consumo.imp_total)}</span></div>
+        <div class="sc-prog"><div class="pr">
+          <span class="pr-l">Obj.</span><span class="pr-v num">${fmt(objC,0)} h</span>
+          <div class="pr-t"><div class="pr-f" style="width:${pctC}%"></div></div>
+          <span class="pr-p">${fmt(pctC,0)}%</span>
+        </div></div>
+      </div>
+      <div class="sc anim" style="animation-delay:150ms">
+        <div class="sc-lbl">H. Producción Consumos</div>
+        <div class="sc-val num drill" onclick="drillKPIExact('consumos','h_prod','all')" title="Ver todas las líneas de consumos">${fmt(cTot.h_prod,2)}</div>
+        <div class="sc-sub">H.Téc. total: <span class="drill" onclick="drillKPIExact('consumos','h_tec','all')" title="Ver líneas H.Téc. consumos">${fmt(cTot.h_tec,2)}</span></div>
+      </div>
     </div>`;
+
 
   fillKT('tbody-v','tfoot-v',vRows,['h_prod','h_gest','h_tec','h_partner','imp_tec'],vTot);
 
