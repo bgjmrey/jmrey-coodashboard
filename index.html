@@ -2322,11 +2322,11 @@ function exportTableXLS(tableId, filename){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = filename + '_' + now.toISOString().slice(0,10) + '.xls';
+  a.download = filename + '_' + now.toISOString().slice(0,10) + '.xlsx.html';
   document.body.appendChild(a); a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  toast('Exportado: ' + filename + '_' + now.toISOString().slice(0,10) + '.xls');
+  toast('Exportado: ' + filename + '.xlsx.html');
 }
 
 // ── INIT ─────────────────────────────────────────────
