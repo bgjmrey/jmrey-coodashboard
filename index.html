@@ -2318,7 +2318,7 @@ function exportTableXLS(tableId, filename){
 </Workbook>`;
 
   // Use .xls extension — Excel opens SpreadsheetML with this extension without issues
-  const blob = new Blob(['\uFEFF'+xml], {type:'application/vnd.ms-excel'});
+  const blob = new Blob(['\uFEFF'+xml], {type:'text/html;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
