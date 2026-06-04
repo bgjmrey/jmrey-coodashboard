@@ -416,7 +416,7 @@ table.rt tbody td.c{text-align:center;}
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- PESTAÑA: KPIs                                              -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<section id="sec-kpis" class="sec active" style="max-width:100%;padding-left:var(--sp-4);padding-right:var(--sp-4);">
+<section id="sec-kpis" class="sec active">
 
   <!-- FILTROS -->
   <div class="fbar">
@@ -462,7 +462,7 @@ table.rt tbody td.c{text-align:center;}
 
       <!-- Pivot 1: Cliente > Fecha > Concepto -->
       <div class="kc" style="margin-bottom:var(--sp-4);">
-        <div class="kc-hd"><div><div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="kc-t">Por Cliente &amp; Fecha</div><button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="toggleExpandAll(["'p1'","'_licExpanded'"],'tbody-nuevas-1')">⊞ Todo</button></div><div class="kc-s">Agrupado por cliente, fecha y concepto</div></div></div>
+        <div class="kc-hd"><div><div class="kc-t">Por Cliente &amp; Fecha</div><div class="kc-s">Agrupado por cliente, fecha y concepto</div></div></div>
         <div class="tw"><table class="kt">
           <thead><tr><th>Cliente / Fecha / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
           <tbody id="tbody-nuevas-1"></tbody>
@@ -471,7 +471,7 @@ table.rt tbody td.c{text-align:center;}
 
       <!-- Pivot 2: Cliente > Línea > Concepto -->
       <div class="kc">
-        <div class="kc-hd"><div><div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="kc-t">Por Cliente &amp; Línea</div><button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="toggleExpandAll(["'p2'","'_licExpanded2'"],'tbody-nuevas-2')">⊞ Todo</button></div><div class="kc-s">Agrupado por cliente, línea y concepto</div></div></div>
+        <div class="kc-hd"><div><div class="kc-t">Por Cliente &amp; Línea</div><div class="kc-s">Agrupado por cliente, línea y concepto</div></div></div>
         <div class="tw"><table class="kt">
           <thead><tr><th>Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
           <tbody id="tbody-nuevas-2"></tbody>
@@ -496,7 +496,7 @@ table.rt tbody td.c{text-align:center;}
 
       <!-- Pivot: Cliente > Línea > Concepto -->
       <div class="kc">
-        <div class="kc-hd"><div><div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="kc-t">Por Cliente, Línea &amp; Concepto</div><button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="toggleExpandAll(["'coo'","'_acumExpanded'"],'tbody-acum-coo-pivot')">⊞ Todo</button></div></div></div>
+        <div class="kc-hd"><div><div class="kc-t">Por Cliente, Línea &amp; Concepto</div></div></div>
         <div class="tw"><table class="kt">
           <thead><tr><th>Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
           <tbody id="tbody-acum-coo-pivot"></tbody>
@@ -510,7 +510,7 @@ table.rt tbody td.c{text-align:center;}
     <div style="padding-left:var(--sp-5);">
       <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Licencias acumuladas Agente</div>
       <div class="kc">
-        <div class="kc-hd"><div><div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="kc-t">Por Agente, Cliente, Línea &amp; Concepto</div><button class="btn btn-s" style="font-size:11px;padding:3px 10px" onclick="toggleExpandAll(["'agt'","'_acumAgtExpanded'"],'tbody-acum-agt')">⊞ Todo</button></div></div></div>
+        <div class="kc-hd"><div><div class="kc-t">Por Agente, Cliente, Línea &amp; Concepto</div></div></div>
         <div class="tw"><table class="kt">
           <thead><tr><th>Agente / Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
           <tbody id="tbody-acum-agt"></tbody>
@@ -1536,50 +1536,81 @@ function renderLicKPI(){
   const year  = parseInt(document.getElementById('lic-kpi-year').value);
   const month = parseInt(document.getElementById('lic-kpi-month').value);
   const vista = getLicVista();
-  const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-  const rng   = licMesRange(year, month);
+  const MESES_ES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // Rango del período
+  const rng = licMesRange(year, month);
   const iniStr = licDateStr(rng.ini);
   const finStr = licDateStr(rng.fin);
 
-  // Acumulado: desde 27-dic del año anterior hasta el 26 del mes seleccionado
-  const acumIniStr = (year-1)+'-12-27';
+  // Filtrar licencias del período (por fecha_inicio)
+  // Para "mes": fecha_inicio dentro del rango 27ant→26act
+  // Para "acumulado": todas hasta el 26 del mes actual
+  let licMes, licAcum;
+  if(vista==='mes'){
+    licMes = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi >= iniStr && fi <= finStr;
+    });
+    licAcum = licMes;
+  } else {
+    // Acumulado: año en curso hasta el 26 del mes
+    const acumIni = (year-1)+'-12-27';
+    licMes = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi >= iniStr && fi <= finStr;
+    });
+    licAcum = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi <= finStr;
+    });
+  }
 
-  const licMes = DB.licencias.filter(r=>{
-    const fi=(r.fecha_inicio||'').substring(0,10);
-    return fi >= iniStr && fi <= finStr;
-  });
-
-  const licAcum = vista==='mes' ? licMes : DB.licencias.filter(r=>{
-    const fi=(r.fecha_inicio||'').substring(0,10);
-    return fi >= acumIniStr && fi <= finStr;
-  });
-
+  // Período label
   const lbl = vista==='mes'
-    ? '27 '+MESES_ES[month===1?12:month-1]+' \u2013 26 '+MESES_ES[month]+' '+year
+    ? '27 '+MESES_ES[month===1?12:month-1]+' – 26 '+MESES_ES[month]+' '+year
     : 'Acumulado '+MESES_ES[month]+' '+year;
   document.getElementById('lic-kpi-period').textContent = lbl;
 
-  // KPI cards — siempre muestran el período seleccionado (licAcum en acumulado)
-  const licKpi = licAcum;
-  let totPvp=0, totCoste=0, totMrg=0, totN=0;
-  licKpi.forEach(r=>{
-    const c=calcLicRowSimple(r);
-    totPvp   += isNaN(c.pvpTotal)   ? 0 : c.pvpTotal;
-    totCoste += isNaN(c.costeTotal) ? 0 : c.costeTotal;
-    totMrg   += isNaN(c.pvpTotal-c.costeTotal) ? 0 : (c.pvpTotal-c.costeTotal);
-    totN++;
-  });
+  // ── CALC totales ──
+  const today = new Date().toISOString().slice(0,10);
+  function calcLicRow(r){
+    const precio = lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
+    const pvpMes   = precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
+    const costeMes = precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
+    const cant=parseFloat(r.cantidad)||0, dias=parseFloat(r.dias_fact)||0;
+    let diasMes=30;
+    if(r.fecha_inicio){const d=new Date(r.fecha_inicio);diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();}
+    const pvp  =dias>0?pvpMes*dias/diasMes:pvpMes;
+    const coste=dias>0?costeMes*dias/diasMes:costeMes;
+    const agt  =lookupAgente(r.agente);
+    return {pvp, coste, cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
+            mrg:(pvp-coste), mrgTotal:(pvp-coste)*cant,
+            mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
+            mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant,
+            mrgAgente:(pvp-coste)*(agt.margen||0)*cant};
+  }
+
+  // KPI cards
+  const totMes  = licMes.reduce( (a,r)=>{const c=calcLicRow(r);return {pvp:a.pvp+c.pvpTotal,coste:a.costeTotal+c.costeTotal,mrg:a.mrg+c.mrgTotal,n:a.n+1};},{pvp:0,coste:0,mrg:0,n:0});
+  const totAcum = licAcum.reduce((a,r)=>{const c=calcLicRow(r);return {pvp:a.pvp+c.pvpTotal,coste:a.coste+c.costeTotal,mrg:a.mrg+c.mrgTotal,n:a.n+1};},{pvp:0,coste:0,mrg:0,n:0});
 
   document.getElementById('lic-kpi-cards').innerHTML =
-    kpiCard('Licencias período', totN+' uds', '', null) +
-    kpiCard('PVP período',   fmtE(totPvp),   '', null) +
-    kpiCard('Coste período', fmtE(totCoste), '', null) +
-    kpiCard('Margen período',fmtE(totMrg),   '', null);
+    kpiCard('Licencias período',totMes.n,'uds','#lic-kpi-title') +
+    kpiCard('PVP período',fmtE(totMes.pvp),'',null) +
+    kpiCard('Coste período',fmtE(totMes.coste),'',null) +
+    kpiCard('Margen período',fmtE(totMes.mrg),'',null);
 
+  // ── 3.1 NUEVAS LICENCIAS ──
   renderNuevasLicencias(licMes);
+  // ── 3.2 ACUMULADO COO ──
   renderAcumCOO(licAcum);
+  // ── 3.3 ACUMULADO AGENTE ──
   renderAcumAgente(licAcum);
 }
 
@@ -1763,9 +1794,7 @@ const _acumAgtExpanded = new Set();
 function renderAcumAgente(lics){
   const p={};
   lics.forEach(r=>{
-    const agtVal=r.agente||'-';
-    if(agtVal==='-'||agtVal==='') return; // excluir sin agente
-    const c=calcLicRowSimple(r), agt=agtVal, cli=r.cliente||'—', linea=r.linea_producto||'—';
+    const c=calcLicRowSimple(r), agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[agt]) p[agt]={cant:0,pvp:0,children:{}};
     p[agt].cant+=c.cant; p[agt].pvp+=c.pvpTotal;
     if(!p[agt].children[cli]) p[agt].children[cli]={cant:0,pvp:0,children:{}};
@@ -1825,33 +1854,6 @@ function buildPivotAgt(pivot){
 
 function toggleAcumAgt(key){
   if(_acumAgtExpanded.has(key)) _acumAgtExpanded.delete(key); else _acumAgtExpanded.add(key);
-  renderLicKPI();
-}
-
-function toggleExpandAll(prefixes, tbodyId){
-  // Check if all top-level items are expanded
-  const tbody = document.getElementById(tbodyId);
-  if(!tbody) return;
-  const allRows = Array.from(tbody.querySelectorAll('tr.tp-hdr'));
-  const topRows = allRows.filter(r=>!r.classList.contains('tp-l2')&&!r.classList.contains('tp-l3'));
-  const allExpanded = topRows.length>0 && topRows.every(r=>!r.classList.contains('collapsed'));
-
-  // Determine which sets to use based on tbody
-  const setMap = {
-    'tbody-nuevas-1':   [window._licExpanded,  window._licExpanded2][0],
-    'tbody-nuevas-2':   window._licExpanded2,
-    'tbody-acum-coo-pivot': window._acumExpanded,
-    'tbody-acum-agt':   window._acumAgtExpanded
-  };
-  const s = setMap[tbodyId];
-  if(!s) return;
-
-  if(allExpanded){
-    s.clear();
-  } else {
-    // Collect all possible keys from current rows
-    tbody.querySelectorAll('tr[data-key]').forEach(r=>{s.add(r.dataset.key);});
-  }
   renderLicKPI();
 }
 
@@ -2193,9 +2195,7 @@ function toggleAcumCOO(key){
 function renderAcumAgente(lics){
   const p={};
   lics.forEach(r=>{
-    const agtVal=r.agente||'-';
-    if(agtVal==='-'||agtVal==='') return; // excluir sin agente
-    const c=calcLicRowSimple(r), agt=agtVal, cli=r.cliente||'—', linea=r.linea_producto||'—';
+    const c=calcLicRowSimple(r), agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[agt]) p[agt]={cant:0,pvp:0,children:{}};
     p[agt].cant+=c.cant; p[agt].pvp+=c.pvpTotal;
     if(!p[agt].children[cli]) p[agt].children[cli]={cant:0,pvp:0,children:{}};
@@ -2255,33 +2255,6 @@ function buildPivotAgt(pivot){
 
 function toggleAcumAgt(key){
   if(_acumAgtExpanded.has(key)) _acumAgtExpanded.delete(key); else _acumAgtExpanded.add(key);
-  renderLicKPI();
-}
-
-function toggleExpandAll(prefixes, tbodyId){
-  // Check if all top-level items are expanded
-  const tbody = document.getElementById(tbodyId);
-  if(!tbody) return;
-  const allRows = Array.from(tbody.querySelectorAll('tr.tp-hdr'));
-  const topRows = allRows.filter(r=>!r.classList.contains('tp-l2')&&!r.classList.contains('tp-l3'));
-  const allExpanded = topRows.length>0 && topRows.every(r=>!r.classList.contains('collapsed'));
-
-  // Determine which sets to use based on tbody
-  const setMap = {
-    'tbody-nuevas-1':   [window._licExpanded,  window._licExpanded2][0],
-    'tbody-nuevas-2':   window._licExpanded2,
-    'tbody-acum-coo-pivot': window._acumExpanded,
-    'tbody-acum-agt':   window._acumAgtExpanded
-  };
-  const s = setMap[tbodyId];
-  if(!s) return;
-
-  if(allExpanded){
-    s.clear();
-  } else {
-    // Collect all possible keys from current rows
-    tbody.querySelectorAll('tr[data-key]').forEach(r=>{s.add(r.dataset.key);});
-  }
   renderLicKPI();
 }
 
