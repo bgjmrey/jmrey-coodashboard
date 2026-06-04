@@ -1348,7 +1348,12 @@ function clearPrecFilters(){ precFilters={}; document.getElementById('prec-filte
 // ── INIT ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', initMsalWhenReady);
 // ── INIT ─────────────────────────────────────────────
-(async function(){
+(async function initApp(){
+  // Wait for Supabase CDN to load (same pattern as COO)
+  if(!window.supabase || !window.supabase.createClient){
+    setTimeout(initApp, 300);
+    return;
+  }
   await hydrateDB();
   renderLic();
   renderPrec();
