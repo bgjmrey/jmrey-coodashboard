@@ -358,6 +358,20 @@ table.rt tbody td.c{text-align:center;}
 #sec-licencias,#sec-precios,#sec-agentes{max-width:100%;padding-left:var(--sp-4);padding-right:var(--sp-4);}
 .calc{background:var(--ivory-50);color:var(--fg-3);font-style:italic;}
 .pct{font-size:var(--fz-xs);color:var(--fg-3);}
+/* Modal */
+.mod-bg{display:none;position:fixed;inset:0;background:rgba(14,31,61,.45);z-index:200;align-items:flex-start;justify-content:center;padding:48px var(--g);overflow-y:auto;}
+.mod{background:var(--bg-card);border-radius:var(--r-lg);box-shadow:var(--sh-md);width:100%;}
+.mod-hd{background:var(--bg-dark);padding:var(--sp-4) var(--sp-5);display:flex;align-items:center;justify-content:space-between;border-radius:var(--r-lg) var(--r-lg) 0 0;}
+.mod-t{font-family:var(--ff-serif);font-size:var(--fz-h4);font-weight:500;color:var(--fg-d);}
+.mod-x{background:none;border:none;color:var(--fg-d2);font-size:18px;cursor:pointer;padding:0 4px;line-height:1;}
+.mod-x:hover{color:var(--fg-d);}
+.mod-bd{padding:var(--sp-5);}
+.mod-ft{padding:var(--sp-4) var(--sp-5);border-top:1px solid var(--border-s);display:flex;justify-content:flex-end;gap:var(--sp-3);}
+.fi{display:flex;flex-direction:column;gap:4px;}
+.fi label{font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);}
+.fi input,.fi select,.fi textarea{font-family:var(--ff-sans);font-size:var(--fz-sm);color:var(--fg-2);background:var(--bg-e);border:1px solid var(--border);border-radius:var(--r-md);padding:6px var(--sp-3);outline:none;width:100%;}
+.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--accent);}
+.fi textarea{min-height:80px;resize:vertical;}
 </style>
 <body>
 
@@ -393,13 +407,123 @@ table.rt tbody td.c{text-align:center;}
 </header>
 
 <nav class="nav">
-  <button class="nav-tab active" data-sec="licencias" onclick="navTo('licencias',this)">&#128273; Licencias</button>
+  <button class="nav-tab active" data-sec="kpis" onclick="navTo('kpis',this)">&#128202; KPIs</button>
+  <button class="nav-tab" data-sec="licencias" onclick="navTo('licencias',this)">&#128273; Licencias</button>
   <button class="nav-tab" data-sec="precios" onclick="navTo('precios',this)">&#128176; Precios Licencias</button>
   <button class="nav-tab" data-sec="agentes" onclick="navTo('agentes',this)">&#128101; % Agente</button>
 </nav>
 
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- PESTAÑA: KPIs                                              -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<section id="sec-kpis" class="sec active">
+
+  <!-- FILTROS -->
+  <div class="fbar">
+    <div class="fg">
+      <span class="fl">AÑO</span>
+      <select class="fsel" id="lic-kpi-year" onchange="renderLicKPI()" style="width:90px"></select>
+    </div>
+    <div class="fg">
+      <span class="fl">MES</span>
+      <select class="fsel" id="lic-kpi-month" onchange="renderLicKPI()" style="width:130px">
+        <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+        <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+        <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+        <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+      </select>
+    </div>
+    <div class="fg">
+      <span class="fl">VISTA</span>
+      <div style="display:flex;gap:0">
+        <button class="tog-btn on" id="lic-btn-mes"  onclick="setLicVista('mes')">Mes</button>
+        <button class="tog-btn"    id="lic-btn-acum" onclick="setLicVista('acum')">Acumulado</button>
+      </div>
+    </div>
+    <div class="fdiv"></div>
+    <div class="fg" style="justify-content:flex-end">
+      <button class="btn btn-s" onclick="sendLicKpiEmail()" style="white-space:nowrap">&#x2709;&#xFE0F; Enviar por email</button>
+    </div>
+  </div>
+
+  <!-- PERÍODO -->
+  <div class="seh-ey" style="margin-top:var(--sp-5)">Indicadores clave</div>
+  <h2 id="lic-kpi-period" class="seh-t" style="margin-bottom:var(--sp-5)">—</h2>
+
+  <!-- KPI CARDS -->
+  <div class="sg" id="lic-kpi-cards" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--sp-5);"></div>
+
+  <!-- GRID 3 COLUMNAS -->
+  <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;">
+
+    <!-- 3.1 NUEVAS LICENCIAS -->
+    <div style="padding-right:var(--sp-5);">
+      <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Nuevas licencias este mes</div>
+
+      <!-- Pivot 1: Cliente > Fecha > Concepto -->
+      <div class="kc" style="margin-bottom:var(--sp-4);">
+        <div class="kc-hd"><div><div class="kc-t">Por Cliente &amp; Fecha</div><div class="kc-s">Agrupado por cliente, fecha y concepto</div></div></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Cliente / Fecha / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
+          <tbody id="tbody-nuevas-1"></tbody>
+        </table></div>
+      </div>
+
+      <!-- Pivot 2: Cliente > Línea > Concepto -->
+      <div class="kc">
+        <div class="kc-hd"><div><div class="kc-t">Por Cliente &amp; Línea</div><div class="kc-s">Agrupado por cliente, línea y concepto</div></div></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
+          <tbody id="tbody-nuevas-2"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div style="background:var(--border);"></div>
+
+    <!-- 3.2 ACUMULADO COO -->
+    <div style="padding:0 var(--sp-5);">
+      <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Licencias acumuladas COO</div>
+
+      <!-- Resumen por cliente -->
+      <div class="kc" style="margin-bottom:var(--sp-4);">
+        <div class="kc-hd"><div><div class="kc-t">Resumen por Cliente</div></div></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Cliente</th><th class="r">PVP</th><th class="r">Coste</th><th class="r">&#8364; JMREY</th><th class="r">&#8364; COO</th></tr></thead>
+          <tbody id="tbody-acum-coo"></tbody>
+        </table></div>
+      </div>
+
+      <!-- Pivot: Cliente > Línea > Concepto -->
+      <div class="kc">
+        <div class="kc-hd"><div><div class="kc-t">Por Cliente, Línea &amp; Concepto</div></div></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
+          <tbody id="tbody-acum-coo-pivot"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div style="background:var(--border);"></div>
+
+    <!-- 3.3 ACUMULADO AGENTE -->
+    <div style="padding-left:var(--sp-5);">
+      <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Licencias acumuladas Agente</div>
+      <div class="kc">
+        <div class="kc-hd"><div><div class="kc-t">Por Agente, Cliente, Línea &amp; Concepto</div></div></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Agente / Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
+          <tbody id="tbody-acum-agt"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+  </div><!-- /grid 3 cols -->
+
+</section>
+
 <!-- LICENCIAS -->
-<section id="sec-licencias" class="sec active">
+<section id="sec-licencias" class="sec">
   <div class="de-tb">
     <div><div class="seh-ey">Gesti&oacute;n de datos</div>
     <div class="de-tb-t">Licencias <span id="lic-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div></div>
@@ -440,6 +564,7 @@ table.rt tbody td.c{text-align:center;}
         <th data-col="importe_margen_agente" class="r">Mrg Agente</th>
         <th class="ac-col">Acc.</th>
       </tr>
+      <tr id="lic-filter-row"></tr>
     </thead>
     <tbody id="tbody-lic"></tbody>
   </table></div>
@@ -471,6 +596,7 @@ table.rt tbody td.c{text-align:center;}
         <th data-col="coste_mes_arrow" class="r">Coste Arrow</th>
         <th class="ac-col">Acc.</th>
       </tr>
+      <tr id="prec-filter-row"></tr>
     </thead>
     <tbody id="tbody-prec"></tbody>
   </table></div>
@@ -481,7 +607,7 @@ table.rt tbody td.c{text-align:center;}
   <div class="de-tb">
     <div><div class="seh-ey">Gesti&oacute;n de datos</div>
     <div class="de-tb-t">% Agente</div></div>
-    <div><button class="btn btn-p" onclick="openAgtModal(null)">&#xff0b; Nuevo agente</button></div>
+    <div style="display:flex;gap:var(--sp-3);align-items:center;"><button class="btn btn-s btn-sm" onclick="clearAgtFilters()">&#x2715; Limpiar filtros</button><button class="btn btn-p" onclick="openAgtModal(null)">&#xff0b; Nuevo agente</button></div>
   </div>
   <div class="rtw" style="max-width:700px;"><table class="dt" id="tbl-agt">
     <thead>
@@ -493,6 +619,7 @@ table.rt tbody td.c{text-align:center;}
         <th data-col="pct_borja" class="r">% Borja</th>
         <th class="ac-col">Acc.</th>
       </tr>
+      <tr id="agt-filter-row"></tr>
     </thead>
     <tbody id="tbody-agt"></tbody>
   </table></div>
@@ -611,18 +738,14 @@ var _msalApp = null;
 // ── CONTROL DE ACCESO VIA SUPABASE (tabla users) ─────
 function showApp(account){
   var email = (account.username || '').toLowerCase().trim();
-
-  // Consultar tabla users en Supabase
   var sb = getSB();
   if(!sb){
-    // Sin Supabase: denegar por seguridad
-    _denyAccess(account, email, 'No se pudo verificar el acceso. Inténtalo de nuevo.');
+    // Supabase CDN no ha cargado aún — reintentar en 500ms
+    setTimeout(function(){ showApp(account); }, 500);
     return;
   }
-
   sb.from('users').select('email').ilike('email', email)
     .then(function(res){
-      console.log('[auth] users query result:', JSON.stringify(res));
       if(res.error){
         _denyAccess(account, email, 'Error al verificar acceso: ' + (res.error.message||res.error.code));
         return;
@@ -634,7 +757,6 @@ function showApp(account){
       _grantAccess(account);
     })
     .catch(function(e){
-      console.error('[auth] catch:', e);
       _denyAccess(account, email, 'Error de conexión: ' + (e.message||e));
     });
 }
@@ -647,6 +769,32 @@ function _denyAccess(account, email, msg){
     _msalApp.logoutPopup({account: account, postLogoutRedirectUri: 'https://bgjmrey.github.io/jmrey-coodashboard/'}).catch(function(){});
   }
 }
+
+
+// ── SESSION GUARD: redirect to index if not authenticated ──
+(function checkSession(){
+  // MSAL stores accounts in sessionStorage
+  // If no account keys found, redirect to portal
+  var hasSession = false;
+  try {
+    for(var i=0; i<sessionStorage.length; i++){
+      var k = sessionStorage.key(i);
+      if(k && k.indexOf('login.windows.net') > -1){
+        hasSession = true; break;
+      }
+    }
+  } catch(e){}
+  if(!hasSession){
+    // Give MSAL a moment to initialize from cache before redirecting
+    window._sessionCheckTimer = setTimeout(function(){
+      var accounts = typeof msal !== 'undefined' && window._msalApp
+        ? window._msalApp.getAllAccounts() : [];
+      if(accounts.length === 0){
+        window.location.href = 'index.html';
+      }
+    }, 1500);
+  }
+})();
 
 function _grantAccess(account){
   document.getElementById('login-overlay').style.display = 'none';
@@ -712,46 +860,6 @@ function initMsalWhenReady(){
 }
 document.addEventListener('DOMContentLoaded', initMsalWhenReady);
 
-// ── CONTROL DE ACCESO VIA SUPABASE (tabla users) ─────
-function showApp(account){
-  var email = (account.username || '').toLowerCase().trim();
-
-  // Consultar tabla users en Supabase
-  var sb = getSB();
-  if(!sb){
-    // Sin Supabase: denegar por seguridad
-    _denyAccess(account, email, 'No se pudo verificar el acceso. Inténtalo de nuevo.');
-    return;
-  }
-
-  sb.from('users').select('email').ilike('email', email)
-    .then(function(res){
-      console.log('[auth] users query result:', JSON.stringify(res));
-      if(res.error){
-        _denyAccess(account, email, 'Error al verificar acceso: ' + (res.error.message||res.error.code));
-        return;
-      }
-      if(!res.data || res.data.length === 0){
-        _denyAccess(account, email, 'El usuario ' + email + ' no tiene permiso para acceder a esta aplicación.');
-        return;
-      }
-      _grantAccess(account);
-    })
-    .catch(function(e){
-      console.error('[auth] catch:', e);
-      _denyAccess(account, email, 'Error de conexión: ' + (e.message||e));
-    });
-}
-
-function _denyAccess(account, email, msg){
-  document.getElementById('login-overlay').style.display = 'flex';
-  document.getElementById('app-content').style.display = 'none';
-  showLoginError(msg);
-  if(_msalApp){
-    _msalApp.logoutPopup({account: account, postLogoutRedirectUri: 'https://bgjmrey.github.io/jmrey-coodashboard/'}).catch(function(){});
-  }
-}
-
 function _grantAccess(account){
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
@@ -765,6 +873,32 @@ function showLoginError(msg){
   el.textContent = msg;
   el.style.display = 'block';
 }
+
+
+// ── SESSION GUARD: redirect to index if not authenticated ──
+(function checkSession(){
+  // MSAL stores accounts in sessionStorage
+  // If no account keys found, redirect to portal
+  var hasSession = false;
+  try {
+    for(var i=0; i<sessionStorage.length; i++){
+      var k = sessionStorage.key(i);
+      if(k && k.indexOf('login.windows.net') > -1){
+        hasSession = true; break;
+      }
+    }
+  } catch(e){}
+  if(!hasSession){
+    // Give MSAL a moment to initialize from cache before redirecting
+    window._sessionCheckTimer = setTimeout(function(){
+      var accounts = typeof msal !== 'undefined' && window._msalApp
+        ? window._msalApp.getAllAccounts() : [];
+      if(accounts.length === 0){
+        window.location.href = 'index.html';
+      }
+    }, 1500);
+  }
+})();
 
 function _grantAccess(account){
   document.getElementById('login-overlay').style.display = 'none';
@@ -817,6 +951,7 @@ async function hydrateDB(){
     if(la.data) DB.agentes   = la.data;
     if(lp.data) DB.precios   = lp.data;
     if(ll.data) DB.licencias = ll.data;
+    toast('Cargado: '+DB.agentes.length+' agentes, '+DB.precios.length+' precios, '+DB.licencias.length+' licencias');
   } catch(e){
     const msg=e?.message||'';
     if(!msg.includes('DataCloneError')&&!msg.includes('postMessage'))
@@ -957,10 +1092,42 @@ function calcRow(r){
 
 // ── RENDER LICENCIAS ─────────────────────────────────────────
 let licFilters={};
+let precFilters={};
+let agtFilters={};
+function buildLicFilterRow(){
+  const fr=document.getElementById('lic-filter-row');
+  if(fr.innerHTML) return;
+  const table=document.getElementById('tbl-lic');
+  if(!table) return;
+  const ths=Array.from(table.querySelectorAll('.hdr-row th'));
+  const textCols=['anio_mes','proveedor','nro_pedido_cliente','concepto','linea_producto',
+    'compromiso','pago','proy','cliente','agente'];
+  fr.innerHTML=ths.map(th=>{
+    const col=th.getAttribute('data-col')||'';
+    if(!col) return '<td></td>';
+    if(textCols.includes(col))
+      return '<td><input class="f-inp" placeholder="Filtrar..." data-col="'+col+'" oninput="licFilters[this.dataset.col]=this.value;renderLic()" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-e);color:var(--fg-2);"></td>';
+    return '<td></td>';
+  }).join('');
+}
+
+function buildPrecFilterRow(){
+  const fr=document.getElementById('prec-filter-row');
+  if(fr.innerHTML) return;
+  const table=document.getElementById('tbl-prec');
+  if(!table) return;
+  const ths=Array.from(table.querySelectorAll('.hdr-row th'));
+  fr.innerHTML=ths.map(th=>{
+    const col=th.getAttribute('data-col')||'';
+    if(!col) return '<td></td>';
+    return '<td><input class="f-inp" placeholder="Filtrar..." data-col="'+col+'" oninput="precFilters[this.dataset.col]=this.value;renderPrec()" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-e);color:var(--fg-2);"></td>';
+  }).join('');
+}
+
 function renderLic(){
+  buildLicFilterRow();
   const tb=document.getElementById('tbody-lic');
   let data=DB.licencias;
-  // Apply filters
   Object.entries(licFilters).forEach(([col,val])=>{
     if(!val) return;
     data=data.filter(r=>(r[col]||'').toString().toLowerCase().includes(val.toLowerCase()));
@@ -1000,8 +1167,14 @@ function renderLic(){
 }
 
 function renderPrec(){
+  buildPrecFilterRow();
   const tb=document.getElementById('tbody-prec');
-  const rows=DB.precios.map((r,i)=>`<tr ondblclick="openPrecModal(${i})">
+  let data=DB.precios;
+  Object.entries(precFilters).forEach(([col,val])=>{
+    if(!val) return;
+    data=data.filter(r=>(r[col]||'').toString().toLowerCase().includes(val.toLowerCase()));
+  });
+  const rows=data.map((r,i)=>`<tr ondblclick="openPrecModal(${DB.precios.indexOf(r)})">
     <td title="${r.concepto||''}">${(r.concepto||'').substring(0,40)}${(r.concepto||'').length>40?'…':''}</td>
     <td style="font-size:var(--fz-xs)">${r.linea_producto||'—'}</td>
     <td>${r.cliente||'—'}</td><td>${r.compromiso||'—'}</td><td>${r.pago||'—'}</td>
@@ -1014,9 +1187,28 @@ function renderPrec(){
   document.getElementById('prec-cnt').textContent='('+DB.precios.length+')';
 }
 
+function buildAgtFilterRow(){
+  const fr=document.getElementById('agt-filter-row');
+  if(fr.innerHTML) return;
+  const table=document.getElementById('tbl-agt');
+  if(!table) return;
+  const ths=Array.from(table.querySelectorAll('.hdr-row th'));
+  fr.innerHTML=ths.map(th=>{
+    const col=th.getAttribute('data-col')||'';
+    if(!col) return '<td></td>';
+    return '<td><input class="f-inp" placeholder="Filtrar..." data-col="'+col+'" oninput="agtFilters[this.dataset.col]=this.value;renderAgt()" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-e);color:var(--fg-2);"></td>';
+  }).join('');
+}
+
 function renderAgt(){
+  buildAgtFilterRow();
   const tb=document.getElementById('tbody-agt');
-  const rows=DB.agentes.map((r,i)=>`<tr ondblclick="openAgtModal(${i})">
+  let data=DB.agentes;
+  Object.entries(agtFilters).forEach(([col,val])=>{
+    if(!val) return;
+    data=data.filter(r=>(r[col]||'').toString().toLowerCase().includes(val.toLowerCase()));
+  });
+  const rows=data.map((r,i)=>`<tr ondblclick="openAgtModal(${DB.agentes.indexOf(r)})">
     <td><strong>${r.agente||'—'}</strong></td>
     <td class="r num">${fmtPct(r.margen)}</td>
     <td class="r num">${fmtPct(r.pct_jmrey)}</td>
@@ -1228,17 +1420,895 @@ async function delAgt(i){
 }
 
 // ── EXPORT XLS ───────────────────────────────────────────────
-function exportLicXLS(){ toast('Exportar próximamente'); }
-function exportPrecXLS(){ toast('Exportar próximamente'); }
-function clearLicFilters(){ licFilters={}; renderLic(); }
-function clearPrecFilters(){ renderPrec(); }
+function exportLicXLS(){
+  const table=document.getElementById('tbl-lic');
+  if(!table){toast('Tabla no encontrada');return;}
+  const hdrRow=table.querySelector('.hdr-row');
+  const thCells=hdrRow?Array.from(hdrRow.querySelectorAll('th')).filter(th=>!th.classList.contains('ac-col')):[];
+  const headers=thCells.map(th=>(th.innerText||th.textContent||'').replace(/\s+/g,' ').trim());
+  const dataCols=thCells.map(th=>th.getAttribute('data-col')||'');
+  function colType(dc){
+    if(['dias_fact','cantidad'].includes(dc)) return 'int';
+    if(['pvp_mes_compl','pvp','importe','coste_mes_compl','coste','importe_coste',
+        'importe_margen_total','importe_margen_jmrey','importe_margen_juanma',
+        'importe_margen_borja','importe_margen_agente'].includes(dc)) return 'currency';
+    if(['pct_margen'].includes(dc)) return 'pct';
+    if(['fecha_inicio','fecha_fin'].includes(dc)) return 'date';
+    return 'text';
+  }
+  const colTypes=dataCols.map(colType);
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function cellXml(raw,type,sid){
+    if(type==='int'){const n=parseInt(raw.replace(/[^\d-]/g,''));if(!isNaN(n))return '<td class="s'+sid+'" x:num="'+n+'">'+n+'</td>';}
+    if(type==='currency'){const n=parseFloat(raw.replace(',','.').replace(/[^\d.-]/g,''));if(!isNaN(n))return '<td class="s'+sid+'" x:num="'+n+'">'+n.toFixed(2).replace('.',',')+'</td>';}
+    if(type==='date'){const m=raw.match(/(\d{4})-(\d{2})-(\d{2})/);if(m)return '<td class="s'+sid+'">'+m[3]+'/'+m[2]+'/'+m[1]+'</td>';}
+    return '<td class="s'+sid+'">'+esc(raw)+'</td>';
+  }
+  function styleId(type){return {int:3,currency:5,pct:4,date:6}[type]||2;}
+  const rows=[];
+  table.querySelectorAll('tbody tr').forEach(tr=>{
+    if(tr.querySelector('.ec')) return;
+    let cells=Array.from(tr.cells);
+    const last=cells[cells.length-1];
+    if(last&&last.classList.contains('c')&&last.querySelector('button')) cells=cells.slice(0,-1);
+    rows.push(cells.map((td,ci)=>{
+      const clone=td.cloneNode(true);
+      clone.querySelectorAll('button').forEach(el=>el.remove());
+      return (clone.innerText||clone.textContent||'').replace(/\s+/g,' ').trim();
+    }));
+  });
+  let thead='<tr class="hdr">'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr>';
+  let tbody='';
+  rows.forEach((row,ri)=>{
+    tbody+='<tr>';
+    row.forEach((val,ci)=>{tbody+=cellXml(val,colTypes[ci]||'text',styleId(colTypes[ci]||'text'));});
+    tbody+='</tr>\n';
+  });
+  const now=new Date();
+  const html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Licencias</x:Name><x:WorksheetOptions><x:FreezePanes/><x:SplitHorizontal>1</x:SplitHorizontal><x:TopRowBottomPane>1</x:TopRowBottomPane></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--><style>body{font-family:Calibri;font-size:11pt;}table{border-collapse:collapse;}.hdr th{background:#0E1F3D;color:#F4ECE0;font-weight:bold;padding:6px 8px;}.s2{text-align:left;}.s3{text-align:right;mso-number-format:0;}.s4{text-align:right;mso-number-format:"0.00%";}.s5{text-align:right;mso-number-format:"#,##0.00\ \"€\"";}.s6{text-align:center;mso-number-format:"dd/mm/yyyy";}td{padding:4px 8px;border:1px solid #E2D9C6;}tr:nth-child(even) td{background:#F3F0EA;}</style></head><body><table><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table></body></html>';
+  const blob=new Blob(['\uFEFF'+html],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='licencias_'+now.toISOString().slice(0,10)+'.xlsx.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('Exportado: licencias.xlsx.html');
+}
+function exportPrecXLS(){
+  const table=document.getElementById('tbl-prec');
+  if(!table){toast('Tabla no encontrada');return;}
+  const hdrRow=table.querySelector('.hdr-row');
+  const headers=hdrRow?Array.from(hdrRow.querySelectorAll('th')).filter(th=>!th.classList.contains('ac-col')).map(th=>(th.innerText||'').trim()):[];
+  const rows=[];
+  table.querySelectorAll('tbody tr').forEach(tr=>{
+    if(tr.querySelector('.ec')) return;
+    let cells=Array.from(tr.cells);
+    const last=cells[cells.length-1];
+    if(last&&last.classList.contains('c')&&last.querySelector('button')) cells=cells.slice(0,-1);
+    rows.push(cells.map(td=>(td.innerText||td.textContent||'').replace(/\s+/g,' ').trim()));
+  });
+  const tsv='\uFEFF'+[headers.join('\t'),...rows.map(r=>r.join('\t'))].join('\r\n');
+  const blob=new Blob([tsv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='precios_licencias_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('Exportado: precios_licencias.csv');
+}
+function clearLicFilters(){ licFilters={}; document.getElementById('lic-filter-row').innerHTML=''; renderLic(); }
+function clearAgtFilters(){ agtFilters={}; document.getElementById('agt-filter-row').innerHTML=''; renderAgt(); }
+function clearPrecFilters(){ precFilters={}; document.getElementById('prec-filter-row').innerHTML=''; renderPrec(); }
+
+
+// ── INIT KPI LICENCIAS ──────────────────────────────────────
+(function initLicKPI(){
+  const yearSel=document.getElementById('lic-kpi-year');
+  const now=new Date();
+  for(let y=now.getFullYear(); y>=2023; y--){
+    const o=document.createElement('option');
+    o.value=y; o.textContent=y;
+    yearSel.appendChild(o);
+  }
+  // Auto-detect: si día > 26 → mes siguiente
+  const autoMonth = now.getDate()>26 ? now.getMonth()+2 : now.getMonth()+1;
+  const m = autoMonth>12?1:autoMonth;
+  document.getElementById('lic-kpi-month').value=m;
+})();
+
+// ── KPI LICENCIAS ────────────────────────────────────────────
+function licMesRange(year, month){
+  // Período 27 mes anterior → 26 mes actual
+  const ini = month===1 ? new Date(year-1,11,27) : new Date(year,month-2,27);
+  const fin = new Date(year,month-1,26,23,59,59);
+  return {ini, fin};
+}
+function licDateStr(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+dd;
+}
+
+function getLicVista(){ return document.getElementById('lic-btn-mes').classList.contains('on')?'mes':'acum'; }
+function setLicVista(v){
+  document.getElementById('lic-btn-mes').classList.toggle('on', v==='mes');
+  document.getElementById('lic-btn-acum').classList.toggle('on', v==='acum');
+  renderLicKPI();
+}
+
+function renderLicKPI(){
+  const year  = parseInt(document.getElementById('lic-kpi-year').value);
+  const month = parseInt(document.getElementById('lic-kpi-month').value);
+  const vista = getLicVista();
+
+  const MESES_ES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // Rango del período
+  const rng = licMesRange(year, month);
+  const iniStr = licDateStr(rng.ini);
+  const finStr = licDateStr(rng.fin);
+
+  // Filtrar licencias del período (por fecha_inicio)
+  // Para "mes": fecha_inicio dentro del rango 27ant→26act
+  // Para "acumulado": todas hasta el 26 del mes actual
+  let licMes, licAcum;
+  if(vista==='mes'){
+    licMes = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi >= iniStr && fi <= finStr;
+    });
+    licAcum = licMes;
+  } else {
+    // Acumulado: año en curso hasta el 26 del mes
+    const acumIni = (year-1)+'-12-27';
+    licMes = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi >= iniStr && fi <= finStr;
+    });
+    licAcum = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi <= finStr;
+    });
+  }
+
+  // Período label
+  const lbl = vista==='mes'
+    ? '27 '+MESES_ES[month===1?12:month-1]+' – 26 '+MESES_ES[month]+' '+year
+    : 'Acumulado '+MESES_ES[month]+' '+year;
+  document.getElementById('lic-kpi-period').textContent = lbl;
+
+  // ── CALC totales ──
+  const today = new Date().toISOString().slice(0,10);
+  function calcLicRow(r){
+    const precio = lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
+    const pvpMes   = precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
+    const costeMes = precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
+    const cant=parseFloat(r.cantidad)||0, dias=parseFloat(r.dias_fact)||0;
+    let diasMes=30;
+    if(r.fecha_inicio){const d=new Date(r.fecha_inicio);diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();}
+    const pvp  =dias>0?pvpMes*dias/diasMes:pvpMes;
+    const coste=dias>0?costeMes*dias/diasMes:costeMes;
+    const agt  =lookupAgente(r.agente);
+    return {pvp, coste, cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
+            mrg:(pvp-coste), mrgTotal:(pvp-coste)*cant,
+            mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
+            mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant,
+            mrgAgente:(pvp-coste)*(agt.margen||0)*cant};
+  }
+
+  // KPI cards
+  const totMes  = licMes.reduce( (a,r)=>{const c=calcLicRow(r);return {pvp:a.pvp+c.pvpTotal,coste:a.costeTotal+c.costeTotal,mrg:a.mrg+c.mrgTotal,n:a.n+1};},{pvp:0,coste:0,mrg:0,n:0});
+  const totAcum = licAcum.reduce((a,r)=>{const c=calcLicRow(r);return {pvp:a.pvp+c.pvpTotal,coste:a.coste+c.costeTotal,mrg:a.mrg+c.mrgTotal,n:a.n+1};},{pvp:0,coste:0,mrg:0,n:0});
+
+  document.getElementById('lic-kpi-cards').innerHTML =
+    kpiCard('Licencias período',totMes.n,'uds','#lic-kpi-title') +
+    kpiCard('PVP período',fmtE(totMes.pvp),'',null) +
+    kpiCard('Coste período',fmtE(totMes.coste),'',null) +
+    kpiCard('Margen período',fmtE(totMes.mrg),'',null);
+
+  // ── 3.1 NUEVAS LICENCIAS ──
+  renderNuevasLicencias(licMes);
+  // ── 3.2 ACUMULADO COO ──
+  renderAcumCOO(licAcum);
+  // ── 3.3 ACUMULADO AGENTE ──
+  renderAcumAgente(licAcum);
+}
+
+function kpiCard(lbl, val, sub, idLink){
+  return '<div class="sc anim"><div class="sc-lbl">'+lbl+'</div>'
+    +'<div class="sc-val num">'+val+'</div>'
+    +(sub?'<div class="sc-sub">'+sub+'</div>':'')
+    +'</div>';
+}
+function fmtE(v){ return typeof v==='number'?v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':'—'; }
+function fmtN(v,d){ if(v===null||v===undefined) return '—'; return parseFloat(v).toLocaleString('es-ES',{minimumFractionDigits:d??2,maximumFractionDigits:d??2}); }
+
+// ── 3.1 Nuevas licencias: pivot por Cliente > Fecha > Concepto y Cliente > Línea > Concepto ──
+const _licExpanded = new Set(); // 'fecha' pivots
+const _licExpanded2 = new Set(); // 'linea' pivots
+
+function renderNuevasLicencias(lics){
+  const today = new Date().toISOString().slice(0,10);
+
+  // Pivot 1: Cliente > Fecha > Concepto
+  const p1 = {};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—', fecha=(r.fecha_inicio||'').substring(0,10);
+    if(!p1[cli]) p1[cli]={cant:0,pvp:0,coste:0,children:{}};
+    p1[cli].cant+=c.cant; p1[cli].pvp+=c.pvpTotal; p1[cli].coste+=c.costeTotal;
+    if(!p1[cli].children[fecha]) p1[cli].children[fecha]={cant:0,pvp:0,coste:0,children:{}};
+    p1[cli].children[fecha].cant+=c.cant; p1[cli].children[fecha].pvp+=c.pvpTotal; p1[cli].children[fecha].coste+=c.costeTotal;
+    const conc=r.concepto||'—';
+    if(!p1[cli].children[fecha].children[conc]) p1[cli].children[fecha].children[conc]={cant:0,pvp:0,coste:0};
+    p1[cli].children[fecha].children[conc].cant+=c.cant;
+    p1[cli].children[fecha].children[conc].pvp+=c.pvpTotal;
+    p1[cli].children[fecha].children[conc].coste+=c.costeTotal;
+  });
+
+  // Pivot 2: Cliente > Línea > Concepto
+  const p2 = {};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—', linea=r.linea_producto||'—';
+    if(!p2[cli]) p2[cli]={cant:0,pvp:0,coste:0,children:{}};
+    p2[cli].cant+=c.cant; p2[cli].pvp+=c.pvpTotal; p2[cli].coste+=c.costeTotal;
+    if(!p2[cli].children[linea]) p2[cli].children[linea]={cant:0,pvp:0,coste:0,children:{}};
+    p2[cli].children[linea].cant+=c.cant; p2[cli].children[linea].pvp+=c.pvpTotal; p2[cli].children[linea].coste+=c.costeTotal;
+    const conc=r.concepto||'—';
+    if(!p2[cli].children[linea].children[conc]) p2[cli].children[linea].children[conc]={cant:0,pvp:0,coste:0};
+    p2[cli].children[linea].children[conc].cant+=c.cant;
+    p2[cli].children[linea].children[conc].pvp+=c.pvpTotal;
+    p2[cli].children[linea].children[conc].coste+=c.costeTotal;
+  });
+
+  document.getElementById('tbody-nuevas-1').innerHTML = buildPivot3(p1,'p1','_licExpanded');
+  document.getElementById('tbody-nuevas-2').innerHTML = buildPivot3(p2,'p2','_licExpanded2');
+}
+
+function buildPivot3(pivot, pfx, setName){
+  let html='';
+  if(Object.keys(pivot).length===0) return '<tr><td colspan="4" class="ec">Sin datos</td></tr>';
+  Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
+    const exp = window[setName].has(pfx+':'+cli);
+    html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="${pfx}:${cli}" data-set="${setName}" onclick="toggleLicPivot(this.dataset.key,this.dataset.set)">
+      <td><strong>${cli}</strong></td>
+      <td class="r num">${fmtN(cliData.cant,0)}</td>
+      <td class="r num">${fmtE(cliData.pvp)}</td>
+      <td class="r num">${fmtE(cliData.coste)}</td>
+    </tr>`;
+    if(exp){
+      Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([mid,midData])=>{
+        const key2=pfx+':'+cli+':'+mid, exp2=window[setName].has(key2);
+        html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" data-set="${setName}" onclick="toggleLicPivot(this.dataset.key,this.dataset.set)">
+          <td style="padding-left:20px">↳ ${mid}</td>
+          <td class="r num">${fmtN(midData.cant,0)}</td>
+          <td class="r num">${fmtE(midData.pvp)}</td>
+          <td class="r num">${fmtE(midData.coste)}</td>
+        </tr>`;
+        if(exp2){
+          Object.entries(midData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
+            html+=`<tr class="tp-child">
+              <td style="padding-left:40px;font-size:var(--fz-xs)">${conc}</td>
+              <td class="r num">${fmtN(concData.cant,0)}</td>
+              <td class="r num">${fmtE(concData.pvp)}</td>
+              <td class="r num">${fmtE(concData.coste)}</td>
+            </tr>`;
+          });
+        }
+      });
+    }
+  });
+  return html;
+}
+
+function toggleLicPivot(key, setName){
+  const s = window[setName];
+  if(s.has(key)) s.delete(key); else s.add(key);
+  renderLicKPI();
+}
+
+// ── 3.2 Acumulado COO ──
+const _acumExpanded = new Set();
+function renderAcumCOO(lics){
+  // Tabla resumen por cliente
+  const byClient = {};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—';
+    if(!byClient[cli]) byClient[cli]={pvp:0,coste:0,mrgJmrey:0,mrgBorja:0};
+    byClient[cli].pvp+=c.pvpTotal; byClient[cli].coste+=c.costeTotal;
+    byClient[cli].mrgJmrey+=c.mrgJmrey; byClient[cli].mrgBorja+=c.mrgBorja;
+  });
+  let html='';
+  if(Object.keys(byClient).length===0){html='<tr><td colspan="5" class="ec">Sin datos</td></tr>';}
+  else {
+    Object.entries(byClient).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,v])=>{
+      html+=`<tr>
+        <td><strong>${cli}</strong></td>
+        <td class="r num">${fmtE(v.pvp)}</td>
+        <td class="r num">${fmtE(v.coste)}</td>
+        <td class="r num">${fmtE(v.mrgJmrey)}</td>
+        <td class="r num">${fmtE(v.mrgBorja)}</td>
+      </tr>`;
+    });
+    // Total
+    const tot=Object.values(byClient).reduce((a,v)=>({pvp:a.pvp+v.pvp,coste:a.coste+v.coste,mrgJmrey:a.mrgJmrey+v.mrgJmrey,mrgBorja:a.mrgBorja+v.mrgBorja}),{pvp:0,coste:0,mrgJmrey:0,mrgBorja:0});
+    html+=`<tr class="kt-foot"><td><strong>Total</strong></td><td class="r num">${fmtE(tot.pvp)}</td><td class="r num">${fmtE(tot.coste)}</td><td class="r num">${fmtE(tot.mrgJmrey)}</td><td class="r num">${fmtE(tot.mrgBorja)}</td></tr>`;
+  }
+  document.getElementById('tbody-acum-coo').innerHTML = html;
+
+  // Tabla dinámica: Cliente > Línea > Concepto con Cantidad e Importe
+  const p={};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—', linea=r.linea_producto||'—';
+    if(!p[cli]) p[cli]={cant:0,pvp:0,children:{}};
+    p[cli].cant+=c.cant; p[cli].pvp+=c.pvpTotal;
+    if(!p[cli].children[linea]) p[cli].children[linea]={cant:0,pvp:0,children:{}};
+    p[cli].children[linea].cant+=c.cant; p[cli].children[linea].pvp+=c.pvpTotal;
+    const conc=r.concepto||'—';
+    if(!p[cli].children[linea].children[conc]) p[cli].children[linea].children[conc]={cant:0,pvp:0};
+    p[cli].children[linea].children[conc].cant+=c.cant;
+    p[cli].children[linea].children[conc].pvp+=c.pvpTotal;
+  });
+  document.getElementById('tbody-acum-coo-pivot').innerHTML = buildPivotCOO(p);
+}
+
+function buildPivotCOO(pivot){
+  let html='';
+  if(Object.keys(pivot).length===0) return '<tr><td colspan="3" class="ec">Sin datos</td></tr>';
+  Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
+    const exp=_acumExpanded.has('coo:'+cli);
+    html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="coo:${cli}" onclick="toggleAcumCOO(this.dataset.key)">
+      <td><strong>${cli}</strong></td>
+      <td class="r num">${fmtN(cliData.cant,0)}</td>
+      <td class="r num">${fmtE(cliData.pvp)}</td>
+    </tr>`;
+    if(exp){
+      Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([linea,lineaData])=>{
+        const key2='coo:'+cli+':'+linea, exp2=_acumExpanded.has(key2);
+        html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" onclick="toggleAcumCOO(this.dataset.key)">
+          <td style="padding-left:20px">↳ ${linea}</td>
+          <td class="r num">${fmtN(lineaData.cant,0)}</td>
+          <td class="r num">${fmtE(lineaData.pvp)}</td>
+        </tr>`;
+        if(exp2){
+          Object.entries(lineaData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
+            html+=`<tr class="tp-child">
+              <td style="padding-left:40px;font-size:var(--fz-xs)">${conc}</td>
+              <td class="r num">${fmtN(concData.cant,0)}</td>
+              <td class="r num">${fmtE(concData.pvp)}</td>
+            </tr>`;
+          });
+        }
+      });
+    }
+  });
+  return html;
+}
+
+function toggleAcumCOO(key){
+  if(_acumExpanded.has(key)) _acumExpanded.delete(key); else _acumExpanded.add(key);
+  renderLicKPI();
+}
+
+// ── 3.3 Acumulado Agente ──
+const _acumAgtExpanded = new Set();
+function renderAcumAgente(lics){
+  const p={};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
+    if(!p[agt]) p[agt]={cant:0,pvp:0,children:{}};
+    p[agt].cant+=c.cant; p[agt].pvp+=c.pvpTotal;
+    if(!p[agt].children[cli]) p[agt].children[cli]={cant:0,pvp:0,children:{}};
+    p[agt].children[cli].cant+=c.cant; p[agt].children[cli].pvp+=c.pvpTotal;
+    if(!p[agt].children[cli].children[linea]) p[agt].children[cli].children[linea]={cant:0,pvp:0,children:{}};
+    p[agt].children[cli].children[linea].cant+=c.cant; p[agt].children[cli].children[linea].pvp+=c.pvpTotal;
+    const conc=r.concepto||'—';
+    if(!p[agt].children[cli].children[linea].children[conc]) p[agt].children[cli].children[linea].children[conc]={cant:0,pvp:0};
+    p[agt].children[cli].children[linea].children[conc].cant+=c.cant;
+    p[agt].children[cli].children[linea].children[conc].pvp+=c.pvpTotal;
+  });
+  document.getElementById('tbody-acum-agt').innerHTML = buildPivotAgt(p);
+}
+
+function buildPivotAgt(pivot){
+  let html='';
+  if(Object.keys(pivot).length===0) return '<tr><td colspan="3" class="ec">Sin datos</td></tr>';
+  Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([agt,agtData])=>{
+    const exp=_acumAgtExpanded.has('agt:'+agt);
+    html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="agt:${agt}" onclick="toggleAcumAgt(this.dataset.key)">
+      <td><strong>${agt}</strong></td>
+      <td class="r num">${fmtN(agtData.cant,0)}</td>
+      <td class="r num">${fmtE(agtData.pvp)}</td>
+    </tr>`;
+    if(exp){
+      Object.entries(agtData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
+        const key2='agt:'+agt+':'+cli, exp2=_acumAgtExpanded.has(key2);
+        html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" onclick="toggleAcumAgt(this.dataset.key)">
+          <td style="padding-left:16px">↳ ${cli}</td>
+          <td class="r num">${fmtN(cliData.cant,0)}</td>
+          <td class="r num">${fmtE(cliData.pvp)}</td>
+        </tr>`;
+        if(exp2){
+          Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([linea,lineaData])=>{
+            const key3='agt:'+agt+':'+cli+':'+linea, exp3=_acumAgtExpanded.has(key3);
+            html+=`<tr class="tp-hdr${exp3?'':' collapsed'} tp-l3" data-key="${key3}" onclick="toggleAcumAgt(this.dataset.key)">
+              <td style="padding-left:32px;font-size:var(--fz-xs)">↳ ${linea}</td>
+              <td class="r num">${fmtN(lineaData.cant,0)}</td>
+              <td class="r num">${fmtE(lineaData.pvp)}</td>
+            </tr>`;
+            if(exp3){
+              Object.entries(lineaData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
+                html+=`<tr class="tp-child">
+                  <td style="padding-left:48px;font-size:var(--fz-xs)">${conc}</td>
+                  <td class="r num">${fmtN(concData.cant,0)}</td>
+                  <td class="r num">${fmtE(concData.pvp)}</td>
+                </tr>`;
+              });
+            }
+          });
+        }
+      });
+    }
+  });
+  return html;
+}
+
+function toggleAcumAgt(key){
+  if(_acumAgtExpanded.has(key)) _acumAgtExpanded.delete(key); else _acumAgtExpanded.add(key);
+  renderLicKPI();
+}
+
+function calcLicRowSimple(r){
+  const today=new Date().toISOString().slice(0,10);
+  const precio=lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
+  const pvpMes  =precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
+  const costeMes=precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
+  const cant=parseFloat(r.cantidad)||0, dias=parseFloat(r.dias_fact)||0;
+  let diasMes=30;
+  if(r.fecha_inicio){const d=new Date(r.fecha_inicio);diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();}
+  const pvp  =dias>0?pvpMes*dias/diasMes:pvpMes;
+  const coste=dias>0?costeMes*dias/diasMes:costeMes;
+  const agt=lookupAgente(r.agente);
+  return {cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
+          mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
+          mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant};
+}
+
+// ── EMAIL KPI LICENCIAS ──────────────────────────────────────
+function sendLicKpiEmail(){
+  const now=new Date();
+  const MESES_ES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                  'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const year=parseInt(document.getElementById('lic-kpi-year').value);
+  const month=parseInt(document.getElementById('lic-kpi-month').value);
+  const day=String(now.getDate()).padStart(2,'0');
+  const monthName=MESES_ES[month-1];
+  const isCierre=now.getDate()===26;
+  const subj='Licencias / Cuadro de mando / '+year+' '+String(month).padStart(2,'0')+' '+monthName+' '+day+(isCierre?' (CIERRE)':'');
+  const period=(document.getElementById('lic-kpi-period')||{}).textContent||'';
+  const lines=['Hola, te envío los KPIs de licencias.','','Período: '+period,''];
+  document.querySelectorAll('#lic-kpi-cards .sc').forEach(sc=>{
+    const lbl=(sc.querySelector('.sc-lbl')?.textContent||'').trim();
+    const val=(sc.querySelector('.sc-val')?.textContent||'').trim();
+    if(lbl&&val) lines.push(lbl+': '+val);
+  });
+  lines.push('','Un saludo.');
+  window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
+}
 
 // ── INIT ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', initMsalWhenReady);
-(async function(){
+
+// ── INIT KPI LICENCIAS ──────────────────────────────────────
+(function initLicKPI(){
+  const yearSel=document.getElementById('lic-kpi-year');
+  const now=new Date();
+  for(let y=now.getFullYear(); y>=2023; y--){
+    const o=document.createElement('option');
+    o.value=y; o.textContent=y;
+    yearSel.appendChild(o);
+  }
+  // Auto-detect: si día > 26 → mes siguiente
+  const autoMonth = now.getDate()>26 ? now.getMonth()+2 : now.getMonth()+1;
+  const m = autoMonth>12?1:autoMonth;
+  document.getElementById('lic-kpi-month').value=m;
+})();
+
+// ── KPI LICENCIAS ────────────────────────────────────────────
+const MESES_LIC = ['','ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                   'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+const MESES_LIC_CORTO = ['','Ene','Feb','Mar','Abr','May','Jun',
+                          'Jul','Ago','Sep','Oct','Nov','Dic'];
+
+function licMesRange(year, month){
+  // Período 27 mes anterior → 26 mes actual
+  const ini = month===1 ? new Date(year-1,11,27) : new Date(year,month-2,27);
+  const fin = new Date(year,month-1,26,23,59,59);
+  return {ini, fin};
+}
+function licDateStr(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+dd;
+}
+
+function getLicVista(){ return document.getElementById('lic-btn-mes').classList.contains('on')?'mes':'acum'; }
+function setLicVista(v){
+  document.getElementById('lic-btn-mes').classList.toggle('on', v==='mes');
+  document.getElementById('lic-btn-acum').classList.toggle('on', v==='acum');
+  renderLicKPI();
+}
+
+function renderLicKPI(){
+  const year  = parseInt(document.getElementById('lic-kpi-year').value);
+  const month = parseInt(document.getElementById('lic-kpi-month').value);
+  const vista = getLicVista();
+
+  const MESES_ES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // Rango del período
+  const rng = licMesRange(year, month);
+  const iniStr = licDateStr(rng.ini);
+  const finStr = licDateStr(rng.fin);
+
+  // Filtrar licencias del período (por fecha_inicio)
+  // Para "mes": fecha_inicio dentro del rango 27ant→26act
+  // Para "acumulado": todas hasta el 26 del mes actual
+  let licMes, licAcum;
+  if(vista==='mes'){
+    licMes = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi >= iniStr && fi <= finStr;
+    });
+    licAcum = licMes;
+  } else {
+    // Acumulado: año en curso hasta el 26 del mes
+    const acumIni = (year-1)+'-12-27';
+    licMes = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi >= iniStr && fi <= finStr;
+    });
+    licAcum = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi <= finStr;
+    });
+  }
+
+  // Período label
+  const lbl = vista==='mes'
+    ? '27 '+MESES_ES[month===1?12:month-1]+' – 26 '+MESES_ES[month]+' '+year
+    : 'Acumulado '+MESES_ES[month]+' '+year;
+  document.getElementById('lic-kpi-period').textContent = lbl;
+
+  // ── CALC totales ──
+  const today = new Date().toISOString().slice(0,10);
+  function calcLicRow(r){
+    const precio = lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
+    const pvpMes   = precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
+    const costeMes = precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
+    const cant=parseFloat(r.cantidad)||0, dias=parseFloat(r.dias_fact)||0;
+    let diasMes=30;
+    if(r.fecha_inicio){const d=new Date(r.fecha_inicio);diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();}
+    const pvp  =dias>0?pvpMes*dias/diasMes:pvpMes;
+    const coste=dias>0?costeMes*dias/diasMes:costeMes;
+    const agt  =lookupAgente(r.agente);
+    return {pvp, coste, cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
+            mrg:(pvp-coste), mrgTotal:(pvp-coste)*cant,
+            mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
+            mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant,
+            mrgAgente:(pvp-coste)*(agt.margen||0)*cant};
+  }
+
+  // KPI cards
+  const totMes  = licMes.reduce( (a,r)=>{const c=calcLicRow(r);return {pvp:a.pvp+c.pvpTotal,coste:a.costeTotal+c.costeTotal,mrg:a.mrg+c.mrgTotal,n:a.n+1};},{pvp:0,coste:0,mrg:0,n:0});
+  const totAcum = licAcum.reduce((a,r)=>{const c=calcLicRow(r);return {pvp:a.pvp+c.pvpTotal,coste:a.coste+c.costeTotal,mrg:a.mrg+c.mrgTotal,n:a.n+1};},{pvp:0,coste:0,mrg:0,n:0});
+
+  document.getElementById('lic-kpi-cards').innerHTML =
+    kpiCard('Licencias período',totMes.n,'uds','#lic-kpi-title') +
+    kpiCard('PVP período',fmtE(totMes.pvp),'',null) +
+    kpiCard('Coste período',fmtE(totMes.coste),'',null) +
+    kpiCard('Margen período',fmtE(totMes.mrg),'',null);
+
+  // ── 3.1 NUEVAS LICENCIAS ──
+  renderNuevasLicencias(licMes);
+  // ── 3.2 ACUMULADO COO ──
+  renderAcumCOO(licAcum);
+  // ── 3.3 ACUMULADO AGENTE ──
+  renderAcumAgente(licAcum);
+}
+
+function kpiCard(lbl, val, sub, idLink){
+  return '<div class="sc anim"><div class="sc-lbl">'+lbl+'</div>'
+    +'<div class="sc-val num">'+val+'</div>'
+    +(sub?'<div class="sc-sub">'+sub+'</div>':'')
+    +'</div>';
+}
+function fmtE(v){ return typeof v==='number'?v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':'—'; }
+function fmtN(v,d){ if(v===null||v===undefined) return '—'; return parseFloat(v).toLocaleString('es-ES',{minimumFractionDigits:d??2,maximumFractionDigits:d??2}); }
+
+// ── 3.1 Nuevas licencias: pivot por Cliente > Fecha > Concepto y Cliente > Línea > Concepto ──
+
+function renderNuevasLicencias(lics){
+  const today = new Date().toISOString().slice(0,10);
+
+  // Pivot 1: Cliente > Fecha > Concepto
+  const p1 = {};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—', fecha=(r.fecha_inicio||'').substring(0,10);
+    if(!p1[cli]) p1[cli]={cant:0,pvp:0,coste:0,children:{}};
+    p1[cli].cant+=c.cant; p1[cli].pvp+=c.pvpTotal; p1[cli].coste+=c.costeTotal;
+    if(!p1[cli].children[fecha]) p1[cli].children[fecha]={cant:0,pvp:0,coste:0,children:{}};
+    p1[cli].children[fecha].cant+=c.cant; p1[cli].children[fecha].pvp+=c.pvpTotal; p1[cli].children[fecha].coste+=c.costeTotal;
+    const conc=r.concepto||'—';
+    if(!p1[cli].children[fecha].children[conc]) p1[cli].children[fecha].children[conc]={cant:0,pvp:0,coste:0};
+    p1[cli].children[fecha].children[conc].cant+=c.cant;
+    p1[cli].children[fecha].children[conc].pvp+=c.pvpTotal;
+    p1[cli].children[fecha].children[conc].coste+=c.costeTotal;
+  });
+
+  // Pivot 2: Cliente > Línea > Concepto
+  const p2 = {};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—', linea=r.linea_producto||'—';
+    if(!p2[cli]) p2[cli]={cant:0,pvp:0,coste:0,children:{}};
+    p2[cli].cant+=c.cant; p2[cli].pvp+=c.pvpTotal; p2[cli].coste+=c.costeTotal;
+    if(!p2[cli].children[linea]) p2[cli].children[linea]={cant:0,pvp:0,coste:0,children:{}};
+    p2[cli].children[linea].cant+=c.cant; p2[cli].children[linea].pvp+=c.pvpTotal; p2[cli].children[linea].coste+=c.costeTotal;
+    const conc=r.concepto||'—';
+    if(!p2[cli].children[linea].children[conc]) p2[cli].children[linea].children[conc]={cant:0,pvp:0,coste:0};
+    p2[cli].children[linea].children[conc].cant+=c.cant;
+    p2[cli].children[linea].children[conc].pvp+=c.pvpTotal;
+    p2[cli].children[linea].children[conc].coste+=c.costeTotal;
+  });
+
+  document.getElementById('tbody-nuevas-1').innerHTML = buildPivot3(p1,'p1','_licExpanded');
+  document.getElementById('tbody-nuevas-2').innerHTML = buildPivot3(p2,'p2','_licExpanded2');
+}
+
+function buildPivot3(pivot, pfx, setName){
+  let html='';
+  if(Object.keys(pivot).length===0) return '<tr><td colspan="4" class="ec">Sin datos</td></tr>';
+  Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
+    const exp = window[setName].has(pfx+':'+cli);
+    html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="${pfx}:${cli}" data-set="${setName}" onclick="toggleLicPivot(this.dataset.key,this.dataset.set)">
+      <td><strong>${cli}</strong></td>
+      <td class="r num">${fmtN(cliData.cant,0)}</td>
+      <td class="r num">${fmtE(cliData.pvp)}</td>
+      <td class="r num">${fmtE(cliData.coste)}</td>
+    </tr>`;
+    if(exp){
+      Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([mid,midData])=>{
+        const key2=pfx+':'+cli+':'+mid, exp2=window[setName].has(key2);
+        html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" data-set="${setName}" onclick="toggleLicPivot(this.dataset.key,this.dataset.set)">
+          <td style="padding-left:20px">↳ ${mid}</td>
+          <td class="r num">${fmtN(midData.cant,0)}</td>
+          <td class="r num">${fmtE(midData.pvp)}</td>
+          <td class="r num">${fmtE(midData.coste)}</td>
+        </tr>`;
+        if(exp2){
+          Object.entries(midData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
+            html+=`<tr class="tp-child">
+              <td style="padding-left:40px;font-size:var(--fz-xs)">${conc}</td>
+              <td class="r num">${fmtN(concData.cant,0)}</td>
+              <td class="r num">${fmtE(concData.pvp)}</td>
+              <td class="r num">${fmtE(concData.coste)}</td>
+            </tr>`;
+          });
+        }
+      });
+    }
+  });
+  return html;
+}
+
+function toggleLicPivot(key, setName){
+  const s = window[setName];
+  if(s.has(key)) s.delete(key); else s.add(key);
+  renderLicKPI();
+}
+
+// ── 3.2 Acumulado COO ──
+function renderAcumCOO(lics){
+  // Tabla resumen por cliente
+  const byClient = {};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—';
+    if(!byClient[cli]) byClient[cli]={pvp:0,coste:0,mrgJmrey:0,mrgBorja:0};
+    byClient[cli].pvp+=c.pvpTotal; byClient[cli].coste+=c.costeTotal;
+    byClient[cli].mrgJmrey+=c.mrgJmrey; byClient[cli].mrgBorja+=c.mrgBorja;
+  });
+  let html='';
+  if(Object.keys(byClient).length===0){html='<tr><td colspan="5" class="ec">Sin datos</td></tr>';}
+  else {
+    Object.entries(byClient).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,v])=>{
+      html+=`<tr>
+        <td><strong>${cli}</strong></td>
+        <td class="r num">${fmtE(v.pvp)}</td>
+        <td class="r num">${fmtE(v.coste)}</td>
+        <td class="r num">${fmtE(v.mrgJmrey)}</td>
+        <td class="r num">${fmtE(v.mrgBorja)}</td>
+      </tr>`;
+    });
+    // Total
+    const tot=Object.values(byClient).reduce((a,v)=>({pvp:a.pvp+v.pvp,coste:a.coste+v.coste,mrgJmrey:a.mrgJmrey+v.mrgJmrey,mrgBorja:a.mrgBorja+v.mrgBorja}),{pvp:0,coste:0,mrgJmrey:0,mrgBorja:0});
+    html+=`<tr class="kt-foot"><td><strong>Total</strong></td><td class="r num">${fmtE(tot.pvp)}</td><td class="r num">${fmtE(tot.coste)}</td><td class="r num">${fmtE(tot.mrgJmrey)}</td><td class="r num">${fmtE(tot.mrgBorja)}</td></tr>`;
+  }
+  document.getElementById('tbody-acum-coo').innerHTML = html;
+
+  // Tabla dinámica: Cliente > Línea > Concepto con Cantidad e Importe
+  const p={};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—', linea=r.linea_producto||'—';
+    if(!p[cli]) p[cli]={cant:0,pvp:0,children:{}};
+    p[cli].cant+=c.cant; p[cli].pvp+=c.pvpTotal;
+    if(!p[cli].children[linea]) p[cli].children[linea]={cant:0,pvp:0,children:{}};
+    p[cli].children[linea].cant+=c.cant; p[cli].children[linea].pvp+=c.pvpTotal;
+    const conc=r.concepto||'—';
+    if(!p[cli].children[linea].children[conc]) p[cli].children[linea].children[conc]={cant:0,pvp:0};
+    p[cli].children[linea].children[conc].cant+=c.cant;
+    p[cli].children[linea].children[conc].pvp+=c.pvpTotal;
+  });
+  document.getElementById('tbody-acum-coo-pivot').innerHTML = buildPivotCOO(p);
+}
+
+function buildPivotCOO(pivot){
+  let html='';
+  if(Object.keys(pivot).length===0) return '<tr><td colspan="3" class="ec">Sin datos</td></tr>';
+  Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
+    const exp=_acumExpanded.has('coo:'+cli);
+    html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="coo:${cli}" onclick="toggleAcumCOO(this.dataset.key)">
+      <td><strong>${cli}</strong></td>
+      <td class="r num">${fmtN(cliData.cant,0)}</td>
+      <td class="r num">${fmtE(cliData.pvp)}</td>
+    </tr>`;
+    if(exp){
+      Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([linea,lineaData])=>{
+        const key2='coo:'+cli+':'+linea, exp2=_acumExpanded.has(key2);
+        html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" onclick="toggleAcumCOO(this.dataset.key)">
+          <td style="padding-left:20px">↳ ${linea}</td>
+          <td class="r num">${fmtN(lineaData.cant,0)}</td>
+          <td class="r num">${fmtE(lineaData.pvp)}</td>
+        </tr>`;
+        if(exp2){
+          Object.entries(lineaData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
+            html+=`<tr class="tp-child">
+              <td style="padding-left:40px;font-size:var(--fz-xs)">${conc}</td>
+              <td class="r num">${fmtN(concData.cant,0)}</td>
+              <td class="r num">${fmtE(concData.pvp)}</td>
+            </tr>`;
+          });
+        }
+      });
+    }
+  });
+  return html;
+}
+
+function toggleAcumCOO(key){
+  if(_acumExpanded.has(key)) _acumExpanded.delete(key); else _acumExpanded.add(key);
+  renderLicKPI();
+}
+
+// ── 3.3 Acumulado Agente ──
+function renderAcumAgente(lics){
+  const p={};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
+    if(!p[agt]) p[agt]={cant:0,pvp:0,children:{}};
+    p[agt].cant+=c.cant; p[agt].pvp+=c.pvpTotal;
+    if(!p[agt].children[cli]) p[agt].children[cli]={cant:0,pvp:0,children:{}};
+    p[agt].children[cli].cant+=c.cant; p[agt].children[cli].pvp+=c.pvpTotal;
+    if(!p[agt].children[cli].children[linea]) p[agt].children[cli].children[linea]={cant:0,pvp:0,children:{}};
+    p[agt].children[cli].children[linea].cant+=c.cant; p[agt].children[cli].children[linea].pvp+=c.pvpTotal;
+    const conc=r.concepto||'—';
+    if(!p[agt].children[cli].children[linea].children[conc]) p[agt].children[cli].children[linea].children[conc]={cant:0,pvp:0};
+    p[agt].children[cli].children[linea].children[conc].cant+=c.cant;
+    p[agt].children[cli].children[linea].children[conc].pvp+=c.pvpTotal;
+  });
+  document.getElementById('tbody-acum-agt').innerHTML = buildPivotAgt(p);
+}
+
+function buildPivotAgt(pivot){
+  let html='';
+  if(Object.keys(pivot).length===0) return '<tr><td colspan="3" class="ec">Sin datos</td></tr>';
+  Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([agt,agtData])=>{
+    const exp=_acumAgtExpanded.has('agt:'+agt);
+    html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="agt:${agt}" onclick="toggleAcumAgt(this.dataset.key)">
+      <td><strong>${agt}</strong></td>
+      <td class="r num">${fmtN(agtData.cant,0)}</td>
+      <td class="r num">${fmtE(agtData.pvp)}</td>
+    </tr>`;
+    if(exp){
+      Object.entries(agtData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
+        const key2='agt:'+agt+':'+cli, exp2=_acumAgtExpanded.has(key2);
+        html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" onclick="toggleAcumAgt(this.dataset.key)">
+          <td style="padding-left:16px">↳ ${cli}</td>
+          <td class="r num">${fmtN(cliData.cant,0)}</td>
+          <td class="r num">${fmtE(cliData.pvp)}</td>
+        </tr>`;
+        if(exp2){
+          Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([linea,lineaData])=>{
+            const key3='agt:'+agt+':'+cli+':'+linea, exp3=_acumAgtExpanded.has(key3);
+            html+=`<tr class="tp-hdr${exp3?'':' collapsed'} tp-l3" data-key="${key3}" onclick="toggleAcumAgt(this.dataset.key)">
+              <td style="padding-left:32px;font-size:var(--fz-xs)">↳ ${linea}</td>
+              <td class="r num">${fmtN(lineaData.cant,0)}</td>
+              <td class="r num">${fmtE(lineaData.pvp)}</td>
+            </tr>`;
+            if(exp3){
+              Object.entries(lineaData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
+                html+=`<tr class="tp-child">
+                  <td style="padding-left:48px;font-size:var(--fz-xs)">${conc}</td>
+                  <td class="r num">${fmtN(concData.cant,0)}</td>
+                  <td class="r num">${fmtE(concData.pvp)}</td>
+                </tr>`;
+              });
+            }
+          });
+        }
+      });
+    }
+  });
+  return html;
+}
+
+function toggleAcumAgt(key){
+  if(_acumAgtExpanded.has(key)) _acumAgtExpanded.delete(key); else _acumAgtExpanded.add(key);
+  renderLicKPI();
+}
+
+function calcLicRowSimple(r){
+  const today=new Date().toISOString().slice(0,10);
+  const precio=lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
+  const pvpMes  =precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
+  const costeMes=precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
+  const cant=parseFloat(r.cantidad)||0, dias=parseFloat(r.dias_fact)||0;
+  let diasMes=30;
+  if(r.fecha_inicio){const d=new Date(r.fecha_inicio);diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();}
+  const pvp  =dias>0?pvpMes*dias/diasMes:pvpMes;
+  const coste=dias>0?costeMes*dias/diasMes:costeMes;
+  const agt=lookupAgente(r.agente);
+  return {cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
+          mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
+          mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant};
+}
+
+// ── EMAIL KPI LICENCIAS ──────────────────────────────────────
+function sendLicKpiEmail(){
+  const now=new Date();
+  const MESES_ES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                  'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const year=parseInt(document.getElementById('lic-kpi-year').value);
+  const month=parseInt(document.getElementById('lic-kpi-month').value);
+  const day=String(now.getDate()).padStart(2,'0');
+  const monthName=MESES_ES[month-1];
+  const isCierre=now.getDate()===26;
+  const subj='Licencias / Cuadro de mando / '+year+' '+String(month).padStart(2,'0')+' '+monthName+' '+day+(isCierre?' (CIERRE)':'');
+  const period=(document.getElementById('lic-kpi-period')||{}).textContent||'';
+  const lines=['Hola, te envío los KPIs de licencias.','','Período: '+period,''];
+  document.querySelectorAll('#lic-kpi-cards .sc').forEach(sc=>{
+    const lbl=(sc.querySelector('.sc-lbl')?.textContent||'').trim();
+    const val=(sc.querySelector('.sc-val')?.textContent||'').trim();
+    if(lbl&&val) lines.push(lbl+': '+val);
+  });
+  lines.push('','Un saludo.');
+  window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
+}
+
+// ── INIT ─────────────────────────────────────────────
+(async function initApp(){
+  // Wait for Supabase CDN to load (same pattern as COO)
+  if(!window.supabase || !window.supabase.createClient){
+    setTimeout(initApp, 300);
+    return;
+  }
   await hydrateDB();
-  renderLic(); renderPrec(); renderAgt();
-  document.getElementById('footer-lbl').textContent='Licencias · Dpto. BC';
+  renderLicKPI();
+  renderLic();
+  renderPrec();
+  renderAgt();
+  document.getElementById('footer-lbl').textContent = 'Licencias · Dpto. BC';
 })();
 
 </script>
