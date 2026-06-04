@@ -605,8 +605,11 @@ const SB_TBL  = { svc:'servicios', val:'valoraciones', cli:'clientes', tec:'tecn
 let _sb = null;
 function getSB(){
   if(_sb) return _sb;
-  if(!window.supabase?.createClient){ console.warn('Supabase SDK no cargado'); return null; }
-  _sb = window.supabase.createClient(SB_URL, SB_KEY);
+  // UMD bundle exposes via self.supabase or window.supabase
+  const sbLib = (typeof supabase !== 'undefined' && supabase?.createClient) ? supabase
+              : (window.supabase?.createClient ? window.supabase : null);
+  if(!sbLib){ console.warn('Supabase SDK no cargado'); return null; }
+  _sb = sbLib.createClient(SB_URL, SB_KEY);
   return _sb;
 }
 // ── MICROSOFT AUTH (MSAL) ────────────────────────────
