@@ -432,7 +432,28 @@ table.rt tbody td.c{text-align:center;}
         <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
         <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
       </select>
-    </div></div>
+    </div>
+        <div class="fdiv"></div>
+    <div class="fg" style="justify-content:flex-end">
+      <button class="btn btn-s" onclick="sendLicKpiEmail()" style="white-space:nowrap">&#x2709;&#xFE0F; Enviar por email</button>
+    </div>
+  </div>
+
+  <!-- PERÍODO -->
+  <div class="seh-ey" style="margin-top:var(--sp-5)">Indicadores clave</div>
+  <h2 id="lic-kpi-period" class="seh-t" style="margin-bottom:var(--sp-5)">—</h2>
+
+
+  <!-- GRID 3 COLUMNAS -->
+  <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;">
+
+    <!-- 3.1 NUEVAS LICENCIAS -->
+    <div style="padding-right:var(--sp-5);">
+      <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Nuevas licencias este mes</div>
+
+      <!-- Pivot 1: Cliente > Fecha > Concepto -->
+      <div class="kc" style="margin-bottom:var(--sp-4);">
+        <div class="kc-hd"><div><div class="kc-t">Por Cliente &amp; Fecha</div><div class="kc-s">Agrupado por cliente, fecha y concepto</div></div></div>
         <div class="tw"><table class="kt">
           <thead><tr><th>Cliente / Fecha / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
           <tbody id="tbody-nuevas-1"></tbody>
@@ -1083,7 +1104,7 @@ function buildLicFilterRow(){
 
 function buildPrecFilterRow(){
   const fr=document.getElementById('prec-filter-row');
-  if(fr.children.length) return;
+  if(fr.innerHTML) return;
   const table=document.getElementById('tbl-prec');
   if(!table) return;
   const ths=Array.from(table.querySelectorAll('.hdr-row th'));
@@ -1159,7 +1180,7 @@ function renderPrec(){
 
 function buildAgtFilterRow(){
   const fr=document.getElementById('agt-filter-row');
-  if(fr.children.length) return;
+  if(fr.innerHTML) return;
   const table=document.getElementById('tbl-agt');
   if(!table) return;
   const ths=Array.from(table.querySelectorAll('.hdr-row th'));
@@ -1465,7 +1486,7 @@ function exportPrecXLS(){
 }
 function clearLicFilters(){ licFilters={}; document.getElementById('lic-filter-row').innerHTML=''; renderLic(); }
 function clearAgtFilters(){ agtFilters={}; document.getElementById('agt-filter-row').innerHTML=''; renderAgt(); }
-function clearPrecFilters(){ precFilters={}; document.getElementById('prec-filter-row').innerHTML=''; buildPrecFilterRow(); renderPrec(); }
+function clearPrecFilters(){ precFilters={}; document.getElementById('prec-filter-row').innerHTML=''; renderPrec(); }
 
 
 // ── INIT KPI LICENCIAS ──────────────────────────────────────
@@ -1495,32 +1516,21 @@ function licDateStr(d){
   return y+'-'+m+'-'+dd;
 }
 
-
 function renderLicKPI(){
-  const year  = parseInt(document.getElementById('lic-kpi-year').value);
-  const month = parseInt(document.getElementById('lic-kpi-month').value);
-  const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  // Nuevas este mes = fecha_inicio dentro del mes calendario
-  const mesIni = year+'-'+String(month).padStart(2,'0')+'-01';
-  const mesUltDia = new Date(year, month, 0).getDate();
-  const mesFin = year+'-'+String(month).padStart(2,'0')+'-'+String(mesUltDia).padStart(2,'0');
-  // Acumulado = TODAS las licencias con fecha_inicio <= 26 del mes (sin límite de año)
-  const acumFin = licDateStr(licMesRange(year, month).fin);
-  const licMes  = DB.licencias.filter(r=>{ const fi=(r.fecha_inicio||'').substring(0,10); return fi>=mesIni && fi<=mesFin; });
-  const licAcum = DB.licencias.filter(r=>{ const fi=(r.fecha_inicio||'').substring(0,10); return fi.length===10 && fi<=acumFin; });
-  document.getElementById('lic-kpi-period').textContent = 'Acumulado '+MESES_ES[month]+' '+year;
+  const year=parseInt(document.getElementById('lic-kpi-year').value);
+  const month=parseInt(document.getElementById('lic-kpi-month').value);
+  const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const mesIni=year+'-'+String(month).padStart(2,'0')+'-01';
+  const mesFin=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
+  const acumFin=licDateStr(licMesRange(year,month).fin);
+  const licMes=DB.licencias.filter(r=>{const fi=(r.fecha_inicio||'').substring(0,10);return fi>=mesIni&&fi<=mesFin;});
+  const licAcum=DB.licencias.filter(r=>{const fi=(r.fecha_inicio||'').substring(0,10);return fi.length===10&&fi<=acumFin;});
+  document.getElementById('lic-kpi-period').textContent='Acumulado '+MESES_ES[month]+' '+year;
   renderNuevasLicencias(licMes);
   renderAcumCOO(licAcum);
   renderAcumAgente(licAcum);
 }
 
-function kpiCard(lbl, val, sub, idLink){
-  return '<div class="sc anim"><div class="sc-lbl">'+lbl+'</div>'
-    +'<div class="sc-val num">'+val+'</div>'
-    +(sub?'<div class="sc-sub">'+sub+'</div>':'')
-    +'</div>';
-}
 function fmtE(v){ return typeof v==='number'?v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':'—'; }
 function fmtN(v,d){ if(v===null||v===undefined) return '—'; return parseFloat(v).toLocaleString('es-ES',{minimumFractionDigits:d??2,maximumFractionDigits:d??2}); }
 
@@ -1796,23 +1806,6 @@ function sendLicKpiEmail(){
   window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
 }
 
-// ── INIT ─────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', initMsalWhenReady);
-
-// ── INIT KPI LICENCIAS ──────────────────────────────────────
-(function initLicKPI(){
-  const yearSel=document.getElementById('lic-kpi-year');
-  const now=new Date();
-  for(let y=now.getFullYear(); y>=2023; y--){
-    const o=document.createElement('option');
-    o.value=y; o.textContent=y;
-    yearSel.appendChild(o);
-  }
-  // Auto-detect: si día > 26 → mes siguiente
-  const autoMonth = now.getDate()>26 ? now.getMonth()+2 : now.getMonth()+1;
-  const m = autoMonth>12?1:autoMonth;
-  document.getElementById('lic-kpi-month').value=m;
-})();
 
 // ── INIT ─────────────────────────────────────────────
 (async function initApp(){
