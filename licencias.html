@@ -358,6 +358,20 @@ table.rt tbody td.c{text-align:center;}
 #sec-licencias,#sec-precios,#sec-agentes{max-width:100%;padding-left:var(--sp-4);padding-right:var(--sp-4);}
 .calc{background:var(--ivory-50);color:var(--fg-3);font-style:italic;}
 .pct{font-size:var(--fz-xs);color:var(--fg-3);}
+/* Modal */
+.mod-bg{display:none;position:fixed;inset:0;background:rgba(14,31,61,.45);z-index:200;align-items:flex-start;justify-content:center;padding:48px var(--g);overflow-y:auto;}
+.mod{background:var(--bg-card);border-radius:var(--r-lg);box-shadow:var(--sh-md);width:100%;}
+.mod-hd{background:var(--bg-dark);padding:var(--sp-4) var(--sp-5);display:flex;align-items:center;justify-content:space-between;border-radius:var(--r-lg) var(--r-lg) 0 0;}
+.mod-t{font-family:var(--ff-serif);font-size:var(--fz-h4);font-weight:500;color:var(--fg-d);}
+.mod-x{background:none;border:none;color:var(--fg-d2);font-size:18px;cursor:pointer;padding:0 4px;line-height:1;}
+.mod-x:hover{color:var(--fg-d);}
+.mod-bd{padding:var(--sp-5);}
+.mod-ft{padding:var(--sp-4) var(--sp-5);border-top:1px solid var(--border-s);display:flex;justify-content:flex-end;gap:var(--sp-3);}
+.fi{display:flex;flex-direction:column;gap:4px;}
+.fi label{font-size:var(--fz-2xs);font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);}
+.fi input,.fi select,.fi textarea{font-family:var(--ff-sans);font-size:var(--fz-sm);color:var(--fg-2);background:var(--bg-e);border:1px solid var(--border);border-radius:var(--r-md);padding:6px var(--sp-3);outline:none;width:100%;}
+.fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--accent);}
+.fi textarea{min-height:80px;resize:vertical;}
 </style>
 <body>
 
