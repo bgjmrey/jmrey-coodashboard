@@ -448,10 +448,11 @@ table.rt tbody td.c{text-align:center;}
 
   <!-- PERÍODO -->
   <div class="seh-ey" style="margin-top:var(--sp-5)">Indicadores clave</div>
-  <h2 id="lic-kpi-period" class="seh-t" style="margin-bottom:var(--sp-5)">—</h2>
+  <div style="display:flex;align-items:baseline;gap:var(--sp-5);flex-wrap:wrap;margin-bottom:var(--sp-5);">
+    <h2 id="lic-kpi-period" class="seh-t" style="margin:0">—</h2>
+    <span id="lic-kpi-inline" style="font-size:var(--fz-sm);color:var(--fg-3);display:flex;gap:var(--sp-4);flex-wrap:wrap;"></span>
+  </div>
 
-  <!-- KPI CARDS -->
-  <div class="sg" id="lic-kpi-cards" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--sp-5);"></div>
 
   <!-- GRID 3 COLUMNAS -->
   <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;">
@@ -1572,11 +1573,19 @@ function renderLicKPI(){
     totN++;
   });
 
-  document.getElementById('lic-kpi-cards').innerHTML =
-    kpiCard('Licencias período', totN+' uds', '', null) +
-    kpiCard('PVP período',   fmtE(totPvp),   '', null) +
-    kpiCard('Coste período', fmtE(totCoste), '', null) +
-    kpiCard('Margen período',fmtE(totMrg),   '', null);
+  // KPIs inline (sin recuadros)
+  const kpiItems = [
+    {lbl:'Licencias', val: totN+' uds'},
+    {lbl:'PVP',       val: fmtE(totPvp)},
+    {lbl:'Coste',     val: fmtE(totCoste)},
+    {lbl:'Margen',    val: fmtE(totMrg)},
+  ];
+  document.getElementById('lic-kpi-inline').innerHTML = kpiItems.map(k=>
+    '<span style="display:flex;flex-direction:column;align-items:center;min-width:120px;">'
+    +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--accent)">'+k.lbl+'</span>'
+    +'<span style="font-family:var(--ff-serif);font-size:22px;font-weight:500;color:var(--bg-dark)">'+k.val+'</span>'
+    +'</span>'
+  ).join('<span style="color:var(--border);font-size:20px">|</span>');
 
   renderNuevasLicencias(licMes);
   renderAcumCOO(licAcum);
@@ -1828,32 +1837,33 @@ function toggleAcumAgt(key){
   renderLicKPI();
 }
 
-function toggleExpandAll(prefixes, tbodyId){
-  // Check if all top-level items are expanded
-  const tbody = document.getElementById(tbodyId);
+function toggleExpandAllById(tbodyId){
+  const tbody=document.getElementById(tbodyId);
   if(!tbody) return;
-  const allRows = Array.from(tbody.querySelectorAll('tr.tp-hdr'));
-  const topRows = allRows.filter(r=>!r.classList.contains('tp-l2')&&!r.classList.contains('tp-l3'));
-  const allExpanded = topRows.length>0 && topRows.every(r=>!r.classList.contains('collapsed'));
+  const topRows=Array.from(tbody.querySelectorAll('tr.tp-hdr')).filter(r=>!r.classList.contains('tp-l2')&&!r.classList.contains('tp-l3'));
+  const anyCollapsed=topRows.some(r=>r.classList.contains('collapsed'));
 
-  // Determine which sets to use based on tbody
-  const setMap = {
-    'tbody-nuevas-1':   [window._licExpanded,  window._licExpanded2][0],
-    'tbody-nuevas-2':   window._licExpanded2,
-    'tbody-acum-coo-pivot': window._acumExpanded,
-    'tbody-acum-agt':   window._acumAgtExpanded
+  // Collect keys from all expandable rows
+  const setMap={
+    'tbody-nuevas-1':   [_licExpanded],
+    'tbody-nuevas-2':   [_licExpanded2],
+    'tbody-acum-coo-pivot': [_acumExpanded],
+    'tbody-acum-agt':   [_acumAgtExpanded]
   };
-  const s = setMap[tbodyId];
-  if(!s) return;
+  const sets=setMap[tbodyId]||[];
 
-  if(allExpanded){
-    s.clear();
+  if(anyCollapsed){
+    // Expand all: add all keys from rendered rows
+    tbody.querySelectorAll('tr[data-key]').forEach(r=>{
+      sets.forEach(s=>s.add(r.dataset.key));
+    });
   } else {
-    // Collect all possible keys from current rows
-    tbody.querySelectorAll('tr[data-key]').forEach(r=>{s.add(r.dataset.key);});
+    // Collapse all
+    sets.forEach(s=>s.clear());
   }
   renderLicKPI();
 }
+
 
 function calcLicRowSimple(r){
   const today=new Date().toISOString().slice(0,10);
@@ -2258,32 +2268,33 @@ function toggleAcumAgt(key){
   renderLicKPI();
 }
 
-function toggleExpandAll(prefixes, tbodyId){
-  // Check if all top-level items are expanded
-  const tbody = document.getElementById(tbodyId);
+function toggleExpandAllById(tbodyId){
+  const tbody=document.getElementById(tbodyId);
   if(!tbody) return;
-  const allRows = Array.from(tbody.querySelectorAll('tr.tp-hdr'));
-  const topRows = allRows.filter(r=>!r.classList.contains('tp-l2')&&!r.classList.contains('tp-l3'));
-  const allExpanded = topRows.length>0 && topRows.every(r=>!r.classList.contains('collapsed'));
+  const topRows=Array.from(tbody.querySelectorAll('tr.tp-hdr')).filter(r=>!r.classList.contains('tp-l2')&&!r.classList.contains('tp-l3'));
+  const anyCollapsed=topRows.some(r=>r.classList.contains('collapsed'));
 
-  // Determine which sets to use based on tbody
-  const setMap = {
-    'tbody-nuevas-1':   [window._licExpanded,  window._licExpanded2][0],
-    'tbody-nuevas-2':   window._licExpanded2,
-    'tbody-acum-coo-pivot': window._acumExpanded,
-    'tbody-acum-agt':   window._acumAgtExpanded
+  // Collect keys from all expandable rows
+  const setMap={
+    'tbody-nuevas-1':   [_licExpanded],
+    'tbody-nuevas-2':   [_licExpanded2],
+    'tbody-acum-coo-pivot': [_acumExpanded],
+    'tbody-acum-agt':   [_acumAgtExpanded]
   };
-  const s = setMap[tbodyId];
-  if(!s) return;
+  const sets=setMap[tbodyId]||[];
 
-  if(allExpanded){
-    s.clear();
+  if(anyCollapsed){
+    // Expand all: add all keys from rendered rows
+    tbody.querySelectorAll('tr[data-key]').forEach(r=>{
+      sets.forEach(s=>s.add(r.dataset.key));
+    });
   } else {
-    // Collect all possible keys from current rows
-    tbody.querySelectorAll('tr[data-key]').forEach(r=>{s.add(r.dataset.key);});
+    // Collapse all
+    sets.forEach(s=>s.clear());
   }
   renderLicKPI();
 }
+
 
 function calcLicRowSimple(r){
   const today=new Date().toISOString().slice(0,10);
