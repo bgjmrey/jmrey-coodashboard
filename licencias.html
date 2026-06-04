@@ -433,41 +433,6 @@ table.rt tbody td.c{text-align:center;}
         <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
       </select>
     </div>
-    <div class="fg">
-      <span class="fl">VISTA</span>
-      <div style="display:flex;gap:0">
-        <button class="tog-btn on" id="lic-btn-mes"  onclick="setLicVista('mes')">Mes</button>
-        <button class="tog-btn"    id="lic-btn-acum" onclick="setLicVista('acum')">Acumulado</button>
-      </div>
-    </div>
-    <div class="fdiv"></div>
-    <div class="fg" style="justify-content:flex-end">
-      <button class="btn btn-s" onclick="sendLicKpiEmail()" style="white-space:nowrap">&#x2709;&#xFE0F; Enviar por email</button>
-    </div>
-  </div>
-
-  <!-- PERÍODO -->
-  <div class="seh-ey" style="margin-top:var(--sp-5)">Indicadores clave</div>
-  <div style="display:flex;align-items:baseline;gap:var(--sp-5);flex-wrap:wrap;margin-bottom:var(--sp-5);">
-    <h2 id="lic-kpi-period" class="seh-t" style="margin:0">—</h2>
-    <span id="lic-kpi-inline" style="font-size:var(--fz-sm);color:var(--fg-3);display:flex;gap:var(--sp-4);flex-wrap:wrap;"></span>
-  </div>
-
-
-  <!-- GRID 3 COLUMNAS -->
-  <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;">
-
-    <!-- 3.1 NUEVAS LICENCIAS -->
-    <div style="padding-right:var(--sp-5);">
-      <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Nuevas licencias este mes</div>
-
-      <div class="kc" style="margin-bottom:var(--sp-4);">
-        <div class="kc-hd"><div>
-          <div class="kc-t" onclick="toggleExpandAllById('tbody-nuevas-1')" style="cursor:pointer;user-select:none;" title="Clic para expandir/colapsar todo">
-            Por Cliente &amp; Fecha <span style="font-size:9px;color:var(--accent)">&#9660;</span>
-          </div>
-          <div class="kc-s">Agrupado por cliente, fecha y concepto</div>
-        </div></div>
         <div class="tw"><table class="kt">
           <thead><tr><th>Cliente / Fecha / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
           <tbody id="tbody-nuevas-1"></tbody>
@@ -1540,68 +1505,34 @@ function licDateStr(d){
   return y+'-'+m+'-'+dd;
 }
 
-function getLicVista(){ return document.getElementById('lic-btn-mes').classList.contains('on')?'mes':'acum'; }
-function setLicVista(v){
-  document.getElementById('lic-btn-mes').classList.toggle('on', v==='mes');
-  document.getElementById('lic-btn-acum').classList.toggle('on', v==='acum');
-  renderLicKPI();
-}
 
 function renderLicKPI(){
   const year  = parseInt(document.getElementById('lic-kpi-year').value);
   const month = parseInt(document.getElementById('lic-kpi-month').value);
-  const vista = getLicVista();
   const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-  const rng   = licMesRange(year, month);
-  const iniStr = licDateStr(rng.ini);
-  const finStr = licDateStr(rng.fin);
+  // "Este mes" = licencias cuya fecha_inicio está dentro del mes del calendario seleccionado
+  const mesIni = year+'-'+String(month).padStart(2,'0')+'-01';
+  const mesUltDia = new Date(year, month, 0).getDate();
+  const mesFin = year+'-'+String(month).padStart(2,'0')+'-'+String(mesUltDia).padStart(2,'0');
 
-  // Acumulado: desde 27-dic del año anterior hasta el 26 del mes seleccionado
-  const acumIniStr = (year-1)+'-12-27';
+  // Acumulado = desde 27-dic del año anterior hasta el 26 del mes seleccionado
+  const acumIni = (year-1)+'-12-27';
+  const acumFin = licDateStr(licMesRange(year, month).fin);
 
-  const licMes = DB.licencias.filter(r=>{
+  const licMes  = DB.licencias.filter(r=>{
     const fi=(r.fecha_inicio||'').substring(0,10);
-    return fi >= iniStr && fi <= finStr;
+    return fi >= mesIni && fi <= mesFin;
   });
-
-  const licAcum = vista==='mes' ? licMes : DB.licencias.filter(r=>{
+  const licAcum = DB.licencias.filter(r=>{
     const fi=(r.fecha_inicio||'').substring(0,10);
-    return fi >= acumIniStr && fi <= finStr;
+    return fi >= acumIni && fi <= acumFin;
   });
 
-  const lbl = vista==='mes'
-    ? '27 '+MESES_ES[month===1?12:month-1]+' \u2013 26 '+MESES_ES[month]+' '+year
-    : 'Acumulado '+MESES_ES[month]+' '+year;
-  document.getElementById('lic-kpi-period').textContent = lbl;
+  document.getElementById('lic-kpi-period').textContent = 'Acumulado '+MESES_ES[month]+' '+year;
 
-  // KPI cards — siempre muestran el período seleccionado (licAcum en acumulado)
-  const licKpi = licAcum;
-  let totPvp=0, totCoste=0, totMrg=0, totN=0;
-  licKpi.forEach(r=>{
-    const c=calcLicRowSimple(r);
-    totPvp   += isNaN(c.pvpTotal)   ? 0 : c.pvpTotal;
-    totCoste += isNaN(c.costeTotal) ? 0 : c.costeTotal;
-    totMrg   += isNaN(c.pvpTotal-c.costeTotal) ? 0 : (c.pvpTotal-c.costeTotal);
-    totN++;
-  });
-
-  // KPIs inline (sin recuadros)
-  const kpiItems = [
-    {lbl:'Licencias', val: totN+' uds'},
-    {lbl:'PVP',       val: fmtE(totPvp)},
-    {lbl:'Coste',     val: fmtE(totCoste)},
-    {lbl:'Margen',    val: fmtE(totMrg)},
-  ];
-  document.getElementById('lic-kpi-inline').innerHTML = kpiItems.map(k=>
-    '<span style="display:flex;flex-direction:column;align-items:center;min-width:120px;">'
-    +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--accent)">'+k.lbl+'</span>'
-    +'<span style="font-family:var(--ff-serif);font-size:22px;font-weight:500;color:var(--bg-dark)">'+k.val+'</span>'
-    +'</span>'
-  ).join('<span style="color:var(--border);font-size:20px">|</span>');
-
-  renderNuevasLicencias(licMes);
+  renderNuevasLicencias(licMes, MESES_ES[month]);
   renderAcumCOO(licAcum);
   renderAcumAgente(licAcum);
 }
@@ -1619,7 +1550,7 @@ function fmtN(v,d){ if(v===null||v===undefined) return '—'; return parseFloat(
 const _licExpanded = new Set(); // 'fecha' pivots
 const _licExpanded2 = new Set(); // 'linea' pivots
 
-function renderNuevasLicencias(lics){
+function renderNuevasLicencias(lics, mesLabel){
   const today = new Date().toISOString().slice(0,10);
 
   // Pivot 1: Cliente > Fecha > Concepto
