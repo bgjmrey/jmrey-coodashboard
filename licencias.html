@@ -416,7 +416,7 @@ table.rt tbody td.c{text-align:center;}
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- PESTAÑA: KPIs                                              -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<section id="sec-kpis" class="sec active" style="max-width:100%;padding-left:var(--sp-4);padding-right:var(--sp-4);">
+<section id="sec-kpis" class="sec active">
 
   <!-- FILTROS -->
   <div class="fbar">
@@ -433,21 +433,47 @@ table.rt tbody td.c{text-align:center;}
         <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
       </select>
     </div>
+    <div class="fg">
+      <span class="fl">VISTA</span>
+      <div style="display:flex;gap:0">
+        <button class="tog-btn on" id="lic-btn-mes"  onclick="setLicVista('mes')">Mes</button>
+        <button class="tog-btn"    id="lic-btn-acum" onclick="setLicVista('acum')">Acumulado</button>
+      </div>
+    </div>
+    <div class="fdiv"></div>
+    <div class="fg" style="justify-content:flex-end">
+      <button class="btn btn-s" onclick="sendLicKpiEmail()" style="white-space:nowrap">&#x2709;&#xFE0F; Enviar por email</button>
+    </div>
+  </div>
+
+  <!-- PERÍODO -->
+  <div class="seh-ey" style="margin-top:var(--sp-5)">Indicadores clave</div>
+  <h2 id="lic-kpi-period" class="seh-t" style="margin-bottom:var(--sp-5)">—</h2>
+
+  <!-- KPI CARDS -->
+  <div class="sg" id="lic-kpi-cards" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--sp-5);"></div>
+
+  <!-- GRID 3 COLUMNAS -->
+  <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;">
+
+    <!-- 3.1 NUEVAS LICENCIAS -->
+    <div style="padding-right:var(--sp-5);">
+      <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Nuevas licencias este mes</div>
+
+      <!-- Pivot 1: Cliente > Fecha > Concepto -->
+      <div class="kc" style="margin-bottom:var(--sp-4);">
+        <div class="kc-hd"><div><div class="kc-t">Por Cliente &amp; Fecha</div><div class="kc-s">Agrupado por cliente, fecha y concepto</div></div></div>
         <div class="tw"><table class="kt">
           <thead><tr><th>Cliente / Fecha / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
           <tbody id="tbody-nuevas-1"></tbody>
         </table></div>
       </div>
 
+      <!-- Pivot 2: Cliente > Línea > Concepto -->
       <div class="kc">
-        <div class="kc-hd"><div>
-          <div class="kc-t" onclick="toggleExpandAllById('tbody-nuevas-2')" style="cursor:pointer;user-select:none;" title="Clic para expandir/colapsar todo">
-            Por Cliente &amp; L&iacute;nea <span style="font-size:9px;color:var(--accent)">&#9660;</span>
-          </div>
-          <div class="kc-s">Agrupado por cliente, l&iacute;nea y concepto</div>
-        </div></div>
+        <div class="kc-hd"><div><div class="kc-t">Por Cliente &amp; Línea</div><div class="kc-s">Agrupado por cliente, línea y concepto</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th>Cliente / L&iacute;nea / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
+          <thead><tr><th>Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
           <tbody id="tbody-nuevas-2"></tbody>
         </table></div>
       </div>
@@ -459,22 +485,20 @@ table.rt tbody td.c{text-align:center;}
     <div style="padding:0 var(--sp-5);">
       <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Licencias acumuladas COO</div>
 
+      <!-- Resumen por cliente -->
       <div class="kc" style="margin-bottom:var(--sp-4);">
         <div class="kc-hd"><div><div class="kc-t">Resumen por Cliente</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th>Cliente</th><th class="r">PVP</th><th class="r">Coste</th><th class="r">&euro; JMREY</th><th class="r">&euro; COO</th></tr></thead>
+          <thead><tr><th>Cliente</th><th class="r">PVP</th><th class="r">Coste</th><th class="r">&#8364; JMREY</th><th class="r">&#8364; COO</th></tr></thead>
           <tbody id="tbody-acum-coo"></tbody>
         </table></div>
       </div>
 
+      <!-- Pivot: Cliente > Línea > Concepto -->
       <div class="kc">
-        <div class="kc-hd"><div>
-          <div class="kc-t" onclick="toggleExpandAllById('tbody-acum-coo-pivot')" style="cursor:pointer;user-select:none;" title="Clic para expandir/colapsar todo">
-            Por Cliente, L&iacute;nea &amp; Concepto <span style="font-size:9px;color:var(--accent)">&#9660;</span>
-          </div>
-        </div></div>
+        <div class="kc-hd"><div><div class="kc-t">Por Cliente, Línea &amp; Concepto</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th>Cliente / L&iacute;nea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
+          <thead><tr><th>Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
           <tbody id="tbody-acum-coo-pivot"></tbody>
         </table></div>
       </div>
@@ -486,13 +510,9 @@ table.rt tbody td.c{text-align:center;}
     <div style="padding-left:var(--sp-5);">
       <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Licencias acumuladas Agente</div>
       <div class="kc">
-        <div class="kc-hd"><div>
-          <div class="kc-t" onclick="toggleExpandAllById('tbody-acum-agt')" style="cursor:pointer;user-select:none;" title="Clic para expandir/colapsar todo">
-            Por Agente, Cliente, L&iacute;nea &amp; Concepto <span style="font-size:9px;color:var(--accent)">&#9660;</span>
-          </div>
-        </div></div>
+        <div class="kc-hd"><div><div class="kc-t">Por Agente, Cliente, Línea &amp; Concepto</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th>Agente / Cliente / L&iacute;nea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
+          <thead><tr><th>Agente / Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
           <tbody id="tbody-acum-agt"></tbody>
         </table></div>
       </div>
@@ -1505,35 +1525,92 @@ function licDateStr(d){
   return y+'-'+m+'-'+dd;
 }
 
+function getLicVista(){ return document.getElementById('lic-btn-mes').classList.contains('on')?'mes':'acum'; }
+function setLicVista(v){
+  document.getElementById('lic-btn-mes').classList.toggle('on', v==='mes');
+  document.getElementById('lic-btn-acum').classList.toggle('on', v==='acum');
+  renderLicKPI();
+}
 
 function renderLicKPI(){
   const year  = parseInt(document.getElementById('lic-kpi-year').value);
   const month = parseInt(document.getElementById('lic-kpi-month').value);
-  const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const vista = getLicVista();
 
-  // "Este mes" = licencias cuya fecha_inicio está dentro del mes del calendario seleccionado
-  const mesIni = year+'-'+String(month).padStart(2,'0')+'-01';
-  const mesUltDia = new Date(year, month, 0).getDate();
-  const mesFin = year+'-'+String(month).padStart(2,'0')+'-'+String(mesUltDia).padStart(2,'0');
+  const MESES_ES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-  // Acumulado = desde 27-dic del año anterior hasta el 26 del mes seleccionado
-  const acumIni = (year-1)+'-12-27';
-  const acumFin = licDateStr(licMesRange(year, month).fin);
+  // Rango del período
+  const rng = licMesRange(year, month);
+  const iniStr = licDateStr(rng.ini);
+  const finStr = licDateStr(rng.fin);
 
-  const licMes  = DB.licencias.filter(r=>{
-    const fi=(r.fecha_inicio||'').substring(0,10);
-    return fi >= mesIni && fi <= mesFin;
-  });
-  const licAcum = DB.licencias.filter(r=>{
-    const fi=(r.fecha_inicio||'').substring(0,10);
-    return fi >= acumIni && fi <= acumFin;
-  });
+  // Filtrar licencias del período (por fecha_inicio)
+  // Para "mes": fecha_inicio dentro del rango 27ant→26act
+  // Para "acumulado": todas hasta el 26 del mes actual
+  let licMes, licAcum;
+  if(vista==='mes'){
+    licMes = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi >= iniStr && fi <= finStr;
+    });
+    licAcum = licMes;
+  } else {
+    // Acumulado: año en curso hasta el 26 del mes
+    const acumIni = (year-1)+'-12-27';
+    licMes = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi >= iniStr && fi <= finStr;
+    });
+    licAcum = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi <= finStr;
+    });
+  }
 
-  document.getElementById('lic-kpi-period').textContent = 'Acumulado '+MESES_ES[month]+' '+year;
+  // Período label
+  const lbl = vista==='mes'
+    ? '27 '+MESES_ES[month===1?12:month-1]+' – 26 '+MESES_ES[month]+' '+year
+    : 'Acumulado '+MESES_ES[month]+' '+year;
+  document.getElementById('lic-kpi-period').textContent = lbl;
 
-  renderNuevasLicencias(licMes, MESES_ES[month]);
+  // ── CALC totales ──
+  const today = new Date().toISOString().slice(0,10);
+  function calcLicRow(r){
+    const precio = lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
+    const pvpMes   = precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
+    const costeMes = precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
+    const cant=parseFloat(r.cantidad)||0, dias=parseFloat(r.dias_fact)||0;
+    let diasMes=30;
+    if(r.fecha_inicio){const d=new Date(r.fecha_inicio);diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();}
+    const pvp  =dias>0?pvpMes*dias/diasMes:pvpMes;
+    const coste=dias>0?costeMes*dias/diasMes:costeMes;
+    const agt  =lookupAgente(r.agente);
+    return {pvp, coste, cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
+            mrg:(pvp-coste), mrgTotal:(pvp-coste)*cant,
+            mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
+            mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant,
+            mrgAgente:(pvp-coste)*(agt.margen||0)*cant};
+  }
+
+  // KPI cards
+  const totMes  = licMes.reduce( (a,r)=>{const c=calcLicRow(r);return {pvp:a.pvp+c.pvpTotal,coste:a.costeTotal+c.costeTotal,mrg:a.mrg+c.mrgTotal,n:a.n+1};},{pvp:0,coste:0,mrg:0,n:0});
+  const totAcum = licAcum.reduce((a,r)=>{const c=calcLicRow(r);return {pvp:a.pvp+c.pvpTotal,coste:a.coste+c.costeTotal,mrg:a.mrg+c.mrgTotal,n:a.n+1};},{pvp:0,coste:0,mrg:0,n:0});
+
+  document.getElementById('lic-kpi-cards').innerHTML =
+    kpiCard('Licencias período',totMes.n,'uds','#lic-kpi-title') +
+    kpiCard('PVP período',fmtE(totMes.pvp),'',null) +
+    kpiCard('Coste período',fmtE(totMes.coste),'',null) +
+    kpiCard('Margen período',fmtE(totMes.mrg),'',null);
+
+  // ── 3.1 NUEVAS LICENCIAS ──
+  renderNuevasLicencias(licMes);
+  // ── 3.2 ACUMULADO COO ──
   renderAcumCOO(licAcum);
+  // ── 3.3 ACUMULADO AGENTE ──
   renderAcumAgente(licAcum);
 }
 
@@ -1550,7 +1627,7 @@ function fmtN(v,d){ if(v===null||v===undefined) return '—'; return parseFloat(
 const _licExpanded = new Set(); // 'fecha' pivots
 const _licExpanded2 = new Set(); // 'linea' pivots
 
-function renderNuevasLicencias(lics, mesLabel){
+function renderNuevasLicencias(lics){
   const today = new Date().toISOString().slice(0,10);
 
   // Pivot 1: Cliente > Fecha > Concepto
@@ -1717,9 +1794,7 @@ const _acumAgtExpanded = new Set();
 function renderAcumAgente(lics){
   const p={};
   lics.forEach(r=>{
-    const agtVal=r.agente||'-';
-    if(agtVal==='-'||agtVal==='') return; // excluir sin agente
-    const c=calcLicRowSimple(r), agt=agtVal, cli=r.cliente||'—', linea=r.linea_producto||'—';
+    const c=calcLicRowSimple(r), agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[agt]) p[agt]={cant:0,pvp:0,children:{}};
     p[agt].cant+=c.cant; p[agt].pvp+=c.pvpTotal;
     if(!p[agt].children[cli]) p[agt].children[cli]={cant:0,pvp:0,children:{}};
@@ -1782,34 +1857,6 @@ function toggleAcumAgt(key){
   renderLicKPI();
 }
 
-function toggleExpandAllById(tbodyId){
-  const tbody=document.getElementById(tbodyId);
-  if(!tbody) return;
-  const topRows=Array.from(tbody.querySelectorAll('tr.tp-hdr')).filter(r=>!r.classList.contains('tp-l2')&&!r.classList.contains('tp-l3'));
-  const anyCollapsed=topRows.some(r=>r.classList.contains('collapsed'));
-
-  // Collect keys from all expandable rows
-  const setMap={
-    'tbody-nuevas-1':   [_licExpanded],
-    'tbody-nuevas-2':   [_licExpanded2],
-    'tbody-acum-coo-pivot': [_acumExpanded],
-    'tbody-acum-agt':   [_acumAgtExpanded]
-  };
-  const sets=setMap[tbodyId]||[];
-
-  if(anyCollapsed){
-    // Expand all: add all keys from rendered rows
-    tbody.querySelectorAll('tr[data-key]').forEach(r=>{
-      sets.forEach(s=>s.add(r.dataset.key));
-    });
-  } else {
-    // Collapse all
-    sets.forEach(s=>s.clear());
-  }
-  renderLicKPI();
-}
-
-
 function calcLicRowSimple(r){
   const today=new Date().toISOString().slice(0,10);
   const precio=lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
@@ -1865,6 +1912,389 @@ document.addEventListener('DOMContentLoaded', initMsalWhenReady);
   const m = autoMonth>12?1:autoMonth;
   document.getElementById('lic-kpi-month').value=m;
 })();
+
+// ── KPI LICENCIAS ────────────────────────────────────────────
+const MESES_LIC = ['','ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                   'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+const MESES_LIC_CORTO = ['','Ene','Feb','Mar','Abr','May','Jun',
+                          'Jul','Ago','Sep','Oct','Nov','Dic'];
+
+function licMesRange(year, month){
+  // Período 27 mes anterior → 26 mes actual
+  const ini = month===1 ? new Date(year-1,11,27) : new Date(year,month-2,27);
+  const fin = new Date(year,month-1,26,23,59,59);
+  return {ini, fin};
+}
+function licDateStr(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+dd;
+}
+
+function getLicVista(){ return document.getElementById('lic-btn-mes').classList.contains('on')?'mes':'acum'; }
+function setLicVista(v){
+  document.getElementById('lic-btn-mes').classList.toggle('on', v==='mes');
+  document.getElementById('lic-btn-acum').classList.toggle('on', v==='acum');
+  renderLicKPI();
+}
+
+function renderLicKPI(){
+  const year  = parseInt(document.getElementById('lic-kpi-year').value);
+  const month = parseInt(document.getElementById('lic-kpi-month').value);
+  const vista = getLicVista();
+
+  const MESES_ES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // Rango del período
+  const rng = licMesRange(year, month);
+  const iniStr = licDateStr(rng.ini);
+  const finStr = licDateStr(rng.fin);
+
+  // Filtrar licencias del período (por fecha_inicio)
+  // Para "mes": fecha_inicio dentro del rango 27ant→26act
+  // Para "acumulado": todas hasta el 26 del mes actual
+  let licMes, licAcum;
+  if(vista==='mes'){
+    licMes = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi >= iniStr && fi <= finStr;
+    });
+    licAcum = licMes;
+  } else {
+    // Acumulado: año en curso hasta el 26 del mes
+    const acumIni = (year-1)+'-12-27';
+    licMes = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi >= iniStr && fi <= finStr;
+    });
+    licAcum = DB.licencias.filter(r=>{
+      if(!r.fecha_inicio) return false;
+      const fi = r.fecha_inicio.substring(0,10);
+      return fi <= finStr;
+    });
+  }
+
+  // Período label
+  const lbl = vista==='mes'
+    ? '27 '+MESES_ES[month===1?12:month-1]+' – 26 '+MESES_ES[month]+' '+year
+    : 'Acumulado '+MESES_ES[month]+' '+year;
+  document.getElementById('lic-kpi-period').textContent = lbl;
+
+  // ── CALC totales ──
+  const today = new Date().toISOString().slice(0,10);
+  function calcLicRow(r){
+    const precio = lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
+    const pvpMes   = precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
+    const costeMes = precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
+    const cant=parseFloat(r.cantidad)||0, dias=parseFloat(r.dias_fact)||0;
+    let diasMes=30;
+    if(r.fecha_inicio){const d=new Date(r.fecha_inicio);diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();}
+    const pvp  =dias>0?pvpMes*dias/diasMes:pvpMes;
+    const coste=dias>0?costeMes*dias/diasMes:costeMes;
+    const agt  =lookupAgente(r.agente);
+    return {pvp, coste, cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
+            mrg:(pvp-coste), mrgTotal:(pvp-coste)*cant,
+            mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
+            mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant,
+            mrgAgente:(pvp-coste)*(agt.margen||0)*cant};
+  }
+
+  // KPI cards
+  const totMes  = licMes.reduce( (a,r)=>{const c=calcLicRow(r);return {pvp:a.pvp+c.pvpTotal,coste:a.costeTotal+c.costeTotal,mrg:a.mrg+c.mrgTotal,n:a.n+1};},{pvp:0,coste:0,mrg:0,n:0});
+  const totAcum = licAcum.reduce((a,r)=>{const c=calcLicRow(r);return {pvp:a.pvp+c.pvpTotal,coste:a.coste+c.costeTotal,mrg:a.mrg+c.mrgTotal,n:a.n+1};},{pvp:0,coste:0,mrg:0,n:0});
+
+  document.getElementById('lic-kpi-cards').innerHTML =
+    kpiCard('Licencias período',totMes.n,'uds','#lic-kpi-title') +
+    kpiCard('PVP período',fmtE(totMes.pvp),'',null) +
+    kpiCard('Coste período',fmtE(totMes.coste),'',null) +
+    kpiCard('Margen período',fmtE(totMes.mrg),'',null);
+
+  // ── 3.1 NUEVAS LICENCIAS ──
+  renderNuevasLicencias(licMes);
+  // ── 3.2 ACUMULADO COO ──
+  renderAcumCOO(licAcum);
+  // ── 3.3 ACUMULADO AGENTE ──
+  renderAcumAgente(licAcum);
+}
+
+function kpiCard(lbl, val, sub, idLink){
+  return '<div class="sc anim"><div class="sc-lbl">'+lbl+'</div>'
+    +'<div class="sc-val num">'+val+'</div>'
+    +(sub?'<div class="sc-sub">'+sub+'</div>':'')
+    +'</div>';
+}
+function fmtE(v){ return typeof v==='number'?v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':'—'; }
+function fmtN(v,d){ if(v===null||v===undefined) return '—'; return parseFloat(v).toLocaleString('es-ES',{minimumFractionDigits:d??2,maximumFractionDigits:d??2}); }
+
+// ── 3.1 Nuevas licencias: pivot por Cliente > Fecha > Concepto y Cliente > Línea > Concepto ──
+
+function renderNuevasLicencias(lics){
+  const today = new Date().toISOString().slice(0,10);
+
+  // Pivot 1: Cliente > Fecha > Concepto
+  const p1 = {};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—', fecha=(r.fecha_inicio||'').substring(0,10);
+    if(!p1[cli]) p1[cli]={cant:0,pvp:0,coste:0,children:{}};
+    p1[cli].cant+=c.cant; p1[cli].pvp+=c.pvpTotal; p1[cli].coste+=c.costeTotal;
+    if(!p1[cli].children[fecha]) p1[cli].children[fecha]={cant:0,pvp:0,coste:0,children:{}};
+    p1[cli].children[fecha].cant+=c.cant; p1[cli].children[fecha].pvp+=c.pvpTotal; p1[cli].children[fecha].coste+=c.costeTotal;
+    const conc=r.concepto||'—';
+    if(!p1[cli].children[fecha].children[conc]) p1[cli].children[fecha].children[conc]={cant:0,pvp:0,coste:0};
+    p1[cli].children[fecha].children[conc].cant+=c.cant;
+    p1[cli].children[fecha].children[conc].pvp+=c.pvpTotal;
+    p1[cli].children[fecha].children[conc].coste+=c.costeTotal;
+  });
+
+  // Pivot 2: Cliente > Línea > Concepto
+  const p2 = {};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—', linea=r.linea_producto||'—';
+    if(!p2[cli]) p2[cli]={cant:0,pvp:0,coste:0,children:{}};
+    p2[cli].cant+=c.cant; p2[cli].pvp+=c.pvpTotal; p2[cli].coste+=c.costeTotal;
+    if(!p2[cli].children[linea]) p2[cli].children[linea]={cant:0,pvp:0,coste:0,children:{}};
+    p2[cli].children[linea].cant+=c.cant; p2[cli].children[linea].pvp+=c.pvpTotal; p2[cli].children[linea].coste+=c.costeTotal;
+    const conc=r.concepto||'—';
+    if(!p2[cli].children[linea].children[conc]) p2[cli].children[linea].children[conc]={cant:0,pvp:0,coste:0};
+    p2[cli].children[linea].children[conc].cant+=c.cant;
+    p2[cli].children[linea].children[conc].pvp+=c.pvpTotal;
+    p2[cli].children[linea].children[conc].coste+=c.costeTotal;
+  });
+
+  document.getElementById('tbody-nuevas-1').innerHTML = buildPivot3(p1,'p1','_licExpanded');
+  document.getElementById('tbody-nuevas-2').innerHTML = buildPivot3(p2,'p2','_licExpanded2');
+}
+
+function buildPivot3(pivot, pfx, setName){
+  let html='';
+  if(Object.keys(pivot).length===0) return '<tr><td colspan="4" class="ec">Sin datos</td></tr>';
+  Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
+    const exp = window[setName].has(pfx+':'+cli);
+    html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="${pfx}:${cli}" data-set="${setName}" onclick="toggleLicPivot(this.dataset.key,this.dataset.set)">
+      <td><strong>${cli}</strong></td>
+      <td class="r num">${fmtN(cliData.cant,0)}</td>
+      <td class="r num">${fmtE(cliData.pvp)}</td>
+      <td class="r num">${fmtE(cliData.coste)}</td>
+    </tr>`;
+    if(exp){
+      Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([mid,midData])=>{
+        const key2=pfx+':'+cli+':'+mid, exp2=window[setName].has(key2);
+        html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" data-set="${setName}" onclick="toggleLicPivot(this.dataset.key,this.dataset.set)">
+          <td style="padding-left:20px">↳ ${mid}</td>
+          <td class="r num">${fmtN(midData.cant,0)}</td>
+          <td class="r num">${fmtE(midData.pvp)}</td>
+          <td class="r num">${fmtE(midData.coste)}</td>
+        </tr>`;
+        if(exp2){
+          Object.entries(midData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
+            html+=`<tr class="tp-child">
+              <td style="padding-left:40px;font-size:var(--fz-xs)">${conc}</td>
+              <td class="r num">${fmtN(concData.cant,0)}</td>
+              <td class="r num">${fmtE(concData.pvp)}</td>
+              <td class="r num">${fmtE(concData.coste)}</td>
+            </tr>`;
+          });
+        }
+      });
+    }
+  });
+  return html;
+}
+
+function toggleLicPivot(key, setName){
+  const s = window[setName];
+  if(s.has(key)) s.delete(key); else s.add(key);
+  renderLicKPI();
+}
+
+// ── 3.2 Acumulado COO ──
+function renderAcumCOO(lics){
+  // Tabla resumen por cliente
+  const byClient = {};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—';
+    if(!byClient[cli]) byClient[cli]={pvp:0,coste:0,mrgJmrey:0,mrgBorja:0};
+    byClient[cli].pvp+=c.pvpTotal; byClient[cli].coste+=c.costeTotal;
+    byClient[cli].mrgJmrey+=c.mrgJmrey; byClient[cli].mrgBorja+=c.mrgBorja;
+  });
+  let html='';
+  if(Object.keys(byClient).length===0){html='<tr><td colspan="5" class="ec">Sin datos</td></tr>';}
+  else {
+    Object.entries(byClient).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,v])=>{
+      html+=`<tr>
+        <td><strong>${cli}</strong></td>
+        <td class="r num">${fmtE(v.pvp)}</td>
+        <td class="r num">${fmtE(v.coste)}</td>
+        <td class="r num">${fmtE(v.mrgJmrey)}</td>
+        <td class="r num">${fmtE(v.mrgBorja)}</td>
+      </tr>`;
+    });
+    // Total
+    const tot=Object.values(byClient).reduce((a,v)=>({pvp:a.pvp+v.pvp,coste:a.coste+v.coste,mrgJmrey:a.mrgJmrey+v.mrgJmrey,mrgBorja:a.mrgBorja+v.mrgBorja}),{pvp:0,coste:0,mrgJmrey:0,mrgBorja:0});
+    html+=`<tr class="kt-foot"><td><strong>Total</strong></td><td class="r num">${fmtE(tot.pvp)}</td><td class="r num">${fmtE(tot.coste)}</td><td class="r num">${fmtE(tot.mrgJmrey)}</td><td class="r num">${fmtE(tot.mrgBorja)}</td></tr>`;
+  }
+  document.getElementById('tbody-acum-coo').innerHTML = html;
+
+  // Tabla dinámica: Cliente > Línea > Concepto con Cantidad e Importe
+  const p={};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), cli=r.cliente||'—', linea=r.linea_producto||'—';
+    if(!p[cli]) p[cli]={cant:0,pvp:0,children:{}};
+    p[cli].cant+=c.cant; p[cli].pvp+=c.pvpTotal;
+    if(!p[cli].children[linea]) p[cli].children[linea]={cant:0,pvp:0,children:{}};
+    p[cli].children[linea].cant+=c.cant; p[cli].children[linea].pvp+=c.pvpTotal;
+    const conc=r.concepto||'—';
+    if(!p[cli].children[linea].children[conc]) p[cli].children[linea].children[conc]={cant:0,pvp:0};
+    p[cli].children[linea].children[conc].cant+=c.cant;
+    p[cli].children[linea].children[conc].pvp+=c.pvpTotal;
+  });
+  document.getElementById('tbody-acum-coo-pivot').innerHTML = buildPivotCOO(p);
+}
+
+function buildPivotCOO(pivot){
+  let html='';
+  if(Object.keys(pivot).length===0) return '<tr><td colspan="3" class="ec">Sin datos</td></tr>';
+  Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
+    const exp=_acumExpanded.has('coo:'+cli);
+    html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="coo:${cli}" onclick="toggleAcumCOO(this.dataset.key)">
+      <td><strong>${cli}</strong></td>
+      <td class="r num">${fmtN(cliData.cant,0)}</td>
+      <td class="r num">${fmtE(cliData.pvp)}</td>
+    </tr>`;
+    if(exp){
+      Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([linea,lineaData])=>{
+        const key2='coo:'+cli+':'+linea, exp2=_acumExpanded.has(key2);
+        html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" onclick="toggleAcumCOO(this.dataset.key)">
+          <td style="padding-left:20px">↳ ${linea}</td>
+          <td class="r num">${fmtN(lineaData.cant,0)}</td>
+          <td class="r num">${fmtE(lineaData.pvp)}</td>
+        </tr>`;
+        if(exp2){
+          Object.entries(lineaData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
+            html+=`<tr class="tp-child">
+              <td style="padding-left:40px;font-size:var(--fz-xs)">${conc}</td>
+              <td class="r num">${fmtN(concData.cant,0)}</td>
+              <td class="r num">${fmtE(concData.pvp)}</td>
+            </tr>`;
+          });
+        }
+      });
+    }
+  });
+  return html;
+}
+
+function toggleAcumCOO(key){
+  if(_acumExpanded.has(key)) _acumExpanded.delete(key); else _acumExpanded.add(key);
+  renderLicKPI();
+}
+
+// ── 3.3 Acumulado Agente ──
+function renderAcumAgente(lics){
+  const p={};
+  lics.forEach(r=>{
+    const c=calcLicRowSimple(r), agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
+    if(!p[agt]) p[agt]={cant:0,pvp:0,children:{}};
+    p[agt].cant+=c.cant; p[agt].pvp+=c.pvpTotal;
+    if(!p[agt].children[cli]) p[agt].children[cli]={cant:0,pvp:0,children:{}};
+    p[agt].children[cli].cant+=c.cant; p[agt].children[cli].pvp+=c.pvpTotal;
+    if(!p[agt].children[cli].children[linea]) p[agt].children[cli].children[linea]={cant:0,pvp:0,children:{}};
+    p[agt].children[cli].children[linea].cant+=c.cant; p[agt].children[cli].children[linea].pvp+=c.pvpTotal;
+    const conc=r.concepto||'—';
+    if(!p[agt].children[cli].children[linea].children[conc]) p[agt].children[cli].children[linea].children[conc]={cant:0,pvp:0};
+    p[agt].children[cli].children[linea].children[conc].cant+=c.cant;
+    p[agt].children[cli].children[linea].children[conc].pvp+=c.pvpTotal;
+  });
+  document.getElementById('tbody-acum-agt').innerHTML = buildPivotAgt(p);
+}
+
+function buildPivotAgt(pivot){
+  let html='';
+  if(Object.keys(pivot).length===0) return '<tr><td colspan="3" class="ec">Sin datos</td></tr>';
+  Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([agt,agtData])=>{
+    const exp=_acumAgtExpanded.has('agt:'+agt);
+    html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="agt:${agt}" onclick="toggleAcumAgt(this.dataset.key)">
+      <td><strong>${agt}</strong></td>
+      <td class="r num">${fmtN(agtData.cant,0)}</td>
+      <td class="r num">${fmtE(agtData.pvp)}</td>
+    </tr>`;
+    if(exp){
+      Object.entries(agtData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
+        const key2='agt:'+agt+':'+cli, exp2=_acumAgtExpanded.has(key2);
+        html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" onclick="toggleAcumAgt(this.dataset.key)">
+          <td style="padding-left:16px">↳ ${cli}</td>
+          <td class="r num">${fmtN(cliData.cant,0)}</td>
+          <td class="r num">${fmtE(cliData.pvp)}</td>
+        </tr>`;
+        if(exp2){
+          Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([linea,lineaData])=>{
+            const key3='agt:'+agt+':'+cli+':'+linea, exp3=_acumAgtExpanded.has(key3);
+            html+=`<tr class="tp-hdr${exp3?'':' collapsed'} tp-l3" data-key="${key3}" onclick="toggleAcumAgt(this.dataset.key)">
+              <td style="padding-left:32px;font-size:var(--fz-xs)">↳ ${linea}</td>
+              <td class="r num">${fmtN(lineaData.cant,0)}</td>
+              <td class="r num">${fmtE(lineaData.pvp)}</td>
+            </tr>`;
+            if(exp3){
+              Object.entries(lineaData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
+                html+=`<tr class="tp-child">
+                  <td style="padding-left:48px;font-size:var(--fz-xs)">${conc}</td>
+                  <td class="r num">${fmtN(concData.cant,0)}</td>
+                  <td class="r num">${fmtE(concData.pvp)}</td>
+                </tr>`;
+              });
+            }
+          });
+        }
+      });
+    }
+  });
+  return html;
+}
+
+function toggleAcumAgt(key){
+  if(_acumAgtExpanded.has(key)) _acumAgtExpanded.delete(key); else _acumAgtExpanded.add(key);
+  renderLicKPI();
+}
+
+function calcLicRowSimple(r){
+  const today=new Date().toISOString().slice(0,10);
+  const precio=lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
+  const pvpMes  =precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
+  const costeMes=precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
+  const cant=parseFloat(r.cantidad)||0, dias=parseFloat(r.dias_fact)||0;
+  let diasMes=30;
+  if(r.fecha_inicio){const d=new Date(r.fecha_inicio);diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();}
+  const pvp  =dias>0?pvpMes*dias/diasMes:pvpMes;
+  const coste=dias>0?costeMes*dias/diasMes:costeMes;
+  const agt=lookupAgente(r.agente);
+  return {cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
+          mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
+          mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant};
+}
+
+// ── EMAIL KPI LICENCIAS ──────────────────────────────────────
+function sendLicKpiEmail(){
+  const now=new Date();
+  const MESES_ES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                  'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const year=parseInt(document.getElementById('lic-kpi-year').value);
+  const month=parseInt(document.getElementById('lic-kpi-month').value);
+  const day=String(now.getDate()).padStart(2,'0');
+  const monthName=MESES_ES[month-1];
+  const isCierre=now.getDate()===26;
+  const subj='Licencias / Cuadro de mando / '+year+' '+String(month).padStart(2,'0')+' '+monthName+' '+day+(isCierre?' (CIERRE)':'');
+  const period=(document.getElementById('lic-kpi-period')||{}).textContent||'';
+  const lines=['Hola, te envío los KPIs de licencias.','','Período: '+period,''];
+  document.querySelectorAll('#lic-kpi-cards .sc').forEach(sc=>{
+    const lbl=(sc.querySelector('.sc-lbl')?.textContent||'').trim();
+    const val=(sc.querySelector('.sc-val')?.textContent||'').trim();
+    if(lbl&&val) lines.push(lbl+': '+val);
+  });
+  lines.push('','Un saludo.');
+  window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
+}
 
 // ── INIT ─────────────────────────────────────────────
 (async function initApp(){
