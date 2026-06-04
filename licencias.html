@@ -1402,10 +1402,13 @@ function clearPrecFilters(){ renderPrec(); }
 
 // ── INIT ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', initMsalWhenReady);
+// ── INIT ─────────────────────────────────────────────
 (async function(){
   await hydrateDB();
-  renderLic(); renderPrec(); renderAgt();
-  document.getElementById('footer-lbl').textContent='Licencias · Dpto. BC';
+  renderLic();
+  renderPrec();
+  renderAgt();
+  document.getElementById('footer-lbl').textContent = 'Licencias · Dpto. BC';
 })();
 
 </script>
