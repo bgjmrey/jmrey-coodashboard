@@ -433,6 +433,7 @@ table.rt tbody td.c{text-align:center;}
         <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
       </select>
     </div>
+    
         <div class="tw"><table class="kt">
           <thead><tr><th>Cliente / Fecha / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
           <tbody id="tbody-nuevas-1"></tbody>
@@ -1517,7 +1518,7 @@ function renderLicKPI(){
   const mesUltDia = new Date(year, month, 0).getDate();
   const mesFin = year+'-'+String(month).padStart(2,'0')+'-'+String(mesUltDia).padStart(2,'0');
 
-  // "Acumulado" = TODAS las licencias con fecha_inicio <= 26 del mes seleccionado
+  // "Acumulado" = TODAS las licencias con fecha_inicio <= 26 del mes seleccionado (sin límite por año)
   const acumFin = licDateStr(licMesRange(year, month).fin);
 
   const licMes  = DB.licencias.filter(r=>{
