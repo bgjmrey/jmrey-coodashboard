@@ -416,9 +416,9 @@ table.rt tbody td.c{text-align:center;}
 <!-- ══════════════════════════════════════════════════════════ -->
 <!-- PESTAÑA: KPIs                                              -->
 <!-- ══════════════════════════════════════════════════════════ -->
-<section id="sec-kpis" class="sec active">
+<section id="sec-kpis" class="sec active" style="max-width:100%;padding:0 var(--sp-4);">
 
-  <!-- FILTROS -->
+  <!-- BARRA FILTROS -->
   <div class="fbar">
     <div class="fg">
       <span class="fl">AÑO</span>
@@ -433,94 +433,43 @@ table.rt tbody td.c{text-align:center;}
         <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
       </select>
     </div>
-    <div class="fg">
-      <span class="fl">VISTA</span>
-      <div style="display:flex;gap:0">
-        <button class="tog-btn on" id="lic-btn-mes"  onclick="setLicVista('mes')">Mes</button>
-        <button class="tog-btn"    id="lic-btn-acum" onclick="setLicVista('acum')">Acumulado</button>
-      </div>
-    </div>
     <div class="fdiv"></div>
     <div class="fg" style="justify-content:flex-end">
       <button class="btn btn-s" onclick="sendLicKpiEmail()" style="white-space:nowrap">&#x2709;&#xFE0F; Enviar por email</button>
     </div>
   </div>
 
-  <!-- PERÍODO -->
+  <!-- INDICADORES CLAVE -->
   <div class="seh-ey" style="margin-top:var(--sp-5)">Indicadores clave</div>
   <h2 id="lic-kpi-period" class="seh-t" style="margin-bottom:var(--sp-5)">—</h2>
-
-  <!-- KPI CARDS -->
-  <div class="sg" id="lic-kpi-cards" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--sp-5);"></div>
 
   <!-- GRID 3 COLUMNAS -->
   <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;">
 
-    <!-- 3.1 NUEVAS LICENCIAS -->
+    <!-- NUEVAS LICENCIAS ESTE MES -->
     <div style="padding-right:var(--sp-5);">
       <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Nuevas licencias este mes</div>
-
-      <!-- Pivot 1: Cliente > Fecha > Concepto -->
-      <div class="kc" style="margin-bottom:var(--sp-4);">
-        <div class="kc-hd"><div><div class="kc-t">Por Cliente &amp; Fecha</div><div class="kc-s">Agrupado por cliente, fecha y concepto</div></div></div>
-        <div class="tw"><table class="kt">
-          <thead><tr><th>Cliente / Fecha / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
-          <tbody id="tbody-nuevas-1"></tbody>
-        </table></div>
-      </div>
-
-      <!-- Pivot 2: Cliente > Línea > Concepto -->
-      <div class="kc">
-        <div class="kc-hd"><div><div class="kc-t">Por Cliente &amp; Línea</div><div class="kc-s">Agrupado por cliente, línea y concepto</div></div></div>
-        <div class="tw"><table class="kt">
-          <thead><tr><th>Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
-          <tbody id="tbody-nuevas-2"></tbody>
-        </table></div>
-      </div>
     </div>
 
-    <div style="background:var(--border);"></div>
+    <div style="background:var(--border);min-height:400px;"></div>
 
-    <!-- 3.2 ACUMULADO COO -->
+    <!-- ACUMULADO COO -->
     <div style="padding:0 var(--sp-5);">
-      <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Licencias acumuladas COO</div>
-
-      <!-- Resumen por cliente -->
-      <div class="kc" style="margin-bottom:var(--sp-4);">
-        <div class="kc-hd"><div><div class="kc-t">Resumen por Cliente</div></div></div>
-        <div class="tw"><table class="kt">
-          <thead><tr><th>Cliente</th><th class="r">PVP</th><th class="r">Coste</th><th class="r">&#8364; JMREY</th><th class="r">&#8364; COO</th></tr></thead>
-          <tbody id="tbody-acum-coo"></tbody>
-        </table></div>
-      </div>
-
-      <!-- Pivot: Cliente > Línea > Concepto -->
-      <div class="kc">
-        <div class="kc-hd"><div><div class="kc-t">Por Cliente, Línea &amp; Concepto</div></div></div>
-        <div class="tw"><table class="kt">
-          <thead><tr><th>Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
-          <tbody id="tbody-acum-coo-pivot"></tbody>
-        </table></div>
-      </div>
+      <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Acumulado COO</div>
     </div>
 
-    <div style="background:var(--border);"></div>
+    <div style="background:var(--border);min-height:400px;"></div>
 
-    <!-- 3.3 ACUMULADO AGENTE -->
+    <!-- ACUMULADO AGENTE -->
     <div style="padding-left:var(--sp-5);">
-      <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Licencias acumuladas Agente</div>
-      <div class="kc">
-        <div class="kc-hd"><div><div class="kc-t">Por Agente, Cliente, Línea &amp; Concepto</div></div></div>
-        <div class="tw"><table class="kt">
-          <thead><tr><th>Agente / Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
-          <tbody id="tbody-acum-agt"></tbody>
-        </table></div>
-      </div>
+      <div class="kpi-side-label" style="margin-bottom:var(--sp-3);">Acumulado Agente</div>
     </div>
 
-  </div><!-- /grid 3 cols -->
+  </div>
 
 </section>
+
+
 
 <!-- LICENCIAS -->
 <section id="sec-licencias" class="sec">
@@ -1094,34 +1043,184 @@ function calcRow(r){
 let licFilters={};
 let precFilters={};
 let agtFilters={};
+
+function licMatch(r, col, val){
+  if(!val) return true;
+  if(typeof val==='object' && (val.from||val.to)){
+    const v = (r[col]||'').substring(0,10);
+    if(val.from && v < val.from) return false;
+    if(val.to   && v > val.to  ) return false;
+    return true;
+  }
+  return (r[col]||'').toString().toLowerCase().includes(val);
+}
+
 function buildLicFilterRow(){
   const fr=document.getElementById('lic-filter-row');
-  if(fr.innerHTML) return;
-  const table=document.getElementById('tbl-lic');
-  if(!table) return;
-  const ths=Array.from(table.querySelectorAll('.hdr-row th'));
-  const textCols=['anio_mes','proveedor','nro_pedido_cliente','concepto','linea_producto',
-    'compromiso','pago','proy','cliente','agente'];
-  fr.innerHTML=ths.map(th=>{
-    const col=th.getAttribute('data-col')||'';
-    if(!col) return '<td></td>';
-    if(textCols.includes(col))
-      return '<td><input class="f-inp" placeholder="Filtrar..." data-col="'+col+'" oninput="licFilters[this.dataset.col]=this.value;renderLic()" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-e);color:var(--fg-2);"></td>';
-    return '<td></td>';
-  }).join('');
+  if(fr.children.length) return;
+  (function(){
+    const td=document.createElement('td');
+    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col='anio_mes';
+    inp.addEventListener('input',e=>{ licFilters['anio_mes']=e.target.value.toLowerCase(); renderLic(); });
+    td.appendChild(inp); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const sel=document.createElement('select'); sel.dataset.col='proveedor';
+    ['','COMPANIAL','ARROW','GAMMA','JMREY'].forEach(v=>sel.add(new Option(v||'—',v)));
+    sel.addEventListener('change',e=>{ licFilters['proveedor']=e.target.value; renderLic(); });
+    td.appendChild(sel); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col='nro_pedido_cliente';
+    inp.addEventListener('input',e=>{ licFilters['nro_pedido_cliente']=e.target.value.toLowerCase(); renderLic(); });
+    td.appendChild(inp); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const w=document.createElement('div'); w.className='filter-range';
+    const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
+    const sp=document.createElement('span'); sp.textContent='–';
+    const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
+    const fn=()=>{ licFilters['fecha_inicio']=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderLic(); };
+    i1.addEventListener('change',fn); i2.addEventListener('change',fn);
+    w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const w=document.createElement('div'); w.className='filter-range';
+    const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
+    const sp=document.createElement('span'); sp.textContent='–';
+    const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
+    const fn=()=>{ licFilters['fecha_fin']=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderLic(); };
+    i1.addEventListener('change',fn); i2.addEventListener('change',fn);
+    w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col='dias_fact';
+    inp.addEventListener('input',e=>{ licFilters['dias_fact']=e.target.value.toLowerCase(); renderLic(); });
+    td.appendChild(inp); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col='concepto';
+    inp.addEventListener('input',e=>{ licFilters['concepto']=e.target.value.toLowerCase(); renderLic(); });
+    td.appendChild(inp); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const sel=document.createElement('select'); sel.dataset.col='linea_producto';
+    ['',...new Set(DB.precios.map(p=>p.linea_producto).filter(Boolean))].sort().forEach(v=>sel.add(new Option(v||'—',v)));
+    sel.addEventListener('change',e=>{ licFilters['linea_producto']=e.target.value; renderLic(); });
+    td.appendChild(sel); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const sel=document.createElement('select'); sel.dataset.col='compromiso';
+    ['','Mensual','Anual','Trianual'].forEach(v=>sel.add(new Option(v||'—',v)));
+    sel.addEventListener('change',e=>{ licFilters['compromiso']=e.target.value; renderLic(); });
+    td.appendChild(sel); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const sel=document.createElement('select'); sel.dataset.col='pago';
+    ['','Mensual','Trimestral','Anual','Trianual'].forEach(v=>sel.add(new Option(v||'—',v)));
+    sel.addEventListener('change',e=>{ licFilters['pago']=e.target.value; renderLic(); });
+    td.appendChild(sel); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const sel=document.createElement('select'); sel.dataset.col='proy';
+    ['','JMREY'].forEach(v=>sel.add(new Option(v||'—',v)));
+    sel.addEventListener('change',e=>{ licFilters['proy']=e.target.value; renderLic(); });
+    td.appendChild(sel); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col='cliente';
+    inp.addEventListener('input',e=>{ licFilters['cliente']=e.target.value.toLowerCase(); renderLic(); });
+    td.appendChild(inp); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col='cantidad';
+    inp.addEventListener('input',e=>{ licFilters['cantidad']=e.target.value.toLowerCase(); renderLic(); });
+    td.appendChild(inp); fr.appendChild(td);
+  })();
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  (function(){
+    const td=document.createElement('td');
+    const sel=document.createElement('select'); sel.dataset.col='agente';
+    ['',...DB.agentes.map(a=>a.agente)].sort().forEach(v=>sel.add(new Option(v||'—',v)));
+    sel.addEventListener('change',e=>{ licFilters['agente']=e.target.value; renderLic(); });
+    td.appendChild(sel); fr.appendChild(td);
+  })();
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(Object.assign(document.createElement('td'),{className:'ac-col'}));
 }
 
 function buildPrecFilterRow(){
   const fr=document.getElementById('prec-filter-row');
-  if(fr.innerHTML) return;
-  const table=document.getElementById('tbl-prec');
-  if(!table) return;
-  const ths=Array.from(table.querySelectorAll('.hdr-row th'));
-  fr.innerHTML=ths.map(th=>{
-    const col=th.getAttribute('data-col')||'';
-    if(!col) return '<td></td>';
-    return '<td><input class="f-inp" placeholder="Filtrar..." data-col="'+col+'" oninput="precFilters[this.dataset.col]=this.value;renderPrec()" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-e);color:var(--fg-2);"></td>';
-  }).join('');
+  if(fr.children.length) return;
+  (function(){
+    const td=document.createElement('td');
+    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col='concepto';
+    inp.addEventListener('input',e=>{ precFilters['concepto']=e.target.value.toLowerCase(); renderPrec(); });
+    td.appendChild(inp); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col='linea_producto';
+    inp.addEventListener('input',e=>{ precFilters['linea_producto']=e.target.value.toLowerCase(); renderPrec(); });
+    td.appendChild(inp); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col='cliente';
+    inp.addEventListener('input',e=>{ precFilters['cliente']=e.target.value.toLowerCase(); renderPrec(); });
+    td.appendChild(inp); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const sel=document.createElement('select'); sel.dataset.col='compromiso';
+    ['','Mensual','Anual','Trianual'].forEach(v=>sel.add(new Option(v||'—',v)));
+    sel.addEventListener('change',e=>{ precFilters['compromiso']=e.target.value; renderPrec(); });
+    td.appendChild(sel); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const sel=document.createElement('select'); sel.dataset.col='pago';
+    ['','Mensual','Trimestral','Anual','Trianual'].forEach(v=>sel.add(new Option(v||'—',v)));
+    sel.addEventListener('change',e=>{ precFilters['pago']=e.target.value; renderPrec(); });
+    td.appendChild(sel); fr.appendChild(td);
+  })();
+  (function(){
+    const td=document.createElement('td');
+    const w=document.createElement('div'); w.className='filter-range';
+    const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
+    const sp=document.createElement('span'); sp.textContent='–';
+    const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
+    const fn=()=>{ precFilters['fecha_fin_pvp']=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderPrec(); };
+    i1.addEventListener('change',fn); i2.addEventListener('change',fn);
+    w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w); fr.appendChild(td);
+  })();
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(document.createElement('td'));
+  fr.appendChild(Object.assign(document.createElement('td'),{className:'ac-col'}));
 }
 
 function renderLic(){
@@ -1130,7 +1229,7 @@ function renderLic(){
   let data=DB.licencias;
   Object.entries(licFilters).forEach(([col,val])=>{
     if(!val) return;
-    data=data.filter(r=>(r[col]||'').toString().toLowerCase().includes(val.toLowerCase()));
+    data=data.filter(r=>licMatch(r,col,val));
   });
   const rows=data.map((r,i)=>{
     const c=calcRow(r);
@@ -1172,7 +1271,7 @@ function renderPrec(){
   let data=DB.precios;
   Object.entries(precFilters).forEach(([col,val])=>{
     if(!val) return;
-    data=data.filter(r=>(r[col]||'').toString().toLowerCase().includes(val.toLowerCase()));
+    data=data.filter(r=>licMatch(r,col,val));
   });
   const rows=data.map((r,i)=>`<tr ondblclick="openPrecModal(${DB.precios.indexOf(r)})">
     <td title="${r.concepto||''}">${(r.concepto||'').substring(0,40)}${(r.concepto||'').length>40?'…':''}</td>
@@ -1493,9 +1592,9 @@ function exportPrecXLS(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   toast('Exportado: precios_licencias.csv');
 }
-function clearLicFilters(){ licFilters={}; document.getElementById('lic-filter-row').innerHTML=''; renderLic(); }
+function clearLicFilters(){ licFilters={}; const fr=document.getElementById('lic-filter-row'); fr.innerHTML=''; buildLicFilterRow(); renderLic(); }
 function clearAgtFilters(){ agtFilters={}; document.getElementById('agt-filter-row').innerHTML=''; renderAgt(); }
-function clearPrecFilters(){ precFilters={}; document.getElementById('prec-filter-row').innerHTML=''; renderPrec(); }
+function clearPrecFilters(){ precFilters={}; const fr=document.getElementById('prec-filter-row'); fr.innerHTML=''; buildPrecFilterRow(); renderPrec(); }
 
 
 // ── INIT KPI LICENCIAS ──────────────────────────────────────
