@@ -613,18 +613,14 @@ var _msalApp = null;
 // ── CONTROL DE ACCESO VIA SUPABASE (tabla users) ─────
 function showApp(account){
   var email = (account.username || '').toLowerCase().trim();
-
-  // Consultar tabla users en Supabase
   var sb = getSB();
   if(!sb){
-    // Sin Supabase: denegar por seguridad
-    _denyAccess(account, email, 'No se pudo verificar el acceso. Inténtalo de nuevo.');
+    // Supabase CDN no ha cargado aún — reintentar en 500ms
+    setTimeout(function(){ showApp(account); }, 500);
     return;
   }
-
   sb.from('users').select('email').ilike('email', email)
     .then(function(res){
-      console.log('[auth] users query result:', JSON.stringify(res));
       if(res.error){
         _denyAccess(account, email, 'Error al verificar acceso: ' + (res.error.message||res.error.code));
         return;
@@ -636,7 +632,6 @@ function showApp(account){
       _grantAccess(account);
     })
     .catch(function(e){
-      console.error('[auth] catch:', e);
       _denyAccess(account, email, 'Error de conexión: ' + (e.message||e));
     });
 }
@@ -739,72 +734,6 @@ function initMsalWhenReady(){
   }
 }
 document.addEventListener('DOMContentLoaded', initMsalWhenReady);
-
-// ── CONTROL DE ACCESO VIA SUPABASE (tabla users) ─────
-function showApp(account){
-  var email = (account.username || '').toLowerCase().trim();
-
-  // Consultar tabla users en Supabase
-  var sb = getSB();
-  if(!sb){
-    // Sin Supabase: denegar por seguridad
-    _denyAccess(account, email, 'No se pudo verificar el acceso. Inténtalo de nuevo.');
-    return;
-  }
-
-  sb.from('users').select('email').ilike('email', email)
-    .then(function(res){
-      console.log('[auth] users query result:', JSON.stringify(res));
-      if(res.error){
-        _denyAccess(account, email, 'Error al verificar acceso: ' + (res.error.message||res.error.code));
-        return;
-      }
-      if(!res.data || res.data.length === 0){
-        _denyAccess(account, email, 'El usuario ' + email + ' no tiene permiso para acceder a esta aplicación.');
-        return;
-      }
-      _grantAccess(account);
-    })
-    .catch(function(e){
-      console.error('[auth] catch:', e);
-      _denyAccess(account, email, 'Error de conexión: ' + (e.message||e));
-    });
-}
-
-function _denyAccess(account, email, msg){
-  document.getElementById('login-overlay').style.display = 'flex';
-  document.getElementById('app-content').style.display = 'none';
-  showLoginError(msg);
-  if(_msalApp){
-    _msalApp.logoutPopup({account: account, postLogoutRedirectUri: 'https://bgjmrey.github.io/jmrey-coodashboard/'}).catch(function(){});
-  }
-}
-
-
-// ── SESSION GUARD: redirect to index if not authenticated ──
-(function checkSession(){
-  // MSAL stores accounts in sessionStorage
-  // If no account keys found, redirect to portal
-  var hasSession = false;
-  try {
-    for(var i=0; i<sessionStorage.length; i++){
-      var k = sessionStorage.key(i);
-      if(k && k.indexOf('login.windows.net') > -1){
-        hasSession = true; break;
-      }
-    }
-  } catch(e){}
-  if(!hasSession){
-    // Give MSAL a moment to initialize from cache before redirecting
-    window._sessionCheckTimer = setTimeout(function(){
-      var accounts = typeof msal !== 'undefined' && window._msalApp
-        ? window._msalApp.getAllAccounts() : [];
-      if(accounts.length === 0){
-        window.location.href = 'index.html';
-      }
-    }, 1500);
-  }
-})();
 
 function _grantAccess(account){
   document.getElementById('login-overlay').style.display = 'none';
