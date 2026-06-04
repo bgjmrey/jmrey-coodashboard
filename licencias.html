@@ -277,6 +277,7 @@ table.rt tbody tr.row-selected,table.dt tbody tr.row-selected{
 
 /* DATE RANGE FILTER */
 .filter-range{display:flex;gap:2px;align-items:center;}
+.c{white-space:nowrap;} .bi{display:inline-block;}
 .filter-range input{width:88px!important;padding:3px 4px!important;}
 .filter-range span{color:var(--fg-d2);font-size:10px;}
 
@@ -355,7 +356,7 @@ table.rt tbody td.c{text-align:center;}
 @keyframes fu{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 .anim{animation:fu 260ms ease forwards;}
 
-#sec-licencias,#sec-precios,#sec-agentes{max-width:100%;padding-left:var(--sp-4);padding-right:var(--sp-4);}
+#sec-licencias,#sec-precios,#sec-agentes,#sec-kpis{max-width:100%;padding-left:var(--sp-4);padding-right:var(--sp-4);}
 .calc{background:var(--ivory-50);color:var(--fg-3);font-style:italic;}
 .pct{font-size:var(--fz-xs);color:var(--fg-3);}
 /* Modal */
@@ -1085,34 +1086,78 @@ function calcRow(r){
 let licFilters={};
 let precFilters={};
 let agtFilters={};
+
+function licMatch(r, col, val){
+  if(!val) return true;
+  if(typeof val==='object' && (val.from||val.to)){
+    const v=(r[col]||'').substring(0,10);
+    if(val.from && v<val.from) return false;
+    if(val.to   && v>val.to  ) return false;
+    return true;
+  }
+  return (r[col]||'').toString().toLowerCase().includes(val);
+}
+
 function buildLicFilterRow(){
   const fr=document.getElementById('lic-filter-row');
-  if(fr.innerHTML) return;
-  const table=document.getElementById('tbl-lic');
-  if(!table) return;
-  const ths=Array.from(table.querySelectorAll('.hdr-row th'));
-  const textCols=['anio_mes','proveedor','nro_pedido_cliente','concepto','linea_producto',
-    'compromiso','pago','proy','cliente','agente'];
-  fr.innerHTML=ths.map(th=>{
+  if(fr.children.length) return;
+  const ths=Array.from(document.getElementById('tbl-lic').querySelectorAll('.hdr-row th'));
+  ths.forEach(th=>{
     const col=th.getAttribute('data-col')||'';
-    if(!col) return '<td></td>';
-    if(textCols.includes(col))
-      return '<td><input class="f-inp" placeholder="Filtrar..." data-col="'+col+'" oninput="licFilters[this.dataset.col]=this.value;renderLic()" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-e);color:var(--fg-2);"></td>';
-    return '<td></td>';
-  }).join('');
+    const td=document.createElement('td');
+    if(!col){ td.className='ac-col'; fr.appendChild(td); return; }
+    if(['fecha_inicio', 'fecha_fin', 'fecha_solicitud'].includes(col)){
+      const w=document.createElement('div'); w.className='filter-range';
+      const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
+      const sp=document.createElement('span'); sp.textContent='–';
+      const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
+      const fn=()=>{ licFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderLic()(); };
+      i1.addEventListener('change',fn); i2.addEventListener('change',fn);
+      w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);
+    } else if(['proveedor', 'compromiso', 'pago', 'proy'].includes(col)){
+      const sel=document.createElement('select'); sel.dataset.col=col;
+      const opts={'proveedor': ['', 'COMPANIAL', 'ARROW', 'GAMMA', 'JMREY'], 'compromiso': ['', 'Mensual', 'Anual', 'Trianual'], 'pago': ['', 'Mensual', 'Trimestral', 'Anual', 'Trianual'], 'proy': ['', 'JMREY']};
+      (opts[col]||['']).forEach(v=>sel.add(new Option(v||'—',v)));
+      sel.addEventListener('change',e=>{ licFilters[col]=e.target.value; renderLic()(); });
+      td.appendChild(sel);
+    } else {
+      const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
+      inp.addEventListener('input',e=>{ licFilters[col]=e.target.value.toLowerCase(); renderLic()(); });
+      td.appendChild(inp);
+    }
+    fr.appendChild(td);
+  });
 }
 
 function buildPrecFilterRow(){
   const fr=document.getElementById('prec-filter-row');
-  if(fr.innerHTML) return;
-  const table=document.getElementById('tbl-prec');
-  if(!table) return;
-  const ths=Array.from(table.querySelectorAll('.hdr-row th'));
-  fr.innerHTML=ths.map(th=>{
+  if(fr.children.length) return;
+  const ths=Array.from(document.getElementById('tbl-prec').querySelectorAll('.hdr-row th'));
+  ths.forEach(th=>{
     const col=th.getAttribute('data-col')||'';
-    if(!col) return '<td></td>';
-    return '<td><input class="f-inp" placeholder="Filtrar..." data-col="'+col+'" oninput="precFilters[this.dataset.col]=this.value;renderPrec()" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-e);color:var(--fg-2);"></td>';
-  }).join('');
+    const td=document.createElement('td');
+    if(!col){ td.className='ac-col'; fr.appendChild(td); return; }
+    if(['fecha_fin_pvp'].includes(col)){
+      const w=document.createElement('div'); w.className='filter-range';
+      const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
+      const sp=document.createElement('span'); sp.textContent='–';
+      const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
+      const fn=()=>{ precFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderPrec()(); };
+      i1.addEventListener('change',fn); i2.addEventListener('change',fn);
+      w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);
+    } else if(['compromiso', 'pago'].includes(col)){
+      const sel=document.createElement('select'); sel.dataset.col=col;
+      const opts={'compromiso': ['', 'Mensual', 'Anual', 'Trianual'], 'pago': ['', 'Mensual', 'Trimestral', 'Anual', 'Trianual']};
+      (opts[col]||['']).forEach(v=>sel.add(new Option(v||'—',v)));
+      sel.addEventListener('change',e=>{ precFilters[col]=e.target.value; renderPrec()(); });
+      td.appendChild(sel);
+    } else {
+      const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
+      inp.addEventListener('input',e=>{ precFilters[col]=e.target.value.toLowerCase(); renderPrec()(); });
+      td.appendChild(inp);
+    }
+    fr.appendChild(td);
+  });
 }
 
 function renderLic(){
@@ -1121,7 +1166,7 @@ function renderLic(){
   let data=DB.licencias;
   Object.entries(licFilters).forEach(([col,val])=>{
     if(!val) return;
-    data=data.filter(r=>(r[col]||'').toString().toLowerCase().includes(val.toLowerCase()));
+    data=data.filter(r=>licMatch(r,col,val));
   });
   const rows=data.map((r,i)=>{
     const c=calcRow(r);
@@ -1163,7 +1208,7 @@ function renderPrec(){
   let data=DB.precios;
   Object.entries(precFilters).forEach(([col,val])=>{
     if(!val) return;
-    data=data.filter(r=>(r[col]||'').toString().toLowerCase().includes(val.toLowerCase()));
+    data=data.filter(r=>licMatch(r,col,val));
   });
   const rows=data.map((r,i)=>`<tr ondblclick="openPrecModal(${DB.precios.indexOf(r)})">
     <td title="${r.concepto||''}">${(r.concepto||'').substring(0,40)}${(r.concepto||'').length>40?'…':''}</td>
@@ -1180,15 +1225,33 @@ function renderPrec(){
 
 function buildAgtFilterRow(){
   const fr=document.getElementById('agt-filter-row');
-  if(fr.innerHTML) return;
-  const table=document.getElementById('tbl-agt');
-  if(!table) return;
-  const ths=Array.from(table.querySelectorAll('.hdr-row th'));
-  fr.innerHTML=ths.map(th=>{
+  if(fr.children.length) return;
+  const ths=Array.from(document.getElementById('tbl-agt').querySelectorAll('.hdr-row th'));
+  ths.forEach(th=>{
     const col=th.getAttribute('data-col')||'';
-    if(!col) return '<td></td>';
-    return '<td><input class="f-inp" placeholder="Filtrar..." data-col="'+col+'" oninput="agtFilters[this.dataset.col]=this.value;renderAgt()" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-e);color:var(--fg-2);"></td>';
-  }).join('');
+    const td=document.createElement('td');
+    if(!col){ td.className='ac-col'; fr.appendChild(td); return; }
+    if([].includes(col)){
+      const w=document.createElement('div'); w.className='filter-range';
+      const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
+      const sp=document.createElement('span'); sp.textContent='–';
+      const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
+      const fn=()=>{ agtFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderAgt()(); };
+      i1.addEventListener('change',fn); i2.addEventListener('change',fn);
+      w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);
+    } else if([].includes(col)){
+      const sel=document.createElement('select'); sel.dataset.col=col;
+      const opts={};
+      (opts[col]||['']).forEach(v=>sel.add(new Option(v||'—',v)));
+      sel.addEventListener('change',e=>{ agtFilters[col]=e.target.value; renderAgt()(); });
+      td.appendChild(sel);
+    } else {
+      const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
+      inp.addEventListener('input',e=>{ agtFilters[col]=e.target.value.toLowerCase(); renderAgt()(); });
+      td.appendChild(inp);
+    }
+    fr.appendChild(td);
+  });
 }
 
 function renderAgt(){
@@ -1197,7 +1260,7 @@ function renderAgt(){
   let data=DB.agentes;
   Object.entries(agtFilters).forEach(([col,val])=>{
     if(!val) return;
-    data=data.filter(r=>(r[col]||'').toString().toLowerCase().includes(val.toLowerCase()));
+    data=data.filter(r=>licMatch(r,col,val));
   });
   const rows=data.map((r,i)=>`<tr ondblclick="openAgtModal(${DB.agentes.indexOf(r)})">
     <td><strong>${r.agente||'—'}</strong></td>
@@ -1484,9 +1547,9 @@ function exportPrecXLS(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   toast('Exportado: precios_licencias.csv');
 }
-function clearLicFilters(){ licFilters={}; document.getElementById('lic-filter-row').innerHTML=''; renderLic(); }
-function clearAgtFilters(){ agtFilters={}; document.getElementById('agt-filter-row').innerHTML=''; renderAgt(); }
-function clearPrecFilters(){ precFilters={}; document.getElementById('prec-filter-row').innerHTML=''; renderPrec(); }
+function clearLicFilters(){ licFilters={}; document.getElementById('lic-filter-row').innerHTML=''; buildLicFilterRow(); renderLic(); }
+function clearAgtFilters(){ agtFilters={}; document.getElementById('agt-filter-row').innerHTML=''; buildAgtFilterRow(); renderAgt(); }
+function clearPrecFilters(){ precFilters={}; document.getElementById('prec-filter-row').innerHTML=''; buildPrecFilterRow(); renderPrec(); }
 
 
 // ── INIT KPI LICENCIAS ──────────────────────────────────────
