@@ -454,8 +454,8 @@ table.rt tbody td.c{text-align:center;}
         <th data-col="importe_margen_agente" class="r">Mrg Agente</th>
         <th class="ac-col">Acc.</th>
       </tr>
+      <tr id="lic-filter-row"></tr>
     </thead>
-    <tr id="lic-filter-row"></tr>
     <tbody id="tbody-lic"></tbody>
   </table></div>
 </section>
@@ -486,8 +486,8 @@ table.rt tbody td.c{text-align:center;}
         <th data-col="coste_mes_arrow" class="r">Coste Arrow</th>
         <th class="ac-col">Acc.</th>
       </tr>
+      <tr id="prec-filter-row"></tr>
     </thead>
-    <tr id="prec-filter-row"></tr>
     <tbody id="tbody-prec"></tbody>
   </table></div>
 </section>
@@ -509,8 +509,8 @@ table.rt tbody td.c{text-align:center;}
         <th data-col="pct_borja" class="r">% Borja</th>
         <th class="ac-col">Acc.</th>
       </tr>
+      <tr id="agt-filter-row"></tr>
     </thead>
-    <tr id="agt-filter-row"></tr>
     <tbody id="tbody-agt"></tbody>
   </table></div>
 </section>
@@ -1057,8 +1057,14 @@ function renderLic(){
 }
 
 function renderPrec(){
+  buildPrecFilterRow();
   const tb=document.getElementById('tbody-prec');
-  const rows=DB.precios.map((r,i)=>`<tr ondblclick="openPrecModal(${i})">
+  let data=DB.precios;
+  Object.entries(precFilters).forEach(([col,val])=>{
+    if(!val) return;
+    data=data.filter(r=>(r[col]||'').toString().toLowerCase().includes(val.toLowerCase()));
+  });
+  const rows=data.map((r,i)=>`<tr ondblclick="openPrecModal(${DB.precios.indexOf(r)})">
     <td title="${r.concepto||''}">${(r.concepto||'').substring(0,40)}${(r.concepto||'').length>40?'…':''}</td>
     <td style="font-size:var(--fz-xs)">${r.linea_producto||'—'}</td>
     <td>${r.cliente||'—'}</td><td>${r.compromiso||'—'}</td><td>${r.pago||'—'}</td>
