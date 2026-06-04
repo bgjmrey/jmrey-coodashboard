@@ -419,7 +419,7 @@ table.rt tbody td.c{text-align:center;}
 <section id="sec-kpis" class="sec active" style="max-width:100%;padding:0 var(--sp-4);">
 
   <!-- BARRA FILTROS -->
-  <div class="fbar">
+  <div class="fbar" style="margin-top:var(--sp-6);">
     <div class="fg">
       <span class="fl">AÑO</span>
       <select class="fsel" id="lic-kpi-year" onchange="renderLicKPI()" style="width:90px"></select>
@@ -1273,22 +1273,22 @@ function renderPrec(){
     if(!val) return;
     data=data.filter(r=>licMatch(r,col,val));
   });
-  const rows=data.map((r,i)=>`<tr ondblclick="openPrecModal(${DB.precios.indexOf(r)})">
+  const rows=data.map((r)=>{const ri=DB.precios.indexOf(r); return `<tr ondblclick="openPrecModal(${ri})">
     <td title="${r.concepto||''}">${(r.concepto||'').substring(0,40)}${(r.concepto||'').length>40?'…':''}</td>
     <td style="font-size:var(--fz-xs)">${r.linea_producto||'—'}</td>
     <td>${r.cliente||'—'}</td><td>${r.compromiso||'—'}</td><td>${r.pago||'—'}</td>
     <td>${r.fecha_fin_pvp||'∞'}</td>
     <td class="r num">${fmt(r.pvp_mes)}</td><td class="r num">${fmt(r.coste_mes)}</td>
     <td class="r num">${fmt(r.pvp_mes_arrow)}</td><td class="r num">${fmt(r.coste_mes_arrow)}</td>
-    <td class="c"><button class="bi" onclick="openPrecModal(${i})" title="Editar">✏️</button> <button class="bi" onclick="delPrec(${i})" title="Eliminar">🗑️</button></td>
-  </tr>`);
+    <td class="c"><button class="bi" onclick="openPrecModal(${ri})" title="Editar">✏️</button> <button class="bi" onclick="delPrec(${ri})" title="Eliminar">🗑️</button></td>
+  </tr>`;});
   tb.innerHTML=rows.length?rows.join(''):'<tr><td colspan="11" class="ec">Sin precios</td></tr>';
   document.getElementById('prec-cnt').textContent='('+DB.precios.length+')';
 }
 
 function buildAgtFilterRow(){
   const fr=document.getElementById('agt-filter-row');
-  if(fr.innerHTML) return;
+  if(fr.children.length) return;
   const table=document.getElementById('tbl-agt');
   if(!table) return;
   const ths=Array.from(table.querySelectorAll('.hdr-row th'));
@@ -1593,8 +1593,8 @@ function exportPrecXLS(){
   toast('Exportado: precios_licencias.csv');
 }
 function clearLicFilters(){ licFilters={}; const fr=document.getElementById('lic-filter-row'); fr.innerHTML=''; buildLicFilterRow(); renderLic(); }
-function clearAgtFilters(){ agtFilters={}; document.getElementById('agt-filter-row').innerHTML=''; renderAgt(); }
-function clearPrecFilters(){ precFilters={}; const fr=document.getElementById('prec-filter-row'); fr.innerHTML=''; buildPrecFilterRow(); renderPrec(); }
+function clearAgtFilters(){ agtFilters={}; document.getElementById('agt-filter-row').innerHTML=''; buildAgtFilterRow(); renderAgt(); }
+function clearPrecFilters(){ precFilters={}; document.getElementById('prec-filter-row').innerHTML=''; buildPrecFilterRow(); renderPrec(); }
 
 
 // ── INIT KPI LICENCIAS ──────────────────────────────────────
