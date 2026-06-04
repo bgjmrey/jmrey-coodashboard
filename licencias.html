@@ -648,6 +648,32 @@ function _denyAccess(account, email, msg){
   }
 }
 
+
+// ── SESSION GUARD: redirect to index if not authenticated ──
+(function checkSession(){
+  // MSAL stores accounts in sessionStorage
+  // If no account keys found, redirect to portal
+  var hasSession = false;
+  try {
+    for(var i=0; i<sessionStorage.length; i++){
+      var k = sessionStorage.key(i);
+      if(k && k.indexOf('login.windows.net') > -1){
+        hasSession = true; break;
+      }
+    }
+  } catch(e){}
+  if(!hasSession){
+    // Give MSAL a moment to initialize from cache before redirecting
+    window._sessionCheckTimer = setTimeout(function(){
+      var accounts = typeof msal !== 'undefined' && window._msalApp
+        ? window._msalApp.getAllAccounts() : [];
+      if(accounts.length === 0){
+        window.location.href = 'index.html';
+      }
+    }, 1500);
+  }
+})();
+
 function _grantAccess(account){
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
@@ -752,6 +778,32 @@ function _denyAccess(account, email, msg){
   }
 }
 
+
+// ── SESSION GUARD: redirect to index if not authenticated ──
+(function checkSession(){
+  // MSAL stores accounts in sessionStorage
+  // If no account keys found, redirect to portal
+  var hasSession = false;
+  try {
+    for(var i=0; i<sessionStorage.length; i++){
+      var k = sessionStorage.key(i);
+      if(k && k.indexOf('login.windows.net') > -1){
+        hasSession = true; break;
+      }
+    }
+  } catch(e){}
+  if(!hasSession){
+    // Give MSAL a moment to initialize from cache before redirecting
+    window._sessionCheckTimer = setTimeout(function(){
+      var accounts = typeof msal !== 'undefined' && window._msalApp
+        ? window._msalApp.getAllAccounts() : [];
+      if(accounts.length === 0){
+        window.location.href = 'index.html';
+      }
+    }, 1500);
+  }
+})();
+
 function _grantAccess(account){
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
@@ -765,6 +817,32 @@ function showLoginError(msg){
   el.textContent = msg;
   el.style.display = 'block';
 }
+
+
+// ── SESSION GUARD: redirect to index if not authenticated ──
+(function checkSession(){
+  // MSAL stores accounts in sessionStorage
+  // If no account keys found, redirect to portal
+  var hasSession = false;
+  try {
+    for(var i=0; i<sessionStorage.length; i++){
+      var k = sessionStorage.key(i);
+      if(k && k.indexOf('login.windows.net') > -1){
+        hasSession = true; break;
+      }
+    }
+  } catch(e){}
+  if(!hasSession){
+    // Give MSAL a moment to initialize from cache before redirecting
+    window._sessionCheckTimer = setTimeout(function(){
+      var accounts = typeof msal !== 'undefined' && window._msalApp
+        ? window._msalApp.getAllAccounts() : [];
+      if(accounts.length === 0){
+        window.location.href = 'index.html';
+      }
+    }, 1500);
+  }
+})();
 
 function _grantAccess(account){
   document.getElementById('login-overlay').style.display = 'none';
@@ -957,10 +1035,28 @@ function calcRow(r){
 
 // ── RENDER LICENCIAS ─────────────────────────────────────────
 let licFilters={};
+function buildLicFilterRow(){
+  const fr=document.getElementById('lic-filter-row');
+  if(fr.innerHTML) return;
+  const cols=['anio_mes','proveedor','nro_pedido_cliente','fecha_inicio','fecha_fin',
+    'dias_fact','concepto','linea_producto','compromiso','pago','proy','cliente',
+    'cantidad','pvp_mes_compl','pvp','importe','coste_mes_compl','coste',
+    'importe_coste','pct_margen','importe_margen_total','importe_margen_jmrey',
+    'importe_margen_juanma','importe_margen_borja','agente','importe_margen_agente',''];
+  const textCols=['anio_mes','proveedor','nro_pedido_cliente','concepto','linea_producto',
+    'compromiso','pago','proy','cliente','agente'];
+  fr.innerHTML=cols.map(col=>{
+    if(!col) return '<td></td>';
+    if(textCols.includes(col))
+      return '<td><input class="f-inp" placeholder="Filtrar..." data-col="'+col+'" oninput="licFilters[this.dataset.col]=this.value;renderLic()" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-e);"></td>';
+    return '<td></td>';
+  }).join('');
+}
+
 function renderLic(){
+  buildLicFilterRow();
   const tb=document.getElementById('tbody-lic');
   let data=DB.licencias;
-  // Apply filters
   Object.entries(licFilters).forEach(([col,val])=>{
     if(!val) return;
     data=data.filter(r=>(r[col]||'').toString().toLowerCase().includes(val.toLowerCase()));
@@ -1228,9 +1324,80 @@ async function delAgt(i){
 }
 
 // ── EXPORT XLS ───────────────────────────────────────────────
-function exportLicXLS(){ toast('Exportar próximamente'); }
-function exportPrecXLS(){ toast('Exportar próximamente'); }
-function clearLicFilters(){ licFilters={}; renderLic(); }
+function exportLicXLS(){
+  const table=document.getElementById('tbl-lic');
+  if(!table){toast('Tabla no encontrada');return;}
+  const hdrRow=table.querySelector('.hdr-row');
+  const thCells=hdrRow?Array.from(hdrRow.querySelectorAll('th')).filter(th=>!th.classList.contains('ac-col')):[];
+  const headers=thCells.map(th=>(th.innerText||th.textContent||'').replace(/\s+/g,' ').trim());
+  const dataCols=thCells.map(th=>th.getAttribute('data-col')||'');
+  function colType(dc){
+    if(['dias_fact','cantidad'].includes(dc)) return 'int';
+    if(['pvp_mes_compl','pvp','importe','coste_mes_compl','coste','importe_coste',
+        'importe_margen_total','importe_margen_jmrey','importe_margen_juanma',
+        'importe_margen_borja','importe_margen_agente'].includes(dc)) return 'currency';
+    if(['pct_margen'].includes(dc)) return 'pct';
+    if(['fecha_inicio','fecha_fin'].includes(dc)) return 'date';
+    return 'text';
+  }
+  const colTypes=dataCols.map(colType);
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function cellXml(raw,type,sid){
+    if(type==='int'){const n=parseInt(raw.replace(/[^\d-]/g,''));if(!isNaN(n))return '<td class="s'+sid+'" x:num="'+n+'">'+n+'</td>';}
+    if(type==='currency'){const n=parseFloat(raw.replace(',','.').replace(/[^\d.-]/g,''));if(!isNaN(n))return '<td class="s'+sid+'" x:num="'+n+'">'+n.toFixed(2).replace('.',',')+'</td>';}
+    if(type==='date'){const m=raw.match(/(\d{4})-(\d{2})-(\d{2})/);if(m)return '<td class="s'+sid+'">'+m[3]+'/'+m[2]+'/'+m[1]+'</td>';}
+    return '<td class="s'+sid+'">'+esc(raw)+'</td>';
+  }
+  function styleId(type){return {int:3,currency:5,pct:4,date:6}[type]||2;}
+  const rows=[];
+  table.querySelectorAll('tbody tr').forEach(tr=>{
+    if(tr.querySelector('.ec')) return;
+    let cells=Array.from(tr.cells);
+    const last=cells[cells.length-1];
+    if(last&&last.classList.contains('c')&&last.querySelector('button')) cells=cells.slice(0,-1);
+    rows.push(cells.map((td,ci)=>{
+      const clone=td.cloneNode(true);
+      clone.querySelectorAll('button').forEach(el=>el.remove());
+      return (clone.innerText||clone.textContent||'').replace(/\s+/g,' ').trim();
+    }));
+  });
+  let thead='<tr class="hdr">'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr>';
+  let tbody='';
+  rows.forEach((row,ri)=>{
+    tbody+='<tr>';
+    row.forEach((val,ci)=>{tbody+=cellXml(val,colTypes[ci]||'text',styleId(colTypes[ci]||'text'));});
+    tbody+='</tr>\n';
+  });
+  const now=new Date();
+  const html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Licencias</x:Name><x:WorksheetOptions><x:FreezePanes/><x:SplitHorizontal>1</x:SplitHorizontal><x:TopRowBottomPane>1</x:TopRowBottomPane></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--><style>body{font-family:Calibri;font-size:11pt;}table{border-collapse:collapse;}.hdr th{background:#0E1F3D;color:#F4ECE0;font-weight:bold;padding:6px 8px;}.s2{text-align:left;}.s3{text-align:right;mso-number-format:0;}.s4{text-align:right;mso-number-format:"0.00%";}.s5{text-align:right;mso-number-format:"#,##0.00\ \"€\"";}.s6{text-align:center;mso-number-format:"dd/mm/yyyy";}td{padding:4px 8px;border:1px solid #E2D9C6;}tr:nth-child(even) td{background:#F3F0EA;}</style></head><body><table><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table></body></html>';
+  const blob=new Blob(['\uFEFF'+html],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='licencias_'+now.toISOString().slice(0,10)+'.xlsx.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('Exportado: licencias.xlsx.html');
+}
+function exportPrecXLS(){
+  const table=document.getElementById('tbl-prec');
+  if(!table){toast('Tabla no encontrada');return;}
+  const hdrRow=table.querySelector('.hdr-row');
+  const headers=hdrRow?Array.from(hdrRow.querySelectorAll('th')).filter(th=>!th.classList.contains('ac-col')).map(th=>(th.innerText||'').trim()):[];
+  const rows=[];
+  table.querySelectorAll('tbody tr').forEach(tr=>{
+    if(tr.querySelector('.ec')) return;
+    let cells=Array.from(tr.cells);
+    const last=cells[cells.length-1];
+    if(last&&last.classList.contains('c')&&last.querySelector('button')) cells=cells.slice(0,-1);
+    rows.push(cells.map(td=>(td.innerText||td.textContent||'').replace(/\s+/g,' ').trim()));
+  });
+  const tsv='\uFEFF'+[headers.join('\t'),...rows.map(r=>r.join('\t'))].join('\r\n');
+  const blob=new Blob([tsv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='precios_licencias_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('Exportado: precios_licencias.csv');
+}
+function clearLicFilters(){ licFilters={}; document.getElementById('lic-filter-row').innerHTML=''; renderLic(); }
 function clearPrecFilters(){ renderPrec(); }
 
 // ── INIT ─────────────────────────────────────────────────────

@@ -719,6 +719,25 @@ function _denyAccess(account, email, msg){
   }
 }
 
+
+// ── SESSION GUARD: redirect to index if not authenticated ──
+(function checkSession(){
+  var hasSession = false;
+  try {
+    for(var i=0; i<sessionStorage.length; i++){
+      var k = sessionStorage.key(i);
+      if(k && k.indexOf('login.windows.net') > -1){ hasSession = true; break; }
+    }
+  } catch(e){}
+  if(!hasSession){
+    window._sessionCheckTimer = setTimeout(function(){
+      var accounts = typeof msal !== 'undefined' && window._msalApp
+        ? window._msalApp.getAllAccounts() : [];
+      if(accounts.length === 0) window.location.href = 'index.html';
+    }, 1500);
+  }
+})();
+
 function _grantAccess(account){
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
