@@ -483,7 +483,7 @@ table.rt tbody td.c{text-align:center;}
   <div class="de-tb">
     <div><div class="seh-ey">Gesti&oacute;n de datos</div>
     <div class="de-tb-t">% Agente</div></div>
-    <div><button class="btn btn-p" onclick="openAgtModal(null)">&#xff0b; Nuevo agente</button></div>
+    <div style="display:flex;gap:var(--sp-3);align-items:center;"><button class="btn btn-s btn-sm" onclick="clearAgtFilters()">&#x2715; Limpiar filtros</button><button class="btn btn-p" onclick="openAgtModal(null)">&#xff0b; Nuevo agente</button></div>
   </div>
   <div class="rtw" style="max-width:700px;"><table class="dt" id="tbl-agt">
     <thead>
@@ -496,6 +496,7 @@ table.rt tbody td.c{text-align:center;}
         <th class="ac-col">Acc.</th>
       </tr>
     </thead>
+    <tr id="agt-filter-row"></tr>
     <tbody id="tbody-agt"></tbody>
   </table></div>
 </section>
@@ -968,6 +969,7 @@ function calcRow(r){
 // ── RENDER LICENCIAS ─────────────────────────────────────────
 let licFilters={};
 let precFilters={};
+let agtFilters={};
 function buildLicFilterRow(){
   const fr=document.getElementById('lic-filter-row');
   if(fr.innerHTML) return;
@@ -1055,9 +1057,28 @@ function renderPrec(){
   document.getElementById('prec-cnt').textContent='('+DB.precios.length+')';
 }
 
+function buildAgtFilterRow(){
+  const fr=document.getElementById('agt-filter-row');
+  if(fr.innerHTML) return;
+  const table=document.getElementById('tbl-agt');
+  if(!table) return;
+  const ths=Array.from(table.querySelectorAll('.hdr-row th'));
+  fr.innerHTML=ths.map(th=>{
+    const col=th.getAttribute('data-col')||'';
+    if(!col) return '<td></td>';
+    return '<td><input class="f-inp" placeholder="Filtrar..." data-col="'+col+'" oninput="agtFilters[this.dataset.col]=this.value;renderAgt()" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--bg-e);color:var(--fg-2);"></td>';
+  }).join('');
+}
+
 function renderAgt(){
+  buildAgtFilterRow();
   const tb=document.getElementById('tbody-agt');
-  const rows=DB.agentes.map((r,i)=>`<tr ondblclick="openAgtModal(${i})">
+  let data=DB.agentes;
+  Object.entries(agtFilters).forEach(([col,val])=>{
+    if(!val) return;
+    data=data.filter(r=>(r[col]||'').toString().toLowerCase().includes(val.toLowerCase()));
+  });
+  const rows=data.map((r,i)=>`<tr ondblclick="openAgtModal(${DB.agentes.indexOf(r)})">
     <td><strong>${r.agente||'—'}</strong></td>
     <td class="r num">${fmtPct(r.margen)}</td>
     <td class="r num">${fmtPct(r.pct_jmrey)}</td>
@@ -1343,6 +1364,7 @@ function exportPrecXLS(){
   toast('Exportado: precios_licencias.csv');
 }
 function clearLicFilters(){ licFilters={}; document.getElementById('lic-filter-row').innerHTML=''; renderLic(); }
+function clearAgtFilters(){ agtFilters={}; document.getElementById('agt-filter-row').innerHTML=''; renderAgt(); }
 function clearPrecFilters(){ precFilters={}; document.getElementById('prec-filter-row').innerHTML=''; renderPrec(); }
 
 // ── INIT ─────────────────────────────────────────────────────
