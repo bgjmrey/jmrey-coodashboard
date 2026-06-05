@@ -1605,12 +1605,25 @@ function renderLicKPI(){
   const mesIni=year+'-'+String(month).padStart(2,'0')+'-01';
   const mesFin=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
   const acumFin=licDateStr(licMesRange(year,month).fin);
-  const licMes=DB.licencias.filter(r=>{const fi=(r.fecha_inicio||'').substring(0,10);return fi>=mesIni&&fi<=mesFin;});
-  const licAcum=DB.licencias.filter(r=>{const fi=(r.fecha_inicio||'').substring(0,10);return fi.length===10&&fi<=acumFin;});
+  // Excluir licencias cuya fecha_fin ya pasó antes del período
+  function licActiva(r, refY, refM){
+    if(!r.fecha_fin || r.anio_mes_fin===999999) return true;
+    const fin=new Date(r.fecha_fin);
+    const finMes=fin.getFullYear()*100+(fin.getMonth()+1);
+    return finMes >= refY*100+refM;
+  }
+  const licMes=DB.licencias.filter(r=>{
+    const fi=(r.fecha_inicio||'').substring(0,10);
+    return fi>=mesIni && fi<=mesFin && licActiva(r,year,month);
+  });
+  const licAcum=DB.licencias.filter(r=>{
+    const fi=(r.fecha_inicio||'').substring(0,10);
+    return fi.length===10 && fi<=acumFin && licActiva(r,year,month);
+  });
   document.getElementById('lic-kpi-period').textContent='Acumulado '+MESES_ES[month]+' '+year;
-  renderNuevasLicencias(licMes);
-  renderAcumCOO(licAcum);
-  renderAcumAgente(licAcum);
+  renderNuevasLicencias(licMes, year, month);
+  renderAcumCOO(licAcum, year, month);
+  renderAcumAgente(licAcum, year, month);
 }
 
 function fmtE(v){ if(v===null||v===undefined||isNaN(parseFloat(v))) return '—'; const n=parseFloat(v); const parts=n.toFixed(2).split('.'); parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.'); return parts.join(',')+' €'; }
@@ -1620,7 +1633,7 @@ function fmtN(v,d){ if(v===null||v===undefined) return '—'; const n=parseFloat
 const _licExpanded = new Set(); // 'fecha' pivots
 const _licExpanded2 = new Set(); // 'linea' pivots
 
-function renderNuevasLicencias(lics){
+function renderNuevasLicencias(lics, refYear, refMonth){
   const today = new Date().toISOString().slice(0,10);
 
   // Pivot 1: Cliente > Fecha > Concepto
@@ -1641,7 +1654,8 @@ function renderNuevasLicencias(lics){
   // Pivot 2: Cliente > Línea > Concepto
   const p2 = {};
   lics.forEach(r=>{
-    const c=calcLicRowSimple(r), cli=r.cliente||'—', linea=r.linea_producto||'—';
+    const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    const cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p2[cli]) p2[cli]={cant:0,pvp:0,coste:0,children:{}};
     p2[cli].cant+=c.cant; p2[cli].pvp+=c.pvpTotal; p2[cli].coste+=c.costeTotal;
     if(!p2[cli].children[linea]) p2[cli].children[linea]={cant:0,pvp:0,coste:0,children:{}};
@@ -1735,7 +1749,7 @@ function toggleLicPivot(key, setName){
 
 // ── 3.2 Acumulado COO ──
 const _acumExpanded = new Set();
-function renderAcumCOO(lics){
+function renderAcumCOO(lics, refYear, refMonth){
   // Tabla resumen por cliente
   const byClient = {};
   lics.forEach(r=>{
@@ -1765,7 +1779,8 @@ function renderAcumCOO(lics){
   // Tabla dinámica: Cliente > Línea > Concepto con Cantidad e Importe
   const p={};
   lics.forEach(r=>{
-    const c=calcLicRowSimple(r), cli=r.cliente||'—', linea=r.linea_producto||'—';
+    const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    const cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[cli]) p[cli]={cant:0,pvp:0,children:{}};
     p[cli].cant+=c.cant; p[cli].pvp+=c.pvpTotal;
     if(!p[cli].children[linea]) p[cli].children[linea]={cant:0,pvp:0,children:{}};
@@ -1819,10 +1834,11 @@ function toggleAcumCOO(key){
 
 // ── 3.3 Acumulado Agente ──
 const _acumAgtExpanded = new Set();
-function renderAcumAgente(lics){
+function renderAcumAgente(lics, refYear, refMonth){
   const p={};
   lics.forEach(r=>{
-    const c=calcLicRowSimple(r), agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
+    const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    const agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[agt]) p[agt]={cant:0,pvp:0,children:{}};
     p[agt].cant+=c.cant; p[agt].pvp+=c.pvpTotal;
     if(!p[agt].children[cli]) p[agt].children[cli]={cant:0,pvp:0,children:{}};
@@ -1906,16 +1922,55 @@ function toggleAllAcumAgt(){
   renderLicKPI();
 }
 
-function calcLicRowSimple(r){
-  const today=new Date().toISOString().slice(0,10);
+function calcDiasKPI(r, refYear, refMonth){
+  // Calcula los días a facturar para el mes de referencia (refYear/refMonth)
+  // teniendo en cuenta fecha_inicio y fecha_fin de la licencia
+  const refDate = new Date(refYear, refMonth-1, 1);
+  const diasMesRef = new Date(refYear, refMonth, 0).getDate();
+  const ini = r.fecha_inicio ? new Date(r.fecha_inicio) : null;
+  const fin = (r.fecha_fin && r.anio_mes_fin !== 999999) ? new Date(r.fecha_fin) : null;
+
+  // Si tiene fecha_fin y ya terminó antes de este mes → 0 días
+  if(fin){
+    const finMes = fin.getFullYear()*100+(fin.getMonth()+1);
+    const refMes = refYear*100+refMonth;
+    if(finMes < refMes) return 0;
+    // Si fecha_fin es este mes → días proporcionales hasta fecha_fin
+    if(finMes === refMes){
+      const diaInicio = ini && ini.getFullYear()*100+(ini.getMonth()+1)===refMes ? ini.getDate() : 1;
+      return Math.max(0, fin.getDate() - diaInicio + 1);
+    }
+  }
+
+  // Si fecha_inicio es este mes → días desde inicio hasta fin de mes
+  if(ini){
+    const iniMes = ini.getFullYear()*100+(ini.getMonth()+1);
+    const refMes = refYear*100+refMonth;
+    if(iniMes === refMes) return diasMesRef - ini.getDate() + 1;
+  }
+
+  // Mes completo
+  return diasMesRef;
+}
+
+function calcLicRowSimple(r, refYear, refMonth){
+  const now = new Date();
+  const ry = refYear || now.getFullYear();
+  const rm = refMonth || (now.getMonth()+1);
+  const today = now.toISOString().slice(0,10);
+
   const precio=lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
   const pvpMes  =precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
   const costeMes=precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
-  const cant=parseFloat(r.cantidad)||0, dias=parseFloat(r.dias_fact)||0;
-  let diasMes=30;
-  if(r.fecha_inicio){const d=new Date(r.fecha_inicio);diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();}
-  const pvp  =dias>0?pvpMes*dias/diasMes:pvpMes;
-  const coste=dias>0?costeMes*dias/diasMes:costeMes;
+  const cant=parseFloat(r.cantidad)||0;
+  const diasMesRef = new Date(ry, rm, 0).getDate();
+  const dias = calcDiasKPI(r, ry, rm);
+
+  // Si días=0, la licencia no aplica a este mes
+  if(dias === 0) return null;
+
+  const pvp  = dias < diasMesRef ? pvpMes*dias/diasMesRef : pvpMes;
+  const coste= dias < diasMesRef ? costeMes*dias/diasMesRef : costeMes;
   const agt=lookupAgente(r.agente);
   return {cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
           mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
