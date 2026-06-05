@@ -637,8 +637,11 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="fg"><span class="fl">N&ordm; Pedido Cliente</span><input class="finp" id="l-nro-ped-cli" style="width:100%"></div>
       <div class="fg"><span class="fl">N&ordm; Pedido Compra</span><input class="finp" id="l-nro-ped-cmp" style="width:100%"></div>
       <div class="fg"><span class="fl">Fecha Solicitud</span><input type="date" class="finp" id="l-fec-sol" style="width:100%"></div>
+      <div class="fg"><span class="fl">Vínculo Fecha Solicitud</span><input class="finp" id="l-hl-sol" placeholder="https://..." style="width:100%"></div>
       <div class="fg"><span class="fl">Fecha Inicio</span><input type="date" class="finp" id="l-fec-ini" style="width:100%"></div>
+      <div class="fg"><span class="fl">Vínculo Fecha Inicio</span><input class="finp" id="l-hl-ini" placeholder="https://..." style="width:100%"></div>
       <div class="fg"><span class="fl">Fecha Fin</span><input type="date" class="finp" id="l-fec-fin" style="width:100%"></div>
+      <div class="fg"><span class="fl">Vínculo Fecha Fin</span><input class="finp" id="l-hl-fin" placeholder="https://..." style="width:100%"></div>
       <div class="fg"><span class="fl">D&iacute;as fact.</span><input class="finp calc" id="l-dias" readonly style="width:100%"></div>
       <div class="fg" style="grid-column:span 3"><span class="fl">Concepto</span><select class="fsel" id="l-concepto" style="width:100%" onchange="onConceptoChange()"><option value="">&#8212; selecciona &#8212;</option></select></div>
       <div class="fg" style="grid-column:span 2"><span class="fl">L&iacute;nea de Producto</span><input class="finp calc" id="l-linea" readonly style="width:100%"></div>
@@ -1195,8 +1198,8 @@ function renderLic(){
     return `<tr ondblclick="openLicModal(${DB.licencias.indexOf(r)})">
       <td>${r.proveedor||'—'}</td>
       <td style="font-size:var(--fz-xs)">${r.nro_pedido_cliente||'—'}</td>
-      <td>${fmtDate(r.fecha_inicio)}</td>
-      <td>${(r.anio_mes_fin===999999||!r.fecha_fin)?'∞':fmtDate(r.fecha_fin)}</td>
+      <td>${r.hl_fecha_inicio?`<a href="${r.hl_fecha_inicio}" target="_blank" class="hl">${fmtDate(r.fecha_inicio)}</a>`:fmtDate(r.fecha_inicio)}</td>
+      <td>${(r.anio_mes_fin===999999||!r.fecha_fin)?'∞':(r.hl_fecha_fin?`<a href="${r.hl_fecha_fin}" target="_blank" class="hl">${fmtDate(r.fecha_fin)}</a>`:fmtDate(r.fecha_fin))}</td>
       <td class="r">${r.dias_fact??'—'}</td>
       <td title="${r.concepto||''}">${(r.concepto||'').substring(0,30)}${(r.concepto||'').length>30?'…':''}</td>
       <td style="font-size:var(--fz-xs)">${(r.linea_producto||'').substring(0,25)}</td>
@@ -1319,8 +1322,11 @@ function openLicModal(i){
   g('l-nro-ped-cli').value=r.nro_pedido_cliente||'';
   g('l-nro-ped-cmp').value=r.nro_pedido_compra||'';
   g('l-fec-sol').value=r.fecha_solicitud||'';
+  g('l-hl-sol').value=r.hl_fecha_solicitud||'';
   g('l-fec-ini').value=r.fecha_inicio||'';
+  g('l-hl-ini').value=r.hl_fecha_inicio||'';
   g('l-fec-fin').value=(r.anio_mes_fin===999999||!r.fecha_fin)?'':r.fecha_fin||'';
+  g('l-hl-fin').value=r.hl_fecha_fin||'';
   g('l-dias').value=r.dias_fact??'';
   g('l-concepto').value=r.concepto||'';
   g('l-linea').value=r.linea_producto||'';
@@ -1377,8 +1383,11 @@ async function saveLic(){
     nro_pedido_cliente:g('l-nro-ped-cli').value.trim()||null,
     nro_pedido_compra:g('l-nro-ped-cmp').value.trim()||null,
     fecha_solicitud:g('l-fec-sol').value||null,
+    hl_fecha_solicitud:g('l-hl-sol').value.trim()||null,
     fecha_inicio:g('l-fec-ini').value||null,
+    hl_fecha_inicio:g('l-hl-ini').value.trim()||null,
     fecha_fin:g('l-fec-fin').value||null,
+    hl_fecha_fin:g('l-hl-fin').value.trim()||null,
     anio_mes_fin:g('l-fec-fin').value?null:999999,
     dias_fact:parseInt(g('l-dias').value)||0,
     concepto:g('l-concepto').value||null,
