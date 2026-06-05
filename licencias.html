@@ -359,6 +359,14 @@ table.rt tbody td.c{text-align:center;}
 #sec-licencias,#sec-precios,#sec-agentes,#sec-kpis{max-width:100%;padding-left:var(--sp-4);padding-right:var(--sp-4);}
 .calc{background:var(--ivory-50);color:var(--fg-3);font-style:italic;}
 .pct{font-size:var(--fz-xs);color:var(--fg-3);}
+/* Filter rows — same as COO */
+table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);padding:3px 4px;}
+.filter-row input,.filter-row select{
+  font-family:var(--ff-sans);font-size:var(--fz-xs);color:var(--fg-1);
+  background:var(--bg-e);border:1px solid var(--border);border-radius:3px;
+  padding:3px 6px;width:100%;outline:none;box-sizing:border-box;}
+.filter-row input:focus,.filter-row select:focus{border-color:var(--accent);}
+.filter-row .ac-col{width:72px;}
 /* Modal */
 .mod-bg{display:none;position:fixed;inset:0;background:rgba(14,31,61,.45);z-index:200;align-items:flex-start;justify-content:center;padding:48px var(--g);overflow-y:auto;}
 .mod{background:var(--bg-card);border-radius:var(--r-lg);box-shadow:var(--sh-md);width:100%;}
@@ -555,7 +563,7 @@ table.rt tbody td.c{text-align:center;}
         <th data-col="importe_margen_agente" class="r">Mrg Agente</th>
         <th class="ac-col">Acc.</th>
       </tr>
-      <tr id="lic-filter-row"></tr>
+      <tr class="filter-row" id="lic-filter-row"></tr>
     </thead>
     <tbody id="tbody-lic"></tbody>
   </table></div>
@@ -587,7 +595,7 @@ table.rt tbody td.c{text-align:center;}
         <th data-col="coste_mes_arrow" class="r">Coste Arrow</th>
         <th class="ac-col">Acc.</th>
       </tr>
-      <tr id="prec-filter-row"></tr>
+      <tr class="filter-row" id="prec-filter-row"></tr>
     </thead>
     <tbody id="tbody-prec"></tbody>
   </table></div>
@@ -611,7 +619,7 @@ table.rt tbody td.c{text-align:center;}
         <th data-col="pct_borja" class="r">% Borja</th>
         <th class="ac-col">Acc.</th>
       </tr>
-      <tr id="agt-filter-row"></tr>
+      <tr class="filter-row" id="agt-filter-row"></tr>
     </thead>
     <tbody id="tbody-agt"></tbody>
   </table></div>
