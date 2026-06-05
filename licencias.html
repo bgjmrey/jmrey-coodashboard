@@ -394,7 +394,7 @@ table.rt tbody td.c{text-align:center;}
 </div>
 
 <!-- APP CONTENT -->
-<div id="app-content" style="display:none">
+<div id="app-content" style="display:none;padding-bottom:52px;">
 
 <header class="hdr">
   <div class="hdr-brand">
@@ -595,12 +595,13 @@ table.rt tbody td.c{text-align:center;}
 
 <!-- % AGENTE -->
 <section id="sec-agentes" class="sec">
+  <div style="max-width:fit-content;margin:0 auto;">
   <div class="de-tb">
     <div><div class="seh-ey">Gesti&oacute;n de datos</div>
     <div class="de-tb-t">% Agente</div></div>
     <div style="display:flex;gap:var(--sp-3);align-items:center;"><button class="btn btn-s btn-sm" onclick="clearAgtFilters()">&#x2715; Limpiar filtros</button><button class="btn btn-p" onclick="openAgtModal(null)">&#xff0b; Nuevo agente</button></div>
   </div>
-  <div style="display:flex;justify-content:center;"><table class="dt" id="tbl-agt" style="width:auto;min-width:500px;">
+  <div class="rtw" style="max-width:fit-content;"><table class="dt" id="tbl-agt" style="width:auto;">
     <thead>
       <tr class="hdr-row">
         <th data-col="agente">Agente</th>
@@ -614,6 +615,7 @@ table.rt tbody td.c{text-align:center;}
     </thead>
     <tbody id="tbody-agt"></tbody>
   </table></div>
+  </div>
 </section>
 
 <!-- MODAL LICENCIA -->
@@ -704,7 +706,7 @@ table.rt tbody td.c{text-align:center;}
   background:var(--bg-dark);color:var(--fg-d);padding:10px 20px;border-radius:var(--r-lg);
   font-size:var(--fz-sm);z-index:9998;box-shadow:var(--sh-md);border-left:3px solid var(--accent);"></div>
 
-<footer style="background:var(--bg-dark);padding:14px var(--g);display:flex;align-items:center;justify-content:space-between;margin-top:var(--sp-6);">
+<footer style="background:var(--bg-dark);padding:14px var(--g);display:flex;align-items:center;justify-content:space-between;position:fixed;bottom:0;left:0;right:0;z-index:100;">
   <div style="font-family:var(--ff-serif);font-size:16px;color:rgba(244,236,224,.5);">JM<span style="color:var(--accent)">REY</span></div>
   <div id="footer-lbl" style="font-size:11px;color:rgba(244,236,224,.4);"></div>
 </footer>
