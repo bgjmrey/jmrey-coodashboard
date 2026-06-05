@@ -2278,8 +2278,22 @@ function sendKpiEmail(){
   });
   lines.push('', 'Un saludo.');
 
-  window.location.href = 'mailto:?subject=' + encodeURIComponent(subj)
-    + '&body=' + encodeURIComponent(lines.join('\n'));
+  toast('Generando captura...');
+  captureKPI('sec-kpis', function(canvas){
+    window.location.href = 'mailto:?subject=' + encodeURIComponent(subj)
+      + '&body=' + encodeURIComponent(lines.join('\n'));
+    if(canvas){
+      canvas.toBlob(function(blob){
+        if(navigator.clipboard && window.ClipboardItem){
+          navigator.clipboard.write([new ClipboardItem({'image/png': blob})])
+            .then(function(){ setTimeout(function(){ toast('📋 Imagen copiada — pégala en el email con Ctrl+V'); }, 800); })
+            .catch(function(){ setTimeout(function(){ toast('✉️ Email abierto'); }, 800); });
+        } else {
+          setTimeout(function(){ toast('✉️ Email abierto'); }, 800);
+        }
+      });
+    }
+  });
 }
 
 
