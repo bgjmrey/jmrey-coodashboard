@@ -1643,6 +1643,7 @@ function fmtN(v,d){ if(v===null||v===undefined) return '—'; const n=parseFloat
 // ── 3.1 Nuevas licencias: pivot por Cliente > Fecha > Concepto y Cliente > Línea > Concepto ──
 const _licExpanded = new Set(); // 'fecha' pivots
 const _licExpanded2 = new Set(); // 'linea' pivots
+const _licExpandedSets = { '_licExpanded': _licExpanded, '_licExpanded2': _licExpanded2 };
 
 function renderNuevasLicencias(lics, refYear, refMonth){
   const today = new Date().toISOString().slice(0,10);
@@ -1687,7 +1688,8 @@ function buildPivot3(pivot, pfx, setName){
   let html='';
   if(Object.keys(pivot).length===0) return '<tr><td colspan="4" class="ec">Sin datos</td></tr>';
   Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
-    const exp = window[setName].has(pfx+':'+cli);
+    const expSet = _licExpandedSets[setName]||_licExpanded;
+    const exp = expSet.has(pfx+':'+cli);
     html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="${pfx}:${cli}" data-set="${setName}" onclick="toggleLicPivot(this.dataset.key,this.dataset.set)">
       <td><strong>${cli}</strong></td>
       <td class="r num">${fmtN(cliData.cant,0)}</td>
@@ -1696,7 +1698,7 @@ function buildPivot3(pivot, pfx, setName){
     </tr>`;
     if(exp){
       Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([mid,midData])=>{
-        const key2=pfx+':'+cli+':'+mid, exp2=window[setName].has(key2);
+        const key2=pfx+':'+cli+':'+mid, exp2=expSet.has(key2);
         html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" data-set="${setName}" onclick="toggleLicPivot(this.dataset.key,this.dataset.set)">
           <td style="padding-left:20px">${mid}</td>
           <td class="r num">${fmtN(midData.cant,0)}</td>
@@ -1753,7 +1755,7 @@ function toggleAllAcumCOO(){
   renderLicKPI();
 }
 function toggleLicPivot(key, setName){
-  const s = window[setName];
+  const s = _licExpandedSets[setName]||_licExpanded;
   if(s.has(key)) s.delete(key); else s.add(key);
   renderLicKPI();
 }
