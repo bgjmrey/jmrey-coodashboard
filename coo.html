@@ -2407,46 +2407,56 @@ td,th{padding:5px 10px;border:1px solid #E2D9C6;}
 
 
 // ── CAPTURA KPI ──────────────────────────────────────────────
-function captureKPI(containerId){
-  const sec = document.getElementById(containerId||'sec-kpis');
-  const fbar = sec ? sec.querySelector('.fbar') : null;
-  if(!sec){ toast('No se encontró la sección'); return; }
-  if(fbar) fbar.style.visibility='hidden';
-  if(typeof html2canvas === 'undefined'){
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    s.onload = () => _doCapture(sec, fbar);
-    s.onerror = () => { if(fbar) fbar.style.visibility=''; toast('Error al cargar librería de captura'); };
-    document.head.appendChild(s);
-  } else {
-    _doCapture(sec, fbar);
-  }
-}
-function _doCapture(section, fbar){
-  toast('Generando imagen...');
+function captureKPI(secId, callback){
+  const sec = document.getElementById(secId||'sec-kpis');
+  if(!sec){ toast('No se encontró la sección'); if(callback) callback(null); return; }
   const wrapper = document.createElement('div');
-  wrapper.id = '_cap_wrapper';
-  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;background:#F3F0EA;width:'+Math.max(section.scrollWidth, window.innerWidth)+'px;';
+  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;background:#F3F0EA;'
+    + 'width:'+Math.max(sec.scrollWidth, window.innerWidth)+'px;z-index:-1;';
   const hdrClone = document.querySelector('header.hdr').cloneNode(true);
-  const secClone = section.cloneNode(true);
+  const secClone = sec.cloneNode(true);
   const fbarClone = secClone.querySelector('.fbar');
   if(fbarClone) fbarClone.remove();
   wrapper.appendChild(hdrClone);
   wrapper.appendChild(secClone);
   document.body.appendChild(wrapper);
-  if(fbar) fbar.style.visibility='';
-  html2canvas(wrapper, {backgroundColor:'#F3F0EA',scale:2,useCORS:true,allowTaint:true,scrollX:0,scrollY:0}).then(canvas=>{
-    document.body.removeChild(wrapper);
-    const link=document.createElement('a');
-    link.download='kpi_coo_'+new Date().toISOString().slice(0,10)+'.png';
-    link.href=canvas.toDataURL('image/png');
-    link.click();
-    toast('Imagen descargada');
-  }).catch(e=>{
-    if(document.body.contains(wrapper)) document.body.removeChild(wrapper);
-    toast('Error: '+e.message);
-  });
+
+  const doCapture = () => {
+    html2canvas(wrapper, {
+      backgroundColor:'#F3F0EA', scale:2, useCORS:true, allowTaint:true, scrollX:0, scrollY:0
+    }).then(canvas => {
+      document.body.removeChild(wrapper);
+      if(callback){
+        callback(canvas);
+      } else {
+        const link = document.createElement('a');
+        link.download = 'kpi_coo_' + new Date().toISOString().slice(0,10) + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        toast('Imagen descargada');
+      }
+    }).catch(e => {
+      if(document.body.contains(wrapper)) document.body.removeChild(wrapper);
+      toast('Error: ' + e.message);
+      if(callback) callback(null);
+    });
+  };
+
+  if(typeof html2canvas === 'undefined'){
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = doCapture;
+    s.onerror = () => {
+      document.body.removeChild(wrapper);
+      toast('Error al cargar librería de captura');
+      if(callback) callback(null);
+    };
+    document.head.appendChild(s);
+  } else {
+    doCapture();
+  }
 }
+
 
 // ── INIT ─────────────────────────────────────────────
 (async function(){
