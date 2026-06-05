@@ -406,7 +406,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
 
 <header class="hdr">
   <div class="hdr-brand">
-    <div class="hdr-logo">JM<span>REY</span></div>
+    <a class="hdr-logo" href="index.html" style="text-decoration:none;cursor:pointer;" title="Volver al portal">JM<span>REY</span></a>
     <div class="hdr-sub">Cuadro de Mando &middot; Licencias</div>
   </div>
   <div class="hdr-meta">
@@ -445,6 +445,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
         <div class="fdiv"></div>
     <div class="fg" style="justify-content:flex-end">
       <button class="btn btn-s" onclick="sendLicKpiEmail()" style="white-space:nowrap">&#x2709;&#xFE0F; Enviar por email</button>
+      <button class="btn btn-s" onclick="captureKPI()" style="white-space:nowrap">📷 Captura</button>
     </div>
   </div>
 
@@ -464,7 +465,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="kc" style="margin-bottom:var(--sp-4);">
         <div class="kc-hd"><div><div class="kc-t">Por Cliente &amp; Fecha</div><div class="kc-s">Agrupado por cliente, fecha y concepto</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th>Cliente / Fecha / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
+          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllLicPivot('fecha')" title="Expandir/contraer todo">Cliente / Fecha / Concepto ⇕</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
           <tbody id="tbody-nuevas-1"></tbody>
         </table></div>
       </div>
@@ -473,7 +474,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="kc">
         <div class="kc-hd"><div><div class="kc-t">Por Cliente &amp; Línea</div><div class="kc-s">Agrupado por cliente, línea y concepto</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th>Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
+          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllLicPivot('linea')" title="Expandir/contraer todo">Cliente / Línea / Concepto ⇕</th><th class="r">Cant.</th><th class="r">PVP</th><th class="r">Coste</th></tr></thead>
           <tbody id="tbody-nuevas-2"></tbody>
         </table></div>
       </div>
@@ -1112,6 +1113,11 @@ let licFilters={};
 let precFilters={};
 let agtFilters={};
 
+function hl(url, label, title){
+  if(!url) return '';
+  return `<a class="hl" href="${url}" target="_blank" rel="noopener" title="${title||label}">${label}</a>`;
+}
+
 function licMatch(r, col, val){
   if(!val) return true;
   if(typeof val==='object' && (val.from||val.to)){
@@ -1198,8 +1204,8 @@ function renderLic(){
     return `<tr ondblclick="openLicModal(${DB.licencias.indexOf(r)})">
       <td>${r.proveedor||'—'}</td>
       <td style="font-size:var(--fz-xs)">${r.nro_pedido_cliente||'—'}</td>
-      <td>${r.hl_fecha_inicio?`<a href="${r.hl_fecha_inicio}" target="_blank" class="hl">${fmtDate(r.fecha_inicio)}</a>`:fmtDate(r.fecha_inicio)}</td>
-      <td>${(r.anio_mes_fin===999999||!r.fecha_fin)?'∞':(r.hl_fecha_fin?`<a href="${r.hl_fecha_fin}" target="_blank" class="hl">${fmtDate(r.fecha_fin)}</a>`:fmtDate(r.fecha_fin))}</td>
+      <td><div class="hl-row">${fmtDate(r.fecha_inicio)}${hl(r.hl_fecha_inicio,'📄','Ver documento')}</div></td>
+      <td><div class="hl-row">${(r.anio_mes_fin===999999||!r.fecha_fin)?'∞':fmtDate(r.fecha_fin)}${r.hl_fecha_fin?hl(r.hl_fecha_fin,'📄','Ver documento'):''}</div></td>
       <td class="r">${r.dias_fact??'—'}</td>
       <td title="${r.concepto||''}">${(r.concepto||'').substring(0,30)}${(r.concepto||'').length>30?'…':''}</td>
       <td style="font-size:var(--fz-xs)">${(r.linea_producto||'').substring(0,25)}</td>
@@ -1999,6 +2005,43 @@ function calcLicRowSimple(r, refYear, refMonth){
           mrgJuanma:(pvp-coste)*(agt.pct_juanma||0)*cant,
           mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant,
           mrgAgente:(pvp-coste)*(agt.margen||0)*cant};
+}
+
+
+// ── CAPTURA KPI ──────────────────────────────────────────────
+function captureKPI(){
+  const section = document.getElementById('sec-kpis');
+  if(!section){ toast('No se encontró la sección KPI'); return; }
+  // Cargar html2canvas dinámicamente
+  if(typeof html2canvas === 'undefined'){
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = () => _doCapture(section);
+    s.onerror = () => toast('Error al cargar librería de captura');
+    document.head.appendChild(s);
+  } else {
+    _doCapture(section);
+  }
+}
+function _doCapture(section){
+  toast('Generando imagen...');
+  html2canvas(section, {
+    backgroundColor: '#F3F0EA',
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    scrollX: 0,
+    scrollY: -window.scrollY
+  }).then(canvas => {
+    const link = document.createElement('a');
+    const now = new Date();
+    link.download = 'kpi_licencias_' + now.toISOString().slice(0,10) + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    toast('Imagen descargada');
+  }).catch(e => {
+    toast('Error al generar imagen: ' + e.message);
+  });
 }
 
 // ── EMAIL KPI LICENCIAS ──────────────────────────────────────
