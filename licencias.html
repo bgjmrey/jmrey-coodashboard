@@ -528,7 +528,6 @@ table.rt tbody td.c{text-align:center;}
   <div class="rtw"><table class="dt rt" id="tbl-lic">
     <thead>
       <tr class="hdr-row">
-        <th data-col="anio_mes">A&ntilde;o Mes</th>
         <th data-col="proveedor">Proveedor</th>
         <th data-col="nro_pedido_cliente">N&ordm; Ped. Cliente</th>
         <th data-col="fecha_inicio">F.Inicio</th>
@@ -601,7 +600,7 @@ table.rt tbody td.c{text-align:center;}
     <div class="de-tb-t">% Agente</div></div>
     <div style="display:flex;gap:var(--sp-3);align-items:center;"><button class="btn btn-s btn-sm" onclick="clearAgtFilters()">&#x2715; Limpiar filtros</button><button class="btn btn-p" onclick="openAgtModal(null)">&#xff0b; Nuevo agente</button></div>
   </div>
-  <div class="rtw" style="max-width:700px;"><table class="dt" id="tbl-agt">
+  <div style="display:flex;justify-content:center;"><table class="dt" id="tbl-agt" style="width:auto;min-width:500px;">
     <thead>
       <tr class="hdr-row">
         <th data-col="agente">Agente</th>
@@ -920,6 +919,12 @@ function fmtPct(v){
   if(v===null||v===undefined||v==='') return '—';
   return (parseFloat(v)*100).toFixed(1)+'%';
 }
+function fmtE(v){
+  if(v===null||v===undefined||v==='') return '—';
+  const n=parseFloat(v);
+  if(isNaN(n)) return '—';
+  return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+}
 function fmtDate(v){ if(!v) return '—'; return typeof v==='string'?v.substring(0,10):v; }
 
 function navTo(sec, btn){
@@ -1171,7 +1176,6 @@ function renderLic(){
   const rows=data.map((r,i)=>{
     const c=calcRow(r);
     return `<tr ondblclick="openLicModal(${DB.licencias.indexOf(r)})">
-      <td>${r.anio_mes||'—'}</td>
       <td>${r.proveedor||'—'}</td>
       <td style="font-size:var(--fz-xs)">${r.nro_pedido_cliente||'—'}</td>
       <td>${fmtDate(r.fecha_inicio)}</td>
@@ -1182,19 +1186,19 @@ function renderLic(){
       <td>${r.compromiso||'—'}</td><td>${r.pago||'—'}</td>
       <td>${r.proy||'—'}</td><td>${r.cliente||'—'}</td>
       <td class="r">${r.cantidad??0}</td>
-      <td class="r num">${fmt(c.pvpMes)}</td>
-      <td class="r num">${fmt(c.pvp)}</td>
-      <td class="r num">${fmt(c.importe)}</td>
-      <td class="r num">${fmt(c.costeMes)}</td>
-      <td class="r num">${fmt(c.coste)}</td>
-      <td class="r num">${fmt(c.impCoste)}</td>
+      <td class="r num">${fmtE(c.pvpMes)}</td>
+      <td class="r num">${fmtE(c.pvp)}</td>
+      <td class="r num">${fmtE(c.importe)}</td>
+      <td class="r num">${fmtE(c.costeMes)}</td>
+      <td class="r num">${fmtE(c.coste)}</td>
+      <td class="r num">${fmtE(c.impCoste)}</td>
       <td class="r num pct">${fmtPct(c.pctMrg)}</td>
-      <td class="r num">${fmt(c.impMrgTotal)}</td>
-      <td class="r num">${fmt(c.mrg*(c.agt.pct_jmrey||0)*c.cant)}</td>
-      <td class="r num">${fmt(c.mrg*(c.agt.pct_juanma||0)*c.cant)}</td>
-      <td class="r num">${fmt(c.mrg*(c.agt.pct_borja||0)*c.cant)}</td>
+      <td class="r num">${fmtE(c.impMrgTotal)}</td>
+      <td class="r num">${fmtE(c.mrg*(c.agt.pct_jmrey||0)*c.cant)}</td>
+      <td class="r num">${fmtE(c.mrg*(c.agt.pct_juanma||0)*c.cant)}</td>
+      <td class="r num">${fmtE(c.mrg*(c.agt.pct_borja||0)*c.cant)}</td>
       <td>${r.agente||'—'}</td>
-      <td class="r num">${fmt(c.mrg*(c.agt.margen||0)*c.cant)}</td>
+      <td class="r num">${fmtE(c.mrg*(c.agt.margen||0)*c.cant)}</td>
       <td class="c"><button class="bi" onclick="openLicModal(${DB.licencias.indexOf(r)})" title="Editar">✏️</button> <button class="bi" onclick="delLic(${DB.licencias.indexOf(r)})" title="Eliminar">🗑️</button></td>
     </tr>`;
   });
@@ -1215,8 +1219,8 @@ function renderPrec(){
     <td style="font-size:var(--fz-xs)">${r.linea_producto||'—'}</td>
     <td>${r.cliente||'—'}</td><td>${r.compromiso||'—'}</td><td>${r.pago||'—'}</td>
     <td>${r.fecha_fin_pvp||'∞'}</td>
-    <td class="r num">${fmt(r.pvp_mes)}</td><td class="r num">${fmt(r.coste_mes)}</td>
-    <td class="r num">${fmt(r.pvp_mes_arrow)}</td><td class="r num">${fmt(r.coste_mes_arrow)}</td>
+    <td class="r num">${fmtE(r.pvp_mes)}</td><td class="r num">${fmtE(r.coste_mes)}</td>
+    <td class="r num">${fmtE(r.pvp_mes_arrow)}</td><td class="r num">${fmtE(r.coste_mes_arrow)}</td>
     <td class="c"><button class="bi" onclick="openPrecModal(${i})" title="Editar">✏️</button> <button class="bi" onclick="delPrec(${i})" title="Eliminar">🗑️</button></td>
   </tr>`);
   tb.innerHTML=rows.length?rows.join(''):'<tr><td colspan="11" class="ec">Sin precios</td></tr>';
