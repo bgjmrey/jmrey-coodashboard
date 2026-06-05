@@ -1651,7 +1651,8 @@ function renderNuevasLicencias(lics, refYear, refMonth){
   // Pivot 1: Cliente > Fecha > Concepto
   const p1 = {};
   lics.forEach(r=>{
-    const c=calcLicRowSimple(r), cli=r.cliente||'—', fecha=(r.fecha_inicio||'').substring(0,10);
+    const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    const cli=r.cliente||'—', fecha=(r.fecha_inicio||'').substring(0,10);
     if(!p1[cli]) p1[cli]={cant:0,pvp:0,coste:0,children:{}};
     p1[cli].cant+=c.cant; p1[cli].pvp+=c.pvpTotal; p1[cli].coste+=c.costeTotal;
     if(!p1[cli].children[fecha]) p1[cli].children[fecha]={cant:0,pvp:0,coste:0,children:{}};
@@ -1766,7 +1767,8 @@ function renderAcumCOO(lics, refYear, refMonth){
   // Tabla resumen por cliente
   const byClient = {};
   lics.forEach(r=>{
-    const c=calcLicRowSimple(r), cli=r.cliente||'—';
+    const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    const cli=r.cliente||'—';
     if(!byClient[cli]) byClient[cli]={pvp:0,coste:0,mrgJmrey:0,mrgJuanma:0,mrgBorja:0};
     byClient[cli].pvp+=c.pvpTotal; byClient[cli].coste+=c.costeTotal;
     byClient[cli].mrgJmrey+=c.mrgJmrey; byClient[cli].mrgJuanma+=(c.mrgJuanma||0); byClient[cli].mrgBorja+=c.mrgBorja;
