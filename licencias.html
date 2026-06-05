@@ -1136,18 +1136,18 @@ function buildLicFilterRow(){
       const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
       const sp=document.createElement('span'); sp.textContent='–';
       const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
-      const fn=()=>{ licFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderLic()(); };
+      const fn=()=>{ licFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderLic(); };
       i1.addEventListener('change',fn); i2.addEventListener('change',fn);
       w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);
     } else if(['proveedor', 'compromiso', 'pago', 'proy'].includes(col)){
       const sel=document.createElement('select'); sel.dataset.col=col;
       const opts={'proveedor': ['', 'COMPANIAL', 'ARROW', 'GAMMA', 'JMREY'], 'compromiso': ['', 'Mensual', 'Anual', 'Trianual'], 'pago': ['', 'Mensual', 'Trimestral', 'Anual', 'Trianual'], 'proy': ['', 'JMREY']};
       (opts[col]||['']).forEach(v=>sel.add(new Option(v||'—',v)));
-      sel.addEventListener('change',e=>{ licFilters[col]=e.target.value; renderLic()(); });
+      sel.addEventListener('change',e=>{ licFilters[col]=e.target.value; renderLic(); });
       td.appendChild(sel);
     } else {
       const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
-      inp.addEventListener('input',e=>{ licFilters[col]=e.target.value.toLowerCase(); renderLic()(); });
+      inp.addEventListener('input',e=>{ licFilters[col]=e.target.value.toLowerCase(); renderLic(); });
       td.appendChild(inp);
     }
     fr.appendChild(td);
@@ -1167,18 +1167,18 @@ function buildPrecFilterRow(){
       const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
       const sp=document.createElement('span'); sp.textContent='–';
       const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
-      const fn=()=>{ precFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderPrec()(); };
+      const fn=()=>{ precFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderPrec(); };
       i1.addEventListener('change',fn); i2.addEventListener('change',fn);
       w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);
     } else if(['compromiso', 'pago'].includes(col)){
       const sel=document.createElement('select'); sel.dataset.col=col;
       const opts={'compromiso': ['', 'Mensual', 'Anual', 'Trianual'], 'pago': ['', 'Mensual', 'Trimestral', 'Anual', 'Trianual']};
       (opts[col]||['']).forEach(v=>sel.add(new Option(v||'—',v)));
-      sel.addEventListener('change',e=>{ precFilters[col]=e.target.value; renderPrec()(); });
+      sel.addEventListener('change',e=>{ precFilters[col]=e.target.value; renderPrec(); });
       td.appendChild(sel);
     } else {
       const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
-      inp.addEventListener('input',e=>{ precFilters[col]=e.target.value.toLowerCase(); renderPrec()(); });
+      inp.addEventListener('input',e=>{ precFilters[col]=e.target.value.toLowerCase(); renderPrec(); });
       td.appendChild(inp);
     }
     fr.appendChild(td);
@@ -1260,18 +1260,18 @@ function buildAgtFilterRow(){
       const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
       const sp=document.createElement('span'); sp.textContent='–';
       const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
-      const fn=()=>{ agtFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderAgt()(); };
+      const fn=()=>{ agtFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderAgt(); };
       i1.addEventListener('change',fn); i2.addEventListener('change',fn);
       w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);
     } else if([].includes(col)){
       const sel=document.createElement('select'); sel.dataset.col=col;
       const opts={};
       (opts[col]||['']).forEach(v=>sel.add(new Option(v||'—',v)));
-      sel.addEventListener('change',e=>{ agtFilters[col]=e.target.value; renderAgt()(); });
+      sel.addEventListener('change',e=>{ agtFilters[col]=e.target.value; renderAgt(); });
       td.appendChild(sel);
     } else {
       const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
-      inp.addEventListener('input',e=>{ agtFilters[col]=e.target.value.toLowerCase(); renderAgt()(); });
+      inp.addEventListener('input',e=>{ agtFilters[col]=e.target.value.toLowerCase(); renderAgt(); });
       td.appendChild(inp);
     }
     fr.appendChild(td);
