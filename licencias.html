@@ -498,7 +498,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="kc">
         <div class="kc-hd"><div><div class="kc-t">Por Cliente, Línea &amp; Concepto</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllAcumCOO()" title="Expandir/contraer todo">Cliente / Línea / Concepto ⇕</th><th class="r">Cant.</th><th class="r">Mrg Borja</th></tr></thead>
+          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllAcumCOO()" title="Expandir/contraer todo">Cliente / Línea / Concepto ⇕</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
           <tbody id="tbody-acum-coo-pivot"></tbody>
         </table></div>
       </div>
@@ -512,7 +512,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="kc">
         <div class="kc-hd"><div><div class="kc-t">Por Agente, Cliente, Línea &amp; Concepto</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllAcumAgt()" title="Expandir/contraer todo">Agente / Cliente / Línea / Concepto ⇕</th><th class="r">Cant.</th><th class="r">Mrg Agente</th></tr></thead>
+          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllAcumAgt()" title="Expandir/contraer todo">Agente / Cliente / Línea / Concepto ⇕</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
           <tbody id="tbody-acum-agt"></tbody>
         </table></div>
       </div>
@@ -637,11 +637,8 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="fg"><span class="fl">N&ordm; Pedido Cliente</span><input class="finp" id="l-nro-ped-cli" style="width:100%"></div>
       <div class="fg"><span class="fl">N&ordm; Pedido Compra</span><input class="finp" id="l-nro-ped-cmp" style="width:100%"></div>
       <div class="fg"><span class="fl">Fecha Solicitud</span><input type="date" class="finp" id="l-fec-sol" style="width:100%"></div>
-      <div class="fg"><span class="fl">Vínculo Fecha Solicitud</span><input class="finp" id="l-hl-sol" placeholder="https://..." style="width:100%"></div>
       <div class="fg"><span class="fl">Fecha Inicio</span><input type="date" class="finp" id="l-fec-ini" style="width:100%"></div>
-      <div class="fg"><span class="fl">Vínculo Fecha Inicio</span><input class="finp" id="l-hl-ini" placeholder="https://..." style="width:100%"></div>
       <div class="fg"><span class="fl">Fecha Fin</span><input type="date" class="finp" id="l-fec-fin" style="width:100%"></div>
-      <div class="fg"><span class="fl">Vínculo Fecha Fin</span><input class="finp" id="l-hl-fin" placeholder="https://..." style="width:100%"></div>
       <div class="fg"><span class="fl">D&iacute;as fact.</span><input class="finp calc" id="l-dias" readonly style="width:100%"></div>
       <div class="fg" style="grid-column:span 3"><span class="fl">Concepto</span><select class="fsel" id="l-concepto" style="width:100%" onchange="onConceptoChange()"><option value="">&#8212; selecciona &#8212;</option></select></div>
       <div class="fg" style="grid-column:span 2"><span class="fl">L&iacute;nea de Producto</span><input class="finp calc" id="l-linea" readonly style="width:100%"></div>
@@ -1136,18 +1133,18 @@ function buildLicFilterRow(){
       const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
       const sp=document.createElement('span'); sp.textContent='–';
       const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
-      const fn=()=>{ licFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderLic(); };
+      const fn=()=>{ licFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderLic()(); };
       i1.addEventListener('change',fn); i2.addEventListener('change',fn);
       w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);
     } else if(['proveedor', 'compromiso', 'pago', 'proy'].includes(col)){
       const sel=document.createElement('select'); sel.dataset.col=col;
       const opts={'proveedor': ['', 'COMPANIAL', 'ARROW', 'GAMMA', 'JMREY'], 'compromiso': ['', 'Mensual', 'Anual', 'Trianual'], 'pago': ['', 'Mensual', 'Trimestral', 'Anual', 'Trianual'], 'proy': ['', 'JMREY']};
       (opts[col]||['']).forEach(v=>sel.add(new Option(v||'—',v)));
-      sel.addEventListener('change',e=>{ licFilters[col]=e.target.value; renderLic(); });
+      sel.addEventListener('change',e=>{ licFilters[col]=e.target.value; renderLic()(); });
       td.appendChild(sel);
     } else {
       const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
-      inp.addEventListener('input',e=>{ licFilters[col]=e.target.value.toLowerCase(); renderLic(); });
+      inp.addEventListener('input',e=>{ licFilters[col]=e.target.value.toLowerCase(); renderLic()(); });
       td.appendChild(inp);
     }
     fr.appendChild(td);
@@ -1167,18 +1164,18 @@ function buildPrecFilterRow(){
       const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
       const sp=document.createElement('span'); sp.textContent='–';
       const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
-      const fn=()=>{ precFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderPrec(); };
+      const fn=()=>{ precFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderPrec()(); };
       i1.addEventListener('change',fn); i2.addEventListener('change',fn);
       w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);
     } else if(['compromiso', 'pago'].includes(col)){
       const sel=document.createElement('select'); sel.dataset.col=col;
       const opts={'compromiso': ['', 'Mensual', 'Anual', 'Trianual'], 'pago': ['', 'Mensual', 'Trimestral', 'Anual', 'Trianual']};
       (opts[col]||['']).forEach(v=>sel.add(new Option(v||'—',v)));
-      sel.addEventListener('change',e=>{ precFilters[col]=e.target.value; renderPrec(); });
+      sel.addEventListener('change',e=>{ precFilters[col]=e.target.value; renderPrec()(); });
       td.appendChild(sel);
     } else {
       const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
-      inp.addEventListener('input',e=>{ precFilters[col]=e.target.value.toLowerCase(); renderPrec(); });
+      inp.addEventListener('input',e=>{ precFilters[col]=e.target.value.toLowerCase(); renderPrec()(); });
       td.appendChild(inp);
     }
     fr.appendChild(td);
@@ -1198,8 +1195,8 @@ function renderLic(){
     return `<tr ondblclick="openLicModal(${DB.licencias.indexOf(r)})">
       <td>${r.proveedor||'—'}</td>
       <td style="font-size:var(--fz-xs)">${r.nro_pedido_cliente||'—'}</td>
-      <td>${r.hl_fecha_inicio?`<a href="${r.hl_fecha_inicio}" target="_blank" class="hl">${fmtDate(r.fecha_inicio)}</a>`:fmtDate(r.fecha_inicio)}</td>
-      <td>${(r.anio_mes_fin===999999||!r.fecha_fin)?'∞':(r.hl_fecha_fin?`<a href="${r.hl_fecha_fin}" target="_blank" class="hl">${fmtDate(r.fecha_fin)}</a>`:fmtDate(r.fecha_fin))}</td>
+      <td>${fmtDate(r.fecha_inicio)}</td>
+      <td>${(r.anio_mes_fin===999999||!r.fecha_fin)?'∞':fmtDate(r.fecha_fin)}</td>
       <td class="r">${r.dias_fact??'—'}</td>
       <td title="${r.concepto||''}">${(r.concepto||'').substring(0,30)}${(r.concepto||'').length>30?'…':''}</td>
       <td style="font-size:var(--fz-xs)">${(r.linea_producto||'').substring(0,25)}</td>
@@ -1260,18 +1257,18 @@ function buildAgtFilterRow(){
       const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
       const sp=document.createElement('span'); sp.textContent='–';
       const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
-      const fn=()=>{ agtFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderAgt(); };
+      const fn=()=>{ agtFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderAgt()(); };
       i1.addEventListener('change',fn); i2.addEventListener('change',fn);
       w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);
     } else if([].includes(col)){
       const sel=document.createElement('select'); sel.dataset.col=col;
       const opts={};
       (opts[col]||['']).forEach(v=>sel.add(new Option(v||'—',v)));
-      sel.addEventListener('change',e=>{ agtFilters[col]=e.target.value; renderAgt(); });
+      sel.addEventListener('change',e=>{ agtFilters[col]=e.target.value; renderAgt()(); });
       td.appendChild(sel);
     } else {
       const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
-      inp.addEventListener('input',e=>{ agtFilters[col]=e.target.value.toLowerCase(); renderAgt(); });
+      inp.addEventListener('input',e=>{ agtFilters[col]=e.target.value.toLowerCase(); renderAgt()(); });
       td.appendChild(inp);
     }
     fr.appendChild(td);
@@ -1322,11 +1319,8 @@ function openLicModal(i){
   g('l-nro-ped-cli').value=r.nro_pedido_cliente||'';
   g('l-nro-ped-cmp').value=r.nro_pedido_compra||'';
   g('l-fec-sol').value=r.fecha_solicitud||'';
-  g('l-hl-sol').value=r.hl_fecha_solicitud||'';
   g('l-fec-ini').value=r.fecha_inicio||'';
-  g('l-hl-ini').value=r.hl_fecha_inicio||'';
   g('l-fec-fin').value=(r.anio_mes_fin===999999||!r.fecha_fin)?'':r.fecha_fin||'';
-  g('l-hl-fin').value=r.hl_fecha_fin||'';
   g('l-dias').value=r.dias_fact??'';
   g('l-concepto').value=r.concepto||'';
   g('l-linea').value=r.linea_producto||'';
@@ -1383,11 +1377,8 @@ async function saveLic(){
     nro_pedido_cliente:g('l-nro-ped-cli').value.trim()||null,
     nro_pedido_compra:g('l-nro-ped-cmp').value.trim()||null,
     fecha_solicitud:g('l-fec-sol').value||null,
-    hl_fecha_solicitud:g('l-hl-sol').value.trim()||null,
     fecha_inicio:g('l-fec-ini').value||null,
-    hl_fecha_inicio:g('l-hl-ini').value.trim()||null,
     fecha_fin:g('l-fec-fin').value||null,
-    hl_fecha_fin:g('l-hl-fin').value.trim()||null,
     anio_mes_fin:g('l-fec-fin').value?null:999999,
     dias_fact:parseInt(g('l-dias').value)||0,
     concepto:g('l-concepto').value||null,
@@ -1765,9 +1756,9 @@ function renderAcumCOO(lics, refYear, refMonth){
   const byClient = {};
   lics.forEach(r=>{
     const c=calcLicRowSimple(r), cli=r.cliente||'—';
-    if(!byClient[cli]) byClient[cli]={pvp:0,coste:0,mrgJmrey:0,mrgJuanma:0,mrgBorja:0};
+    if(!byClient[cli]) byClient[cli]={pvp:0,coste:0,mrgJmrey:0,mrgBorja:0};
     byClient[cli].pvp+=c.pvpTotal; byClient[cli].coste+=c.costeTotal;
-    byClient[cli].mrgJmrey+=c.mrgJmrey; byClient[cli].mrgJuanma+=(c.mrgJuanma||0); byClient[cli].mrgBorja+=c.mrgBorja;
+    byClient[cli].mrgJmrey+=c.mrgJmrey; byClient[cli].mrgBorja+=c.mrgBorja;
   });
   let html='';
   if(Object.keys(byClient).length===0){html='<tr><td colspan="5" class="ec">Sin datos</td></tr>';}
@@ -1777,13 +1768,13 @@ function renderAcumCOO(lics, refYear, refMonth){
         <td><strong>${cli}</strong></td>
         <td class="r num">${fmtE(v.pvp)}</td>
         <td class="r num">${fmtE(v.coste)}</td>
-        <td class="r num">${fmtE(v.mrgJmrey+(v.mrgJuanma||0))}</td>
+        <td class="r num">${fmtE(v.mrgJmrey)}</td>
         <td class="r num">${fmtE(v.mrgBorja)}</td>
       </tr>`;
     });
     // Total
     const tot=Object.values(byClient).reduce((a,v)=>({pvp:a.pvp+v.pvp,coste:a.coste+v.coste,mrgJmrey:a.mrgJmrey+v.mrgJmrey,mrgBorja:a.mrgBorja+v.mrgBorja}),{pvp:0,coste:0,mrgJmrey:0,mrgBorja:0});
-    html+=`<tr class="kt-foot"><td><strong>Total</strong></td><td class="r num">${fmtE(tot.pvp)}</td><td class="r num">${fmtE(tot.coste)}</td><td class="r num">${fmtE((tot.mrgJmrey||0)+(tot.mrgJuanma||0))}</td><td class="r num">${fmtE(tot.mrgBorja)}</td></tr>`;
+    html+=`<tr class="kt-foot"><td><strong>Total</strong></td><td class="r num">${fmtE(tot.pvp)}</td><td class="r num">${fmtE(tot.coste)}</td><td class="r num">${fmtE(tot.mrgJmrey)}</td><td class="r num">${fmtE(tot.mrgBorja)}</td></tr>`;
   }
   document.getElementById('tbody-acum-coo').innerHTML = html;
 
@@ -1793,13 +1784,13 @@ function renderAcumCOO(lics, refYear, refMonth){
     const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
     const cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[cli]) p[cli]={cant:0,pvp:0,children:{}};
-    p[cli].cant+=c.cant; p[cli].pvp+=c.mrgBorja;
+    p[cli].cant+=c.cant; p[cli].pvp+=c.pvpTotal;
     if(!p[cli].children[linea]) p[cli].children[linea]={cant:0,pvp:0,children:{}};
-    p[cli].children[linea].cant+=c.cant; p[cli].children[linea].pvp+=c.mrgBorja;
+    p[cli].children[linea].cant+=c.cant; p[cli].children[linea].pvp+=c.pvpTotal;
     const conc=r.concepto||'—';
     if(!p[cli].children[linea].children[conc]) p[cli].children[linea].children[conc]={cant:0,pvp:0};
     p[cli].children[linea].children[conc].cant+=c.cant;
-    p[cli].children[linea].children[conc].pvp+=c.mrgBorja;
+    p[cli].children[linea].children[conc].pvp+=c.pvpTotal;
   });
   window._lastPivotCOO=p;
   document.getElementById('tbody-acum-coo-pivot').innerHTML = buildPivotCOO(p);
@@ -1858,15 +1849,15 @@ function renderAcumAgente(lics, refYear, refMonth){
     const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
     const agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[agt]) p[agt]={cant:0,pvp:0,children:{}};
-    p[agt].cant+=c.cant; p[agt].pvp+=(c.mrgAgente||0);
+    p[agt].cant+=c.cant; p[agt].pvp+=c.pvpTotal;
     if(!p[agt].children[cli]) p[agt].children[cli]={cant:0,pvp:0,children:{}};
-    p[agt].children[cli].cant+=c.cant; p[agt].children[cli].pvp+=(c.mrgAgente||0);
+    p[agt].children[cli].cant+=c.cant; p[agt].children[cli].pvp+=c.pvpTotal;
     if(!p[agt].children[cli].children[linea]) p[agt].children[cli].children[linea]={cant:0,pvp:0,children:{}};
-    p[agt].children[cli].children[linea].cant+=c.cant; p[agt].children[cli].children[linea].pvp+=(c.mrgAgente||0);
+    p[agt].children[cli].children[linea].cant+=c.cant; p[agt].children[cli].children[linea].pvp+=c.pvpTotal;
     const conc=r.concepto||'—';
     if(!p[agt].children[cli].children[linea].children[conc]) p[agt].children[cli].children[linea].children[conc]={cant:0,pvp:0};
     p[agt].children[cli].children[linea].children[conc].cant+=c.cant;
-    p[agt].children[cli].children[linea].children[conc].pvp+=(c.mrgAgente||0);
+    p[agt].children[cli].children[linea].children[conc].pvp+=c.pvpTotal;
   });
   window._lastPivotAgt=p;
   document.getElementById('tbody-acum-agt').innerHTML = buildPivotAgt(p);
@@ -1992,9 +1983,7 @@ function calcLicRowSimple(r, refYear, refMonth){
   const agt=lookupAgente(r.agente);
   return {cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
           mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
-          mrgJuanma:(pvp-coste)*(agt.pct_juanma||0)*cant,
-          mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant,
-          mrgAgente:(pvp-coste)*(agt.margen||0)*cant};
+          mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant};
 }
 
 // ── EMAIL KPI LICENCIAS ──────────────────────────────────────
