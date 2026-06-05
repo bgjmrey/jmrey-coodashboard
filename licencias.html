@@ -982,11 +982,13 @@ function lookupPrecio(concepto, linea, compromiso, pago, cliente, fechaRef){
     p.pago===pago &&
     (!p.fecha_fin_pvp || p.fecha_fin_pvp >= hoy)
   );
-  // Sort: precio con fecha_fin_pvp más cercana al futuro primero (más específico), NULL al final
+  // Sort: NULL fecha_fin_pvp primero (precio vigente permanente)
+  // Si hay precio específico sin fecha_fin, ese es el actual; el con fecha_fin es tarifa caducable
   const sort = arr => arr.sort((a,b)=>{
     if(!a.fecha_fin_pvp&&!b.fecha_fin_pvp) return 0;
-    if(!a.fecha_fin_pvp) return 1;  // sin fecha = precio base, al final
-    if(!b.fecha_fin_pvp) return -1;
+    if(!a.fecha_fin_pvp) return -1;  // sin fecha = precio vigente, primero
+    if(!b.fecha_fin_pvp) return 1;
+    // Si ambos tienen fecha, el que vence antes es el más reciente/específico
     return a.fecha_fin_pvp.localeCompare(b.fecha_fin_pvp);
   });
   if(cliente && cliente!=='-' && cliente!==''){
@@ -1797,8 +1799,10 @@ function renderAcumCOO(lics, refYear, refMonth){
 function buildPivotCOO(pivot){
   let html='';
   if(Object.keys(pivot).length===0) return '<tr><td colspan="3" class="ec">Sin datos</td></tr>';
+  let totCant=0, totPvp=0;
   Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
     const exp=_acumExpanded.has('coo:'+cli);
+    totCant+=cliData.cant; totPvp+=cliData.pvp;
     html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="coo:${cli}" onclick="toggleAcumCOO(this.dataset.key)">
       <td><strong>${cli}</strong></td>
       <td class="r num">${fmtN(cliData.cant,0)}</td>
@@ -1824,6 +1828,11 @@ function buildPivotCOO(pivot){
       });
     }
   });
+  html+=`<tr class="kt-foot">
+    <td><strong>Total</strong></td>
+    <td class="r num">${fmtN(totCant,0)}</td>
+    <td class="r num">${fmtE(totPvp)}</td>
+  </tr>`;
   return html;
 }
 
