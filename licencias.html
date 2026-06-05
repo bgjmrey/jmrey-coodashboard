@@ -498,7 +498,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="kc">
         <div class="kc-hd"><div><div class="kc-t">Por Cliente, Línea &amp; Concepto</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th>Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
+          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllAcumCOO()" title="Expandir/contraer todo">Cliente / Línea / Concepto ⇕</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
           <tbody id="tbody-acum-coo-pivot"></tbody>
         </table></div>
       </div>
@@ -512,7 +512,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="kc">
         <div class="kc-hd"><div><div class="kc-t">Por Agente, Cliente, Línea &amp; Concepto</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th>Agente / Cliente / Línea / Concepto</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
+          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllAcumAgt()" title="Expandir/contraer todo">Agente / Cliente / Línea / Concepto ⇕</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
           <tbody id="tbody-acum-agt"></tbody>
         </table></div>
       </div>
@@ -1667,7 +1667,7 @@ function buildPivot3(pivot, pfx, setName){
       Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([mid,midData])=>{
         const key2=pfx+':'+cli+':'+mid, exp2=window[setName].has(key2);
         html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" data-set="${setName}" onclick="toggleLicPivot(this.dataset.key,this.dataset.set)">
-          <td style="padding-left:20px">↳ ${mid}</td>
+          <td style="padding-left:20px">${mid}</td>
           <td class="r num">${fmtN(midData.cant,0)}</td>
           <td class="r num">${fmtE(midData.pvp)}</td>
           <td class="r num">${fmtE(midData.coste)}</td>
@@ -1688,6 +1688,23 @@ function buildPivot3(pivot, pfx, setName){
   return html;
 }
 
+function toggleAllLicPivot(setName){
+  const expSet=setName==='linea'?_licExpanded2:_licExpanded;
+  const pivot=window._lastPivot3||{};
+  const topKeys=Object.keys(pivot).map(k=>(setName==='linea'?'linea':'fecha')+':'+k);
+  const anyExp=topKeys.some(k=>expSet.has(k));
+  expSet.clear();
+  if(!anyExp) topKeys.forEach(k=>expSet.add(k));
+  renderLicKPI();
+}
+function toggleAllAcumCOO(){
+  const pivot=window._lastPivotCOO||{};
+  const topKeys=Object.keys(pivot).map(k=>'coo:'+k);
+  const anyExp=topKeys.some(k=>_acumCOOExpanded.has(k));
+  _acumCOOExpanded.clear();
+  if(!anyExp) topKeys.forEach(k=>_acumCOOExpanded.add(k));
+  renderLicKPI();
+}
 function toggleLicPivot(key, setName){
   const s = window[setName];
   if(s.has(key)) s.delete(key); else s.add(key);
@@ -1736,6 +1753,7 @@ function renderAcumCOO(lics){
     p[cli].children[linea].children[conc].cant+=c.cant;
     p[cli].children[linea].children[conc].pvp+=c.pvpTotal;
   });
+  window._lastPivotCOO=p;
   document.getElementById('tbody-acum-coo-pivot').innerHTML = buildPivotCOO(p);
 }
 
@@ -1753,7 +1771,7 @@ function buildPivotCOO(pivot){
       Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([linea,lineaData])=>{
         const key2='coo:'+cli+':'+linea, exp2=_acumExpanded.has(key2);
         html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" onclick="toggleAcumCOO(this.dataset.key)">
-          <td style="padding-left:20px">↳ ${linea}</td>
+          <td style="padding-left:20px">${linea}</td>
           <td class="r num">${fmtN(lineaData.cant,0)}</td>
           <td class="r num">${fmtE(lineaData.pvp)}</td>
         </tr>`;
@@ -1794,6 +1812,7 @@ function renderAcumAgente(lics){
     p[agt].children[cli].children[linea].children[conc].cant+=c.cant;
     p[agt].children[cli].children[linea].children[conc].pvp+=c.pvpTotal;
   });
+  window._lastPivotAgt=p;
   document.getElementById('tbody-acum-agt').innerHTML = buildPivotAgt(p);
 }
 
@@ -1801,6 +1820,7 @@ function buildPivotAgt(pivot){
   let html='';
   if(Object.keys(pivot).length===0) return '<tr><td colspan="3" class="ec">Sin datos</td></tr>';
   Object.entries(pivot).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([agt,agtData])=>{
+    if(!agt||agt==='-'||agt.trim()==='') return; // skip empty/dash agents
     const exp=_acumAgtExpanded.has('agt:'+agt);
     html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="agt:${agt}" onclick="toggleAcumAgt(this.dataset.key)">
       <td><strong>${agt}</strong></td>
@@ -1811,7 +1831,7 @@ function buildPivotAgt(pivot){
       Object.entries(agtData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
         const key2='agt:'+agt+':'+cli, exp2=_acumAgtExpanded.has(key2);
         html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" onclick="toggleAcumAgt(this.dataset.key)">
-          <td style="padding-left:16px">↳ ${cli}</td>
+          <td style="padding-left:16px">${cli}</td>
           <td class="r num">${fmtN(cliData.cant,0)}</td>
           <td class="r num">${fmtE(cliData.pvp)}</td>
         </tr>`;
@@ -1819,7 +1839,7 @@ function buildPivotAgt(pivot){
           Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([linea,lineaData])=>{
             const key3='agt:'+agt+':'+cli+':'+linea, exp3=_acumAgtExpanded.has(key3);
             html+=`<tr class="tp-hdr${exp3?'':' collapsed'} tp-l3" data-key="${key3}" onclick="toggleAcumAgt(this.dataset.key)">
-              <td style="padding-left:32px;font-size:var(--fz-xs)">↳ ${linea}</td>
+              <td style="padding-left:32px;font-size:var(--fz-xs)">${linea}</td>
               <td class="r num">${fmtN(lineaData.cant,0)}</td>
               <td class="r num">${fmtE(lineaData.pvp)}</td>
             </tr>`;
@@ -1842,6 +1862,14 @@ function buildPivotAgt(pivot){
 
 function toggleAcumAgt(key){
   if(_acumAgtExpanded.has(key)) _acumAgtExpanded.delete(key); else _acumAgtExpanded.add(key);
+  renderLicKPI();
+}
+function toggleAllAcumAgt(){
+  // If any top-level expanded, collapse all; else expand all top-level
+  const topKeys=Object.keys(window._lastPivotAgt||{}).map(k=>'agt:'+k);
+  const anyExp=topKeys.some(k=>_acumAgtExpanded.has(k));
+  _acumAgtExpanded.clear();
+  if(!anyExp) topKeys.forEach(k=>_acumAgtExpanded.add(k));
   renderLicKPI();
 }
 
