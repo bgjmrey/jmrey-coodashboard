@@ -923,7 +923,10 @@ function fmt(v,d){
   if(v===null||v===undefined||v==='') return '—';
   const n=parseFloat(v);
   if(isNaN(n)) return v;
-  return n.toLocaleString('es-ES',{minimumFractionDigits:d??2,maximumFractionDigits:d??2});
+  const dec=d??2;
+  const parts=n.toFixed(dec).split('.');
+  parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  return dec>0?parts.join(','):parts[0];
 }
 function fmtPct(v){
   if(v===null||v===undefined||v==='') return '—';
@@ -933,7 +936,9 @@ function fmtE(v){
   if(v===null||v===undefined||v==='') return '—';
   const n=parseFloat(v);
   if(isNaN(n)) return '—';
-  return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+  const parts=n.toFixed(2).split('.');
+  parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  return parts.join(',')+' €';
 }
 function fmtDate(v){ if(!v) return '—'; return typeof v==='string'?v.substring(0,10):v; }
 
@@ -1608,8 +1613,8 @@ function renderLicKPI(){
   renderAcumAgente(licAcum);
 }
 
-function fmtE(v){ return typeof v==='number'?v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €':'—'; }
-function fmtN(v,d){ if(v===null||v===undefined) return '—'; return parseFloat(v).toLocaleString('es-ES',{minimumFractionDigits:d??2,maximumFractionDigits:d??2}); }
+function fmtE(v){ if(v===null||v===undefined||isNaN(parseFloat(v))) return '—'; const n=parseFloat(v); const parts=n.toFixed(2).split('.'); parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.'); return parts.join(',')+' €'; }
+function fmtN(v,d){ if(v===null||v===undefined) return '—'; const n=parseFloat(v); if(isNaN(n)) return '—'; const dec=d??2; const parts=n.toFixed(dec).split('.'); parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.'); return dec>0?parts.join(','):parts[0]; }
 
 // ── 3.1 Nuevas licencias: pivot por Cliente > Fecha > Concepto y Cliente > Línea > Concepto ──
 const _licExpanded = new Set(); // 'fecha' pivots
