@@ -1717,9 +1717,9 @@ function toggleAllAcumCOO(){
       allKeys.push('coo:'+cli+':'+linea);
     });
   });
-  const anyExp=allKeys.some(k=>_acumCOOExpanded.has(k));
-  _acumCOOExpanded.clear();
-  if(!anyExp) allKeys.forEach(k=>_acumCOOExpanded.add(k));
+  const anyExp=allKeys.some(k=>_acumExpanded.has(k));
+  _acumExpanded.clear();
+  if(!anyExp) allKeys.forEach(k=>_acumExpanded.add(k));
   renderLicKPI();
 }
 function toggleLicPivot(key, setName){
