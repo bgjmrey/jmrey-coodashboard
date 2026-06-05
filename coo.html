@@ -440,7 +440,7 @@ table.rt tbody td.c{text-align:center;}
       <div class="kc">
         <div class="kc-hd"><div><div class="kc-t">Ventas Técnico Equipo</div><div class="kc-s">Por técnico asignado</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th>Técnico / Tarea</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead>
+          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllTec('ventas')" title="Expandir/contraer todo">Técnico / Tarea ⇕</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead>
           <tbody id="tbody-tec-v"></tbody><tfoot id="tfoot-tec-v"></tfoot>
         </table></div>
       </div>
@@ -459,7 +459,7 @@ table.rt tbody td.c{text-align:center;}
       <div class="kc">
         <div class="kc-hd"><div><div class="kc-t">Consumos Técnico Equipo</div><div class="kc-s">Por técnico asignado</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th>Técnico / Tarea</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead>
+          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllTec('consumos')" title="Expandir/contraer todo">Técnico / Tarea ⇕</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead>
           <tbody id="tbody-tec"></tbody><tfoot id="tfoot-tec"></tfoot>
         </table></div>
       </div>
@@ -2105,6 +2105,27 @@ function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId, tipo){
   tf.innerHTML = `<tr><td>Total</td><td class="num">${fmt(tTotP)}</td><td class="num">${fmt(tTotT)}</td><td class="num">${fmt(tTotG)}</td></tr>`;
 }
 
+function toggleAllTec(tipo){
+  const expSet = tipo==='ventas' ? _tecExpandedV : _tecExpanded;
+  const svcs = tipo==='ventas' ? (window._lastSvcsV||[]) : (window._lastSvcsC||[]);
+  const allTecs = [...new Set(svcs.map(s=>s.tecnico).filter(Boolean))];
+  const anyExp = allTecs.some(t=>expSet.has(t));
+  expSet.clear();
+  if(!anyExp) allTecs.forEach(t=>expSet.add(t));
+  const tp = calcTecPivot(svcs);
+  if(tipo==='ventas'){
+    const vP=parseFloat(document.getElementById('f-ov').value)||225;
+    const vT=vP*(new Date().getMonth()+1);
+    const vG=parseFloat(document.getElementById('f-ov').value)||225;
+    renderTecPivot(tp,svcs,vP,vT,vG,'tbody-tec-v','tfoot-tec-v','ventas');
+  } else {
+    const cP=parseFloat(document.getElementById('f-oc').value)||225;
+    const cT=cP*(new Date().getMonth()+1);
+    const cG=parseFloat(document.getElementById('f-oc').value)||225;
+    renderTecPivot(tp,svcs,cP,cT,cG,'tbody-tec','tfoot-tec','consumos');
+  }
+}
+
 function toggleTec(tec, tipo){
   const expSet = (tipo==='ventas') ? _tecExpandedV : _tecExpanded;
   if(expSet.has(tec)) expSet.delete(tec);
@@ -2431,6 +2452,11 @@ function captureKPI(secId, callback){
   const secClone = sec.cloneNode(true);
   const fbarClone = secClone.querySelector('.fbar');
   if(fbarClone) fbarClone.remove();
+  secClone.querySelectorAll('.sc').forEach(function(el){
+    el.style.boxShadow='none';
+    el.style.border='1px solid #E2D9C6';
+    el.style.background='#ffffff';
+  });
   wrapper.appendChild(hdrClone);
   wrapper.appendChild(secClone);
   document.body.appendChild(wrapper);
