@@ -420,7 +420,7 @@ table.rt tbody td.c{text-align:center;}
       <input class="finp" type="number" id="f-oc" value="225" min="0" step="5"></div>
     <div class="fdiv"></div>
     <div class="fg" style="justify-content:flex-end"><span class="fl">&nbsp;</span>
-      <button class="btn btn-s" onclick="sendKpiEmail()" style="white-space:nowrap" title="Copia los KPIs y abre Outlook. Pega con Ctrl+V en el cuerpo del email.">✉️ Enviar por email</button>
+      <button class="btn btn-s" onclick="sendKpiEmail()" style="white-space:nowrap" title="Copia los KPIs y abre Outlook.">✉️ Enviar por email</button><button class="btn btn-s" onclick="captureKPI('sec-kpis')" style="white-space:nowrap;margin-left:8px;">📷 Captura</button>
     </div>
   </div>
   <div class="seh-ey">Indicadores clave</div>
@@ -2403,6 +2403,49 @@ td,th{padding:5px 10px;border:1px solid #E2D9C6;}
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   toast('Exportado: ' + filename + '_' + dateStr + '.xlsx.html');
+}
+
+
+// ── CAPTURA KPI ──────────────────────────────────────────────
+function captureKPI(containerId){
+  const sec = document.getElementById(containerId||'sec-kpis');
+  const fbar = sec ? sec.querySelector('.fbar') : null;
+  if(!sec){ toast('No se encontró la sección'); return; }
+  if(fbar) fbar.style.visibility='hidden';
+  if(typeof html2canvas === 'undefined'){
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = () => _doCapture(sec, fbar);
+    s.onerror = () => { if(fbar) fbar.style.visibility=''; toast('Error al cargar librería de captura'); };
+    document.head.appendChild(s);
+  } else {
+    _doCapture(sec, fbar);
+  }
+}
+function _doCapture(section, fbar){
+  toast('Generando imagen...');
+  const wrapper = document.createElement('div');
+  wrapper.id = '_cap_wrapper';
+  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;background:#F3F0EA;width:'+Math.max(section.scrollWidth, window.innerWidth)+'px;';
+  const hdrClone = document.querySelector('header.hdr').cloneNode(true);
+  const secClone = section.cloneNode(true);
+  const fbarClone = secClone.querySelector('.fbar');
+  if(fbarClone) fbarClone.remove();
+  wrapper.appendChild(hdrClone);
+  wrapper.appendChild(secClone);
+  document.body.appendChild(wrapper);
+  if(fbar) fbar.style.visibility='';
+  html2canvas(wrapper, {backgroundColor:'#F3F0EA',scale:2,useCORS:true,allowTaint:true,scrollX:0,scrollY:0}).then(canvas=>{
+    document.body.removeChild(wrapper);
+    const link=document.createElement('a');
+    link.download='kpi_coo_'+new Date().toISOString().slice(0,10)+'.png';
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+    toast('Imagen descargada');
+  }).catch(e=>{
+    if(document.body.contains(wrapper)) document.body.removeChild(wrapper);
+    toast('Error: '+e.message);
+  });
 }
 
 // ── INIT ─────────────────────────────────────────────

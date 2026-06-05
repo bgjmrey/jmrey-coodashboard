@@ -444,8 +444,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
     </div>
         <div class="fdiv"></div>
     <div class="fg" style="justify-content:flex-end">
-      <button class="btn btn-s" onclick="sendLicKpiEmail()" style="white-space:nowrap">&#x2709;&#xFE0F; Enviar por email</button>
-      <button class="btn btn-s" onclick="captureKPI()" style="white-space:nowrap">📷 Captura</button>
+      <button class="btn btn-s" onclick="sendLicKpiEmail()" style="white-space:nowrap">&#x2709;&#xFE0F; Enviar por email</button><button class="btn btn-s" onclick="captureKPI()" style="white-space:nowrap;margin-left:8px;">📷 Captura</button>
     </div>
   </div>
 
@@ -1686,9 +1685,10 @@ function renderNuevasLicencias(lics, refYear, refMonth){
     p2[cli].children[linea].children[conc].coste+=c.costeTotal;
   });
 
-  document.getElementById('tbody-nuevas-1').innerHTML = buildPivot3(p1,'p1','_licExpanded');
+  window._lastPivot3=p1;
+  document.getElementById('tbody-nuevas-1').innerHTML = buildPivot3(p1,'fecha','_licExpanded');
   window._lastPivot3linea=p2;
-  document.getElementById('tbody-nuevas-2').innerHTML = buildPivot3(p2,'p2','_licExpanded2');
+  document.getElementById('tbody-nuevas-2').innerHTML = buildPivot3(p2,'linea','_licExpanded2');
 }
 
 function buildPivot3(pivot, pfx, setName){
@@ -2009,38 +2009,69 @@ function calcLicRowSimple(r, refYear, refMonth){
 
 
 // ── CAPTURA KPI ──────────────────────────────────────────────
-function captureKPI(){
-  const section = document.getElementById('sec-kpis');
-  if(!section){ toast('No se encontró la sección KPI'); return; }
+function captureKPI(containerId){
+  // Build a capture wrapper: header + KPI section (excluding fbar filters)
+  const existing = document.getElementById('_cap_wrapper');
+  if(existing) existing.remove();
+
+  const hdr = document.querySelector('header.hdr');
+  const sec = document.getElementById(containerId||'sec-kpis');
+  const fbar = sec ? sec.querySelector('.fbar') : null;
+  if(!sec){ toast('No se encontró la sección'); return; }
+
+  // Temporarily hide fbar
+  if(fbar) fbar.style.visibility='hidden';
   // Cargar html2canvas dinámicamente
   if(typeof html2canvas === 'undefined'){
     const s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    s.onload = () => _doCapture(section);
+    s.onload = () => _doCapture(section, fbar, false);
     s.onerror = () => toast('Error al cargar librería de captura');
     document.head.appendChild(s);
   } else {
-    _doCapture(section);
+    _doCapture(section, fbar, false);
   }
 }
-function _doCapture(section){
+function _doCapture(section, fbar, isEmail){
   toast('Generando imagen...');
-  html2canvas(section, {
+  // Create wrapper with header + section
+  const wrapper = document.createElement('div');
+  wrapper.id = '_cap_wrapper';
+  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;background:#F3F0EA;width:'+Math.max(section.scrollWidth, window.innerWidth)+'px;';
+  const hdrClone = document.querySelector('header.hdr').cloneNode(true);
+  const secClone = section.cloneNode(true);
+  // Remove fbar from clone
+  const fbarClone = secClone.querySelector('.fbar');
+  if(fbarClone) fbarClone.remove();
+  wrapper.appendChild(hdrClone);
+  wrapper.appendChild(secClone);
+  document.body.appendChild(wrapper);
+
+  if(fbar) fbar.style.visibility='';
+
+  html2canvas(wrapper, {
     backgroundColor: '#F3F0EA',
     scale: 2,
     useCORS: true,
     allowTaint: true,
     scrollX: 0,
-    scrollY: -window.scrollY
+    scrollY: 0
   }).then(canvas => {
-    const link = document.createElement('a');
-    const now = new Date();
-    link.download = 'kpi_licencias_' + now.toISOString().slice(0,10) + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    toast('Imagen descargada');
+    document.body.removeChild(wrapper);
+    if(isEmail){
+      window._kpiCanvas = canvas;
+      toast('Imagen generada — abre Outlook y pega con Ctrl+V');
+    } else {
+      const link = document.createElement('a');
+      const now = new Date();
+      link.download = 'kpi_' + now.toISOString().slice(0,10) + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      toast('Imagen descargada');
+    }
   }).catch(e => {
-    toast('Error al generar imagen: ' + e.message);
+    if(document.body.contains(wrapper)) document.body.removeChild(wrapper);
+    toast('Error: ' + e.message);
   });
 }
 
