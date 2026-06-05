@@ -498,7 +498,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="kc">
         <div class="kc-hd"><div><div class="kc-t">Por Cliente, Línea &amp; Concepto</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllAcumCOO()" title="Expandir/contraer todo">Cliente / Línea / Concepto ⇕</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
+          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllAcumCOO()" title="Expandir/contraer todo">Cliente / Línea / Concepto ⇕</th><th class="r">Cant.</th><th class="r">Mrg Borja</th></tr></thead>
           <tbody id="tbody-acum-coo-pivot"></tbody>
         </table></div>
       </div>
@@ -512,7 +512,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="kc">
         <div class="kc-hd"><div><div class="kc-t">Por Agente, Cliente, Línea &amp; Concepto</div></div></div>
         <div class="tw"><table class="kt">
-          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllAcumAgt()" title="Expandir/contraer todo">Agente / Cliente / Línea / Concepto ⇕</th><th class="r">Cant.</th><th class="r">Importe</th></tr></thead>
+          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllAcumAgt()" title="Expandir/contraer todo">Agente / Cliente / Línea / Concepto ⇕</th><th class="r">Cant.</th><th class="r">Mrg Agente</th></tr></thead>
           <tbody id="tbody-acum-agt"></tbody>
         </table></div>
       </div>
@@ -1756,9 +1756,9 @@ function renderAcumCOO(lics, refYear, refMonth){
   const byClient = {};
   lics.forEach(r=>{
     const c=calcLicRowSimple(r), cli=r.cliente||'—';
-    if(!byClient[cli]) byClient[cli]={pvp:0,coste:0,mrgJmrey:0,mrgBorja:0};
+    if(!byClient[cli]) byClient[cli]={pvp:0,coste:0,mrgJmrey:0,mrgJuanma:0,mrgBorja:0};
     byClient[cli].pvp+=c.pvpTotal; byClient[cli].coste+=c.costeTotal;
-    byClient[cli].mrgJmrey+=c.mrgJmrey; byClient[cli].mrgBorja+=c.mrgBorja;
+    byClient[cli].mrgJmrey+=c.mrgJmrey; byClient[cli].mrgJuanma+=(c.mrgJuanma||0); byClient[cli].mrgBorja+=c.mrgBorja;
   });
   let html='';
   if(Object.keys(byClient).length===0){html='<tr><td colspan="5" class="ec">Sin datos</td></tr>';}
@@ -1768,13 +1768,13 @@ function renderAcumCOO(lics, refYear, refMonth){
         <td><strong>${cli}</strong></td>
         <td class="r num">${fmtE(v.pvp)}</td>
         <td class="r num">${fmtE(v.coste)}</td>
-        <td class="r num">${fmtE(v.mrgJmrey)}</td>
+        <td class="r num">${fmtE(v.mrgJmrey+(v.mrgJuanma||0))}</td>
         <td class="r num">${fmtE(v.mrgBorja)}</td>
       </tr>`;
     });
     // Total
     const tot=Object.values(byClient).reduce((a,v)=>({pvp:a.pvp+v.pvp,coste:a.coste+v.coste,mrgJmrey:a.mrgJmrey+v.mrgJmrey,mrgBorja:a.mrgBorja+v.mrgBorja}),{pvp:0,coste:0,mrgJmrey:0,mrgBorja:0});
-    html+=`<tr class="kt-foot"><td><strong>Total</strong></td><td class="r num">${fmtE(tot.pvp)}</td><td class="r num">${fmtE(tot.coste)}</td><td class="r num">${fmtE(tot.mrgJmrey)}</td><td class="r num">${fmtE(tot.mrgBorja)}</td></tr>`;
+    html+=`<tr class="kt-foot"><td><strong>Total</strong></td><td class="r num">${fmtE(tot.pvp)}</td><td class="r num">${fmtE(tot.coste)}</td><td class="r num">${fmtE((tot.mrgJmrey||0)+(tot.mrgJuanma||0))}</td><td class="r num">${fmtE(tot.mrgBorja)}</td></tr>`;
   }
   document.getElementById('tbody-acum-coo').innerHTML = html;
 
@@ -1784,13 +1784,13 @@ function renderAcumCOO(lics, refYear, refMonth){
     const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
     const cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[cli]) p[cli]={cant:0,pvp:0,children:{}};
-    p[cli].cant+=c.cant; p[cli].pvp+=c.pvpTotal;
+    p[cli].cant+=c.cant; p[cli].pvp+=c.mrgBorja;
     if(!p[cli].children[linea]) p[cli].children[linea]={cant:0,pvp:0,children:{}};
-    p[cli].children[linea].cant+=c.cant; p[cli].children[linea].pvp+=c.pvpTotal;
+    p[cli].children[linea].cant+=c.cant; p[cli].children[linea].pvp+=c.mrgBorja;
     const conc=r.concepto||'—';
     if(!p[cli].children[linea].children[conc]) p[cli].children[linea].children[conc]={cant:0,pvp:0};
     p[cli].children[linea].children[conc].cant+=c.cant;
-    p[cli].children[linea].children[conc].pvp+=c.pvpTotal;
+    p[cli].children[linea].children[conc].pvp+=c.mrgBorja;
   });
   window._lastPivotCOO=p;
   document.getElementById('tbody-acum-coo-pivot').innerHTML = buildPivotCOO(p);
@@ -1849,15 +1849,15 @@ function renderAcumAgente(lics, refYear, refMonth){
     const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
     const agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[agt]) p[agt]={cant:0,pvp:0,children:{}};
-    p[agt].cant+=c.cant; p[agt].pvp+=c.pvpTotal;
+    p[agt].cant+=c.cant; p[agt].pvp+=(c.mrgAgente||0);
     if(!p[agt].children[cli]) p[agt].children[cli]={cant:0,pvp:0,children:{}};
-    p[agt].children[cli].cant+=c.cant; p[agt].children[cli].pvp+=c.pvpTotal;
+    p[agt].children[cli].cant+=c.cant; p[agt].children[cli].pvp+=(c.mrgAgente||0);
     if(!p[agt].children[cli].children[linea]) p[agt].children[cli].children[linea]={cant:0,pvp:0,children:{}};
-    p[agt].children[cli].children[linea].cant+=c.cant; p[agt].children[cli].children[linea].pvp+=c.pvpTotal;
+    p[agt].children[cli].children[linea].cant+=c.cant; p[agt].children[cli].children[linea].pvp+=(c.mrgAgente||0);
     const conc=r.concepto||'—';
     if(!p[agt].children[cli].children[linea].children[conc]) p[agt].children[cli].children[linea].children[conc]={cant:0,pvp:0};
     p[agt].children[cli].children[linea].children[conc].cant+=c.cant;
-    p[agt].children[cli].children[linea].children[conc].pvp+=c.pvpTotal;
+    p[agt].children[cli].children[linea].children[conc].pvp+=(c.mrgAgente||0);
   });
   window._lastPivotAgt=p;
   document.getElementById('tbody-acum-agt').innerHTML = buildPivotAgt(p);
@@ -1983,7 +1983,9 @@ function calcLicRowSimple(r, refYear, refMonth){
   const agt=lookupAgente(r.agente);
   return {cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
           mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
-          mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant};
+          mrgJuanma:(pvp-coste)*(agt.pct_juanma||0)*cant,
+          mrgBorja:(pvp-coste)*(agt.pct_borja||0)*cant,
+          mrgAgente:(pvp-coste)*(agt.margen||0)*cant};
 }
 
 // ── EMAIL KPI LICENCIAS ──────────────────────────────────────
