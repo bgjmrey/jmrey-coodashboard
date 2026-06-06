@@ -524,6 +524,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
 
 <!-- LICENCIAS -->
 <section id="sec-licencias" class="sec">
+  <div class="drill-active-bar" id="drill-bar-lic"><span id="drill-bar-lic-lbl">Filtro activo</span><button onclick="clearLicDrillFilter()">✕ Quitar filtro</button></div>
   <div class="de-tb">
     <div><div class="seh-ey">Gesti&oacute;n de datos</div>
     <div class="de-tb-t">Licencias <span id="lic-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div></div>
@@ -909,6 +910,32 @@ function _grantAccess(account){
   document.getElementById('app-content').style.display = 'block';
   document.querySelector('.hdr-meta strong').textContent = account.name || account.username;
   document.getElementById('hdr-email').textContent = account.username;
+}
+
+
+// ── DRILLDOWN DESDE KPIs ────────────────────────────────────
+function drillLic(filters, label){
+  // filters: object {col: value}
+  licFilters = {};
+  Object.assign(licFilters, filters);
+  // Navigate to Licencias tab
+  navTo('licencias');
+  // Rebuild filter row with new values
+  document.getElementById('lic-filter-row').innerHTML = '';
+  buildLicFilterRow();
+  // Show drill bar
+  const bar = document.getElementById('drill-bar-lic');
+  bar.style.display = 'flex';
+  document.getElementById('drill-bar-lic-lbl').textContent = '🔍 ' + label;
+  renderLic();
+}
+
+function clearLicDrillFilter(){
+  licFilters = {};
+  document.getElementById('lic-filter-row').innerHTML = '';
+  buildLicFilterRow();
+  document.getElementById('drill-bar-lic').style.display = 'none';
+  renderLic();
 }
 
 // ── DB ──────────────────────────────────────────────────────
@@ -1708,7 +1735,7 @@ function buildPivot3(pivot, pfx, setName){
         const key2=pfx+':'+cli+':'+mid, exp2=expSet.has(key2);
         html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" data-set="${setName}" onclick="toggleLicPivot(this.dataset.key,this.dataset.set)">
           <td style="padding-left:20px">${mid}</td>
-          <td class="r num">${fmtN(midData.cant,0)}</td>
+          <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({cliente:'${cli}'},'Cliente: ${cli}')" title="Ver licencias">${fmtN(midData.cant,0)}</span></td>
           <td class="r num">${fmtE(midData.pvp)}</td>
           <td class="r num">${fmtE(midData.coste)}</td>
         </tr>`;
@@ -1716,7 +1743,7 @@ function buildPivot3(pivot, pfx, setName){
           Object.entries(midData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
             html+=`<tr class="tp-child">
               <td style="padding-left:40px;font-size:var(--fz-xs)">${conc}</td>
-              <td class="r num">${fmtN(concData.cant,0)}</td>
+              <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({cliente:'${cli}',concepto:'${conc}'},'${cli} · ${conc}')" title="Ver licencias">${fmtN(concData.cant,0)}</span></td>
               <td class="r num">${fmtE(concData.pvp)}</td>
               <td class="r num">${fmtE(concData.coste)}</td>
             </tr>`;
@@ -1784,11 +1811,11 @@ function renderAcumCOO(lics, refYear, refMonth){
   else {
     Object.entries(byClient).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,v])=>{
       html+=`<tr>
-        <td><strong>${cli}</strong></td>
-        <td class="r num">${fmtE(v.pvp)}</td>
-        <td class="r num">${fmtE(v.coste)}</td>
-        <td class="r num">${fmtE(v.mrgJmrey+(v.mrgJuanma||0))}</td>
-        <td class="r num">${fmtE(v.mrgBorja)}</td>
+        <td><strong class="drill" onclick="drillLic({cliente:'${cli}'},'Cliente: ${cli}')" title="Ver licencias de ${cli}">${cli}</strong></td>
+        <td class="r num drill" onclick="drillLic({cliente:'${cli}'},'Cliente: ${cli}')" title="Ver licencias">${fmtE(v.pvp)}</td>
+        <td class="r num drill" onclick="drillLic({cliente:'${cli}'},'Cliente: ${cli}')" title="Ver licencias">${fmtE(v.coste)}</td>
+        <td class="r num drill" onclick="drillLic({cliente:'${cli}'},'Cliente: ${cli}')" title="Ver licencias">${fmtE(v.mrgJmrey+(v.mrgJuanma||0))}</td>
+        <td class="r num drill" onclick="drillLic({cliente:'${cli}'},'Cliente: ${cli}')" title="Ver licencias">${fmtE(v.mrgBorja)}</td>
       </tr>`;
     });
     // Total
@@ -1824,22 +1851,22 @@ function buildPivotCOO(pivot){
     totCant+=cliData.cant; totPvp+=cliData.pvp;
     html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="coo:${cli}" onclick="toggleAcumCOO(this.dataset.key)">
       <td><strong>${cli}</strong></td>
-      <td class="r num">${fmtN(cliData.cant,0)}</td>
-      <td class="r num">${fmtE(cliData.pvp)}</td>
+      <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({cliente:'${cli}'},'Cliente: ${cli}')" title="Ver licencias">${fmtN(cliData.cant,0)}</span></td>
+      <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({cliente:'${cli}'},'Cliente: ${cli}')" title="Ver licencias">${fmtE(cliData.pvp)}</span></td>
     </tr>`;
     if(exp){
       Object.entries(cliData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([linea,lineaData])=>{
         const key2='coo:'+cli+':'+linea, exp2=_acumExpanded.has(key2);
         html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" onclick="toggleAcumCOO(this.dataset.key)">
           <td style="padding-left:20px">${linea}</td>
-          <td class="r num">${fmtN(lineaData.cant,0)}</td>
+          <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({cliente:'${cli}',linea_producto:'${linea}'},'${cli} · ${linea}')" title="Ver licencias">${fmtN(lineaData.cant,0)}</span></td>
           <td class="r num">${fmtE(lineaData.pvp)}</td>
         </tr>`;
         if(exp2){
           Object.entries(lineaData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
             html+=`<tr class="tp-child">
               <td style="padding-left:40px;font-size:var(--fz-xs)">${conc}</td>
-              <td class="r num">${fmtN(concData.cant,0)}</td>
+              <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({cliente:'${cli}',concepto:'${conc}'},'${cli} · ${conc}')" title="Ver licencias">${fmtN(concData.cant,0)}</span></td>
               <td class="r num">${fmtE(concData.pvp)}</td>
             </tr>`;
           });
@@ -1890,15 +1917,15 @@ function buildPivotAgt(pivot){
     const exp=_acumAgtExpanded.has('agt:'+agt);
     html+=`<tr class="tp-hdr${exp?'':' collapsed'}" data-key="agt:${agt}" onclick="toggleAcumAgt(this.dataset.key)">
       <td><strong>${agt}</strong></td>
-      <td class="r num">${fmtN(agtData.cant,0)}</td>
-      <td class="r num">${fmtE(agtData.pvp)}</td>
+      <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({agente:'${agt}'},'Agente: ${agt}')" title="Ver licencias">${fmtN(agtData.cant,0)}</span></td>
+      <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({agente:'${agt}'},'Agente: ${agt}')" title="Ver licencias">${fmtE(agtData.pvp)}</span></td>
     </tr>`;
     if(exp){
       Object.entries(agtData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([cli,cliData])=>{
         const key2='agt:'+agt+':'+cli, exp2=_acumAgtExpanded.has(key2);
         html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" onclick="toggleAcumAgt(this.dataset.key)">
           <td style="padding-left:16px">${cli}</td>
-          <td class="r num">${fmtN(cliData.cant,0)}</td>
+          <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({agente:'${agt}',cliente:'${cli}'},'${agt} · ${cli}')" title="Ver licencias">${fmtN(cliData.cant,0)}</span></td>
           <td class="r num">${fmtE(cliData.pvp)}</td>
         </tr>`;
         if(exp2){
@@ -1906,14 +1933,14 @@ function buildPivotAgt(pivot){
             const key3='agt:'+agt+':'+cli+':'+linea, exp3=_acumAgtExpanded.has(key3);
             html+=`<tr class="tp-hdr${exp3?'':' collapsed'} tp-l3" data-key="${key3}" onclick="toggleAcumAgt(this.dataset.key)">
               <td style="padding-left:32px;font-size:var(--fz-xs)">${linea}</td>
-              <td class="r num">${fmtN(lineaData.cant,0)}</td>
+              <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({agente:'${agt}',cliente:'${cli}',linea_producto:'${linea}'},'${agt} · ${cli} · ${linea}')" title="Ver licencias">${fmtN(lineaData.cant,0)}</span></td>
               <td class="r num">${fmtE(lineaData.pvp)}</td>
             </tr>`;
             if(exp3){
               Object.entries(lineaData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
                 html+=`<tr class="tp-child">
                   <td style="padding-left:48px;font-size:var(--fz-xs)">${conc}</td>
-                  <td class="r num">${fmtN(concData.cant,0)}</td>
+                  <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({agente:'${agt}',cliente:'${cli}',concepto:'${conc}'},'${agt} · ${cli} · ${conc}')" title="Ver licencias">${fmtN(concData.cant,0)}</span></td>
                   <td class="r num">${fmtE(concData.pvp)}</td>
                 </tr>`;
               });
