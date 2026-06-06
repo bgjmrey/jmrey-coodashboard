@@ -2349,13 +2349,17 @@ function _drawGrafico(labels, valores, colors, borders){
         const ms=document.getElementById('lic-kpi-month');
         if(ys) ys.value=p.year;
         if(ms) ms.value=p.month;
-        // Calculate period dates (27 prev → 26 current)
-        const rng = licMesRange(p.year, p.month);
-        const from = licDateStr(rng.ini);
-        const to   = licDateStr(rng.fin);
+        // Navegar a Licencias sin filtro de fecha (acumulado hasta ese mes)
         const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
         const label = MESES_ES[p.month] + ' ' + p.year;
-        drillLic({ fecha_inicio: { from, to } }, label);
+        navTo('licencias');
+        licFilters = {};
+        document.getElementById('lic-filter-row').innerHTML = '';
+        buildLicFilterRow();
+        const bar = document.getElementById('drill-bar-lic');
+        bar.style.display = 'flex';
+        document.getElementById('drill-bar-lic-lbl').textContent = '🔍 Período: ' + label;
+        renderLic();
       },
       plugins: {
         legend: { display: false },
