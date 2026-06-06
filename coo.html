@@ -2565,20 +2565,25 @@ function renderGraficoCOO(){
   }
   window._grafPeriodosCOO = periodos;
 
-  // Para cada período: sumar h_tec vendidas (ventas) de servicios
+  // Para cada período: sumar imp_tec de servicios en ventas (fecha_acept en rango)
+  const svcs = DB.servicios || [];
+  console.log('[grafico] servicios disponibles:', svcs.length);
+  if(svcs.length > 0) console.log('[grafico] muestra s[0]:', JSON.stringify(svcs[0]).substring(0,120));
+
   const valores = periodos.map(p => {
     const rng = mesRange(p.year, p.month);
     const iniStr = dateToStr(rng.ini);
     const finStr = dateToStr(rng.fin);
     let total = 0;
-    (DB.servicios || []).forEach(s => {
-      const fa = (s.fecha_acept||'').substring(0,10);
+    svcs.forEach(s => {
+      const fa = (s.fecha_acept||s.fecha_entrega||'').substring(0,10);
       if(fa >= iniStr && fa <= finStr){
         total += parseFloat(s.imp_tec)||0;
       }
     });
     return Math.round(total * 100) / 100;
   });
+  console.log('[grafico] valores:', valores);
 
   const labels = periodos.map(p => MESES[p.month-1] + ' ' + p.year);
   const colors = valores.map((_,i) => i===valores.length-1 ? 'rgba(182,136,74,0.9)' : 'rgba(14,31,61,0.75)');
