@@ -914,6 +914,21 @@ function _grantAccess(account){
 
 
 // ── DRILLDOWN DESDE KPIs ────────────────────────────────────
+function getLicPeriodDates(){
+  const y=window._licKPIYear||(new Date().getFullYear());
+  const m=window._licKPIMonth||(new Date().getMonth()+1);
+  const ini=y+'-'+String(m).padStart(2,'0')+'-01';
+  const fin=y+'-'+String(m).padStart(2,'0')+'-'+String(new Date(y,m,0).getDate()).padStart(2,'0');
+  return {from:ini, to:fin};
+}
+
+function drillLicFecha(cli){
+  const d=getLicPeriodDates();
+  const y=window._licKPIYear, m=window._licKPIMonth;
+  const label='Cliente: '+cli+' · '+String(m).padStart(2,'0')+'/'+y;
+  drillLic({cliente:cli, fecha_inicio:{from:d.from,to:d.to}}, label);
+}
+
 function drillLic(filters, label){
   // 1. Reset filters
   licFilters = {};
@@ -929,24 +944,33 @@ function drillLic(filters, label){
   // 4. Apply each filter: set value in the DOM input/select and in licFilters
   Object.entries(filters).forEach(([col, val]) => {
     if(!val) return;
-    const td = fr.querySelector('[data-col="'+col+'"]');
-    if(!td) return;
-    const inp = td.closest ? td : td.querySelector('input,select');
-    // Find the actual input/select inside the td
-    const el = fr.querySelector('td input[data-col="'+col+'"], td select[data-col="'+col+'"]')
-             || fr.querySelector('td input[data-col="'+col+'"]')
-             || fr.querySelector('td select[data-col="'+col+'"]');
-    // Walk all tds to find the right one by data-col on the input/select
-    let target = null;
-    fr.querySelectorAll('td').forEach(td => {
-      const i = td.querySelector('input,select');
-      if(i && i.dataset && i.dataset.col === col) target = i;
-    });
-    if(target){
-      target.value = val;
-      target.dispatchEvent(new Event(target.tagName==='SELECT'?'change':'input'));
+    licFilters[col] = (val && val.from !== undefined) ? val : (val.toLowerCase ? val.toLowerCase() : val);
+
+    if(val && val.from !== undefined){
+      // Date range filter — find the filter-range div in the td for this col
+      fr.querySelectorAll('td').forEach(td => {
+        const wrap = td.querySelector('.filter-range');
+        if(!wrap) return;
+        // Identify which col this td corresponds to by checking neighbouring th
+        const ths = Array.from(document.getElementById('tbl-lic').querySelectorAll('.hdr-row th'));
+        const tds = Array.from(fr.children);
+        const idx = tds.indexOf(td);
+        if(idx >= 0 && ths[idx] && ths[idx].getAttribute('data-col') === col){
+          const inputs = wrap.querySelectorAll('input');
+          if(inputs[0]) { inputs[0].value = val.from; inputs[0].dispatchEvent(new Event('change')); }
+          if(inputs[1]) { inputs[1].value = val.to;   inputs[1].dispatchEvent(new Event('change')); }
+        }
+      });
+    } else {
+      // Text/select filter
+      fr.querySelectorAll('td').forEach(td => {
+        const el = td.querySelector('input[data-col="'+col+'"],select[data-col="'+col+'"]');
+        if(el){
+          el.value = val;
+          el.dispatchEvent(new Event(el.tagName==='SELECT'?'change':'input'));
+        }
+      });
     }
-    licFilters[col] = val.toLowerCase ? val.toLowerCase() : val;
   });
 
   // 5. Show drill bar
@@ -1671,6 +1695,7 @@ function licDateStr(d){
 function renderLicKPI(){
   const year=parseInt(document.getElementById('lic-kpi-year').value);
   const month=parseInt(document.getElementById('lic-kpi-month').value);
+  window._licKPIYear=year; window._licKPIMonth=month;
   const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const mesIni=year+'-'+String(month).padStart(2,'0')+'-01';
   const mesFin=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
@@ -1762,7 +1787,7 @@ function buildPivot3(pivot, pfx, setName){
         const key2=pfx+':'+cli+':'+mid, exp2=expSet.has(key2);
         html+=`<tr class="tp-hdr${exp2?'':' collapsed'} tp-l2" data-key="${key2}" data-set="${setName}" onclick="toggleLicPivot(this.dataset.key,this.dataset.set)">
           <td style="padding-left:20px">${mid}</td>
-          <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({cliente:'${cli}'},'Cliente: ${cli}')" title="Ver licencias">${fmtN(midData.cant,0)}</span></td>
+          <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLicFecha('${cli}')" title="Ver licencias del período">${fmtN(midData.cant,0)}</span></td>
           <td class="r num">${fmtE(midData.pvp)}</td>
           <td class="r num">${fmtE(midData.coste)}</td>
         </tr>`;
@@ -1770,7 +1795,7 @@ function buildPivot3(pivot, pfx, setName){
           Object.entries(midData.children).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([conc,concData])=>{
             html+=`<tr class="tp-child">
               <td style="padding-left:40px;font-size:var(--fz-xs)">${conc}</td>
-              <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLic({cliente:'${cli}',concepto:'${conc}'},'${cli} · ${conc}')" title="Ver licencias">${fmtN(concData.cant,0)}</span></td>
+              <td class="r num"><span class="drill" onclick="event.stopPropagation();drillLicFecha('${cli}')" title="Ver licencias del período">${fmtN(concData.cant,0)}</span></td>
               <td class="r num">${fmtE(concData.pvp)}</td>
               <td class="r num">${fmtE(concData.coste)}</td>
             </tr>`;
