@@ -2265,6 +2265,7 @@ function renderGrafico(){
     periodos.push({year:y, month:m});
   }
 
+  window._grafPeriodos = periodos;
   // Para cada período calcular importe COO (mrgBorja) sumando todas las licencias activas
   const valores = periodos.map(p => {
     let total = 0;
@@ -2335,6 +2336,27 @@ function _drawGrafico(labels, valores, colors, borders){
     options: {
       responsive: true,
       layout: { padding: { top: 28 } },
+      onClick: (evt, elements) => {
+        if(!elements.length) return;
+        const idx = elements[0].index;
+        const p = (window._grafPeriodos||[])[idx];
+        if(!p) return;
+        // Set KPI period and drill to Licencias
+        window._licKPIYear = p.year;
+        window._licKPIMonth = p.month;
+        // Update KPI selectors too
+        const ys=document.getElementById('lic-kpi-year');
+        const ms=document.getElementById('lic-kpi-month');
+        if(ys) ys.value=p.year;
+        if(ms) ms.value=p.month;
+        // Calculate period dates (27 prev → 26 current)
+        const rng = licMesRange(p.year, p.month);
+        const from = licDateStr(rng.ini);
+        const to   = licDateStr(rng.fin);
+        const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const label = MESES_ES[p.month] + ' ' + p.year;
+        drillLic({ fecha_inicio: { from, to } }, label);
+      },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -2349,6 +2371,9 @@ function _drawGrafico(labels, valores, colors, borders){
           formatter: v => fmtBar(v),
           rotation: -45,
         }
+      },
+      onHover: (evt) => {
+        evt.native.target.style.cursor = evt.chart.getElementsAtEventForMode(evt.native,'nearest',{intersect:true},false).length ? 'pointer' : 'default';
       },
       scales: {
         x: {
