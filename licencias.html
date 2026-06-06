@@ -527,7 +527,10 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
   <div class="drill-active-bar" id="drill-bar-lic"><span id="drill-bar-lic-lbl">Filtro activo</span><button onclick="clearLicDrillFilter()">✕ Quitar filtro</button></div>
   <div class="de-tb">
     <div><div class="seh-ey">Gesti&oacute;n de datos</div>
-    <div class="de-tb-t">Licencias <span id="lic-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div></div>
+    <div>
+      <div class="de-tb-t">Licencias <span id="lic-cnt" style="font-size:14px;font-weight:400;color:var(--fg-3)"></span></div>
+      <div id="lic-period-lbl" style="font-size:12px;color:var(--accent);font-weight:600;margin-top:2px;"></div>
+    </div></div>
     <div style="display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap;">
       <button class="btn btn-s btn-sm" onclick="clearLicFilters()">&#x2715; Limpiar filtros</button>
       <button class="btn btn-s btn-sm" onclick="exportLicXLS()"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-5 4h2.5l1.5 2 1.5-2H16l-2.5 3.5L16 17h-2.5L12 15l-1.5 2H8l2.5-3.5L8 10z"/></svg>Excel</button>
@@ -1271,6 +1274,12 @@ function buildPrecFilterRow(){
 }
 
 function renderLic(){
+  // Ensure _licKPIYear/_licKPIMonth are set from selectors
+  if(!window._licKPIYear){
+    const ys=document.getElementById('lic-kpi-year');
+    const ms=document.getElementById('lic-kpi-month');
+    if(ys&&ms){ window._licKPIYear=parseInt(ys.value); window._licKPIMonth=parseInt(ms.value); }
+  }
   buildLicFilterRow();
   const tb=document.getElementById('tbody-lic');
   let data=DB.licencias;
@@ -1309,7 +1318,19 @@ function renderLic(){
     </tr>`;
   });
   tb.innerHTML=rows.length?rows.join(''):'<tr><td colspan="27" class="ec">Sin licencias</td></tr>';
-  document.getElementById('lic-cnt').textContent='('+DB.licencias.length+')';
+  document.getElementById('lic-cnt').textContent='('+validRows.length+' de '+DB.licencias.length+')';
+  // Mostrar período de cálculo
+  const _ry=window._licKPIYear, _rm=window._licKPIMonth;
+  if(_ry && _rm){
+    const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const rng=licMesRange(_ry,_rm);
+    const f1=licDateStr(rng.ini), f2=licDateStr(rng.fin);
+    document.getElementById('lic-period-lbl').textContent=
+      'Período de cálculo: 27 '+MESES_ES[_rm===1?12:_rm-1]+' – 26 '+MESES_ES[_rm]+' '+_ry
+      +' ('+f1+' → '+f2+')';
+  } else {
+    document.getElementById('lic-period-lbl').textContent='';
+  }
 }
 
 function renderPrec(){
