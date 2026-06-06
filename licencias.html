@@ -1166,22 +1166,25 @@ function updateDias(){
 }
 
 // ── CALC PARA FILA DE TABLA ──────────────────────────────────
-function calcRow(r){
-  const today = new Date().toISOString().slice(0,10);
+function calcRow(r, refYear, refMonth){
+  const now = new Date();
+  const ry = refYear || now.getFullYear();
+  const rm = refMonth || (now.getMonth()+1);
+  const today = now.toISOString().slice(0,10);
   const precio = lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
   const pvpMes   = precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
   const costeMes = precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
   const cant = parseFloat(r.cantidad)||0;
-  const dias = parseFloat(r.dias_fact)||0;
-  let diasMesCompl=30;
-  if(r.fecha_inicio){ const d=new Date(r.fecha_inicio); diasMesCompl=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); }
-  const pvp=dias>0?pvpMes*dias/diasMesCompl:pvpMes;
-  const coste=dias>0?costeMes*dias/diasMesCompl:costeMes;
+  // Calcular días según el mes de referencia (no hoy)
+  const diasMesCompl = new Date(ry, rm, 0).getDate();
+  const dias = calcDiasKPI(r, ry, rm);
+  const pvp  = dias < diasMesCompl ? pvpMes*dias/diasMesCompl : pvpMes;
+  const coste= dias < diasMesCompl ? costeMes*dias/diasMesCompl : costeMes;
   const importe=pvp*cant, impCoste=coste*cant;
   const mrg=pvp-coste, impMrgTotal=importe-impCoste;
   const pctMrg=pvp>0?mrg/pvp:0;
   const agt=lookupAgente(r.agente);
-  return {pvpMes,costeMes,pvp,coste,importe,impCoste,mrg,impMrgTotal,pctMrg,cant,agt};
+  return {pvpMes,costeMes,pvp,coste,dias,importe,impCoste,mrg,impMrgTotal,pctMrg,cant,agt};
 }
 
 // ── RENDER LICENCIAS ─────────────────────────────────────────
@@ -1276,7 +1279,8 @@ function renderLic(){
     data=data.filter(r=>licMatch(r,col,val));
   });
   const rows=data.map((r,i)=>{
-    const c=calcRow(r);
+    const c=calcRow(r, window._licKPIYear, window._licKPIMonth);
+    if(!c || c.dias===0) return null;
     return `<tr ondblclick="openLicModal(${DB.licencias.indexOf(r)})">
       <td>${r.proveedor||'—'}</td>
       <td style="font-size:var(--fz-xs)">${r.nro_pedido_cliente||'—'}</td>
@@ -1695,6 +1699,8 @@ function renderLicKPI(){
   const year=parseInt(document.getElementById('lic-kpi-year').value);
   const month=parseInt(document.getElementById('lic-kpi-month').value);
   window._licKPIYear=year; window._licKPIMonth=month;
+  // Re-render Licencias tab if currently visible
+  if(document.getElementById('sec-licencias').classList.contains('active')) renderLic();
   const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const mesIni=year+'-'+String(month).padStart(2,'0')+'-01';
   const mesFin=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
