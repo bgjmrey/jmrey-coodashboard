@@ -1295,7 +1295,7 @@ function renderLic(){
       <td style="font-size:var(--fz-xs)">${r.nro_pedido_cliente||'—'}</td>
       <td><div class="hl-row">${fmtDate(r.fecha_inicio)}${hl(r.hl_fecha_inicio,'📄','Ver documento')}</div></td>
       <td><div class="hl-row">${(r.anio_mes_fin===999999||!r.fecha_fin)?'∞':fmtDate(r.fecha_fin)}${r.hl_fecha_fin?hl(r.hl_fecha_fin,'📄','Ver documento'):''}</div></td>
-      <td class="r">${r.dias_fact??'—'}</td>
+      <td class="r">${c.dias}</td>
       <td title="${r.concepto||''}">${(r.concepto||'').substring(0,30)}${(r.concepto||'').length>30?'…':''}</td>
       <td style="font-size:var(--fz-xs)">${(r.linea_producto||'').substring(0,25)}</td>
       <td>${r.compromiso||'—'}</td><td>${r.pago||'—'}</td>
@@ -1317,7 +1317,8 @@ function renderLic(){
       <td class="c"><button class="bi" onclick="openLicModal(${DB.licencias.indexOf(r)})" title="Editar">✏️</button> <button class="bi" onclick="delLic(${DB.licencias.indexOf(r)})" title="Eliminar">🗑️</button></td>
     </tr>`;
   });
-  tb.innerHTML=rows.length?rows.join(''):'<tr><td colspan="27" class="ec">Sin licencias</td></tr>';
+  const validRows=rows.filter(Boolean);
+  tb.innerHTML=validRows.length?validRows.join(''):'<tr><td colspan="26" class="ec">Sin licencias</td></tr>';
   document.getElementById('lic-cnt').textContent='('+validRows.length+' de '+DB.licencias.length+')';
   // Mostrar período de cálculo
   const _ry=window._licKPIYear, _rm=window._licKPIMonth;
