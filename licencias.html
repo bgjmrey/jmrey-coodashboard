@@ -2292,16 +2292,32 @@ function renderGrafico(){
   if(typeof Chart === 'undefined'){
     const s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
-    s.onload = () => _drawGrafico(labels, valores, colors, borders);
+    s.onload = () => {
+      const s2=document.createElement('script');
+      s2.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
+      s2.onload=()=>_drawGrafico(labels,valores,colors,borders);
+      document.head.appendChild(s2);
+    };
     document.head.appendChild(s);
+  } else if(typeof ChartDataLabels === 'undefined'){
+    const s2=document.createElement('script');
+    s2.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
+    s2.onload=()=>_drawGrafico(labels,valores,colors,borders);
+    document.head.appendChild(s2);
   } else {
-    _drawGrafico(labels, valores, colors, borders);
+    _drawGrafico(labels,valores,colors,borders);
   }
 }
 
 function _drawGrafico(labels, valores, colors, borders){
   const canvas = document.getElementById('graf-canvas');
   if(_grafChart){ _grafChart.destroy(); _grafChart = null; }
+
+  function fmtBar(n){
+    const parts=n.toFixed(2).split('.');
+    parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+    return parts.join(',')+' €';
+  }
 
   _grafChart = new Chart(canvas, {
     type: 'bar',
@@ -2318,17 +2334,20 @@ function _drawGrafico(labels, valores, colors, borders){
     },
     options: {
       responsive: true,
+      layout: { padding: { top: 28 } },
       plugins: {
         legend: { display: false },
         tooltip: {
-          callbacks: {
-            label: ctx => {
-              const n = ctx.parsed.y;
-              const parts = n.toFixed(2).split('.');
-              parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-              return ' ' + parts.join(',') + ' €';
-            }
-          }
+          callbacks: { label: ctx => ' ' + fmtBar(ctx.parsed.y) }
+        },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          offset: 2,
+          font: { family: 'Manrope', size: 10, weight: '600' },
+          color: ctx => ctx.dataIndex === valores.length-1 ? '#B6884A' : '#0E1F3D',
+          formatter: v => fmtBar(v),
+          rotation: -45,
         }
       },
       scales: {
@@ -2341,15 +2360,12 @@ function _drawGrafico(labels, valores, colors, borders){
           ticks: {
             font: { family: 'Manrope', size: 11 },
             color: '#5A5A5A',
-            callback: v => {
-              const parts = v.toFixed(0).split('.');
-              parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-              return parts.join(',') + ' €';
-            }
+            callback: v => fmtBar(v)
           }
         }
       }
-    }
+    },
+    plugins: [ChartDataLabels]
   });
 }
 
