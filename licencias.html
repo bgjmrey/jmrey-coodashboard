@@ -917,9 +917,8 @@ function _grantAccess(account){
 function getLicPeriodDates(){
   const y=window._licKPIYear||(new Date().getFullYear());
   const m=window._licKPIMonth||(new Date().getMonth()+1);
-  const ini=y+'-'+String(m).padStart(2,'0')+'-01';
-  const fin=y+'-'+String(m).padStart(2,'0')+'-'+String(new Date(y,m,0).getDate()).padStart(2,'0');
-  return {from:ini, to:fin};
+  const rng=licMesRange(y,m);
+  return {from:licDateStr(rng.ini), to:licDateStr(rng.fin)};
 }
 
 function drillLicFecha(cli){
