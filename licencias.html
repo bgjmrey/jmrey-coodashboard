@@ -2349,17 +2349,12 @@ function _drawGrafico(labels, valores, colors, borders){
         const ms=document.getElementById('lic-kpi-month');
         if(ys) ys.value=p.year;
         if(ms) ms.value=p.month;
-        // Navegar a Licencias sin filtro de fecha (acumulado hasta ese mes)
+        // Navegar a Licencias con filtro de fecha acumulado (fecha_inicio <= fin período)
         const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
         const label = MESES_ES[p.month] + ' ' + p.year;
-        navTo('licencias');
-        licFilters = {};
-        document.getElementById('lic-filter-row').innerHTML = '';
-        buildLicFilterRow();
-        const bar = document.getElementById('drill-bar-lic');
-        bar.style.display = 'flex';
-        document.getElementById('drill-bar-lic-lbl').textContent = '🔍 Período: ' + label;
-        renderLic();
+        const rng = licMesRange(p.year, p.month);
+        const acumFin = licDateStr(rng.fin); // fecha_inicio <= 26 del mes seleccionado
+        drillLic({ fecha_inicio: { from: '', to: acumFin } }, 'Período: ' + label);
       },
       plugins: {
         legend: { display: false },
