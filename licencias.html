@@ -915,15 +915,41 @@ function _grantAccess(account){
 
 // ── DRILLDOWN DESDE KPIs ────────────────────────────────────
 function drillLic(filters, label){
-  // filters: object {col: value}
+  // 1. Reset filters
   licFilters = {};
-  Object.assign(licFilters, filters);
-  // Navigate to Licencias tab
+
+  // 2. Navigate to Licencias tab
   navTo('licencias');
-  // Rebuild filter row with new values
-  document.getElementById('lic-filter-row').innerHTML = '';
+
+  // 3. Reset and rebuild filter row DOM
+  const fr = document.getElementById('lic-filter-row');
+  fr.innerHTML = '';
   buildLicFilterRow();
-  // Show drill bar
+
+  // 4. Apply each filter: set value in the DOM input/select and in licFilters
+  Object.entries(filters).forEach(([col, val]) => {
+    if(!val) return;
+    const td = fr.querySelector('[data-col="'+col+'"]');
+    if(!td) return;
+    const inp = td.closest ? td : td.querySelector('input,select');
+    // Find the actual input/select inside the td
+    const el = fr.querySelector('td input[data-col="'+col+'"], td select[data-col="'+col+'"]')
+             || fr.querySelector('td input[data-col="'+col+'"]')
+             || fr.querySelector('td select[data-col="'+col+'"]');
+    // Walk all tds to find the right one by data-col on the input/select
+    let target = null;
+    fr.querySelectorAll('td').forEach(td => {
+      const i = td.querySelector('input,select');
+      if(i && i.dataset && i.dataset.col === col) target = i;
+    });
+    if(target){
+      target.value = val;
+      target.dispatchEvent(new Event(target.tagName==='SELECT'?'change':'input'));
+    }
+    licFilters[col] = val.toLowerCase ? val.toLowerCase() : val;
+  });
+
+  // 5. Show drill bar
   const bar = document.getElementById('drill-bar-lic');
   bar.style.display = 'flex';
   document.getElementById('drill-bar-lic-lbl').textContent = '🔍 ' + label;
@@ -932,7 +958,8 @@ function drillLic(filters, label){
 
 function clearLicDrillFilter(){
   licFilters = {};
-  document.getElementById('lic-filter-row').innerHTML = '';
+  const fr = document.getElementById('lic-filter-row');
+  fr.innerHTML = '';
   buildLicFilterRow();
   document.getElementById('drill-bar-lic').style.display = 'none';
   renderLic();
