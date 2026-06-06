@@ -1321,16 +1321,12 @@ function renderLic(){
   tb.innerHTML=validRows.length?validRows.join(''):'<tr><td colspan="26" class="ec">Sin licencias</td></tr>';
   document.getElementById('lic-cnt').textContent='('+validRows.length+' de '+DB.licencias.length+')';
   // Mostrar período de cálculo
-  const _ry=window._licKPIYear, _rm=window._licKPIMonth;
-  if(_ry && _rm){
-    const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    const rng=licMesRange(_ry,_rm);
-    const f1=licDateStr(rng.ini), f2=licDateStr(rng.fin);
-    document.getElementById('lic-period-lbl').textContent=
-      'Período de cálculo: 27 '+MESES_ES[_rm===1?12:_rm-1]+' – 26 '+MESES_ES[_rm]+' '+_ry;
-  } else {
-    document.getElementById('lic-period-lbl').textContent='';
-  }
+  const _ry=window._licKPIYear||(new Date().getFullYear());
+  const _rm=window._licKPIMonth||(new Date().getMonth()+1);
+  const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const rng=licMesRange(_ry,_rm);
+  document.getElementById('lic-period-lbl').textContent=
+    'Período de cálculo: 27 '+MESES_ES[_rm===1?12:_rm-1]+' – 26 '+MESES_ES[_rm]+' '+_ry;
 }
 
 function renderPrec(){
@@ -2075,10 +2071,12 @@ function calcDiasKPI(r, refYear, refMonth){
     }
   }
 
-  // Si fecha_inicio es este mes → días desde inicio hasta fin de mes
+  // Si fecha_inicio es posterior a este mes → 0 días (aún no ha empezado)
   if(ini){
     const iniMes = ini.getFullYear()*100+(ini.getMonth()+1);
     const refMes = refYear*100+refMonth;
+    if(iniMes > refMes) return 0;
+    // Si fecha_inicio es este mes → días desde inicio hasta fin de mes
     if(iniMes === refMes) return diasMesRef - ini.getDate() + 1;
   }
 
