@@ -2571,7 +2571,7 @@ function renderGraficoCOO(){
     const iniStr = dateToStr(rng.ini);
     const finStr = dateToStr(rng.fin);
     let total = 0;
-    (window._allSvcs || []).forEach(s => {
+    (DB.servicios || []).forEach(s => {
       const fa = (s.fecha_acept||'').substring(0,10);
       if(fa >= iniStr && fa <= finStr){
         total += parseFloat(s.imp_tec)||0;
