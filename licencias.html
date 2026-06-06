@@ -420,6 +420,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
   <button class="nav-tab" data-sec="licencias" onclick="navTo('licencias',this)">&#128273; Licencias</button>
   <button class="nav-tab" data-sec="precios" onclick="navTo('precios',this)">&#128176; Precios Licencias</button>
   <button class="nav-tab" data-sec="agentes" onclick="navTo('agentes',this)">&#128101; % Agente</button>
+  <button class="nav-tab" data-sec="grafico" onclick="navTo('grafico',this)">📈 Gráfico</button>
 </nav>
 
 <!-- ══════════════════════════════════════════════════════════ -->
@@ -720,6 +721,34 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
 <div id="toast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
   background:var(--bg-dark);color:var(--fg-d);padding:10px 20px;border-radius:var(--r-lg);
   font-size:var(--fz-sm);z-index:9998;box-shadow:var(--sh-md);border-left:3px solid var(--accent);"></div>
+
+
+<!-- GRÁFICO -->
+<section id="sec-grafico" class="sec">
+  <div class="de-tb">
+    <div>
+      <div class="seh-ey">Evolución anual</div>
+      <div class="de-tb-t">Gráfico · Importe COO por Mes</div>
+    </div>
+    <div style="display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <label style="font-size:12px;font-weight:600;color:var(--fg-3);text-transform:uppercase;letter-spacing:.1em;">Hasta</label>
+        <select class="fsel" id="graf-year" onchange="renderGrafico()" style="width:90px;"></select>
+        <select class="fsel" id="graf-month" onchange="renderGrafico()">
+          <option value="1">Enero</option><option value="2">Febrero</option>
+          <option value="3">Marzo</option><option value="4">Abril</option>
+          <option value="5">Mayo</option><option value="6">Junio</option>
+          <option value="7">Julio</option><option value="8">Agosto</option>
+          <option value="9">Septiembre</option><option value="10">Octubre</option>
+          <option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="kc" style="padding:var(--sp-5);">
+    <canvas id="graf-canvas" style="width:100%;max-height:420px;"></canvas>
+  </div>
+</section>
 
 <footer style="background:var(--bg-dark);padding:14px var(--g);display:flex;align-items:center;justify-content:space-between;position:fixed;bottom:0;left:0;right:0;z-index:100;">
   <div style="font-family:var(--ff-serif);font-size:16px;color:rgba(244,236,224,.5);">JM<span style="color:var(--accent)">REY</span></div>
@@ -1031,6 +1060,7 @@ function navTo(sec, btn){
   (btn||document.querySelector('.nav-tab[data-sec="'+sec+'"]')).classList.add('active');
   document.getElementById('sec-'+sec).classList.add('active');
   if(sec==='licencias') renderLic();
+  if(sec==='grafico'){ initGrafSelectors(); renderGrafico(); }
 }
 function closeMod(id){ document.getElementById('mod-'+id).style.display='none'; }
 
@@ -2203,6 +2233,125 @@ function sendLicKpiEmail(){
   });
 }
 
+
+
+// ── GRÁFICO ──────────────────────────────────────────────────
+let _grafChart = null;
+
+function initGrafSelectors(){
+  const ySel = document.getElementById('graf-year');
+  if(ySel.options.length) return;
+  const now = new Date();
+  for(let y = now.getFullYear(); y >= now.getFullYear()-3; y--){
+    ySel.add(new Option(y, y));
+  }
+  ySel.value = now.getFullYear();
+  document.getElementById('graf-month').value = now.getMonth()+1;
+}
+
+function renderGrafico(){
+  initGrafSelectors();
+  const year  = parseInt(document.getElementById('graf-year').value);
+  const month = parseInt(document.getElementById('graf-month').value);
+
+  const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  // Generar los 13 períodos (mes actual + 12 anteriores)
+  const periodos = [];
+  for(let i = 12; i >= 0; i--){
+    let m = month - i;
+    let y = year;
+    while(m <= 0){ m += 12; y--; }
+    periodos.push({year:y, month:m});
+  }
+
+  // Para cada período calcular importe COO (mrgBorja) sumando todas las licencias activas
+  const valores = periodos.map(p => {
+    let total = 0;
+    DB.licencias.forEach(r => {
+      const c = calcLicRowSimple(r, p.year, p.month);
+      if(!c) return;
+      total += c.mrgBorja;
+    });
+    return Math.round(total * 100) / 100;
+  });
+
+  const labels = periodos.map(p => MESES[p.month-1] + ' ' + p.year);
+
+  // Colores: último mes destacado en dorado, resto en navy
+  const colors = valores.map((_, i) => i === valores.length-1
+    ? 'rgba(182,136,74,0.9)'
+    : 'rgba(14,31,61,0.75)'
+  );
+  const borders = valores.map((_, i) => i === valores.length-1
+    ? '#B6884A'
+    : '#0E1F3D'
+  );
+
+  // Cargar Chart.js si no está
+  if(typeof Chart === 'undefined'){
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+    s.onload = () => _drawGrafico(labels, valores, colors, borders);
+    document.head.appendChild(s);
+  } else {
+    _drawGrafico(labels, valores, colors, borders);
+  }
+}
+
+function _drawGrafico(labels, valores, colors, borders){
+  const canvas = document.getElementById('graf-canvas');
+  if(_grafChart){ _grafChart.destroy(); _grafChart = null; }
+
+  _grafChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Importe COO (€)',
+        data: valores,
+        backgroundColor: colors,
+        borderColor: borders,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const n = ctx.parsed.y;
+              const parts = n.toFixed(2).split('.');
+              parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+              return ' ' + parts.join(',') + ' €';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: 'Manrope', size: 11 }, color: '#5A5A5A' }
+        },
+        y: {
+          grid: { color: 'rgba(0,0,0,0.06)' },
+          ticks: {
+            font: { family: 'Manrope', size: 11 },
+            color: '#5A5A5A',
+            callback: v => {
+              const parts = v.toFixed(0).split('.');
+              parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+              return parts.join(',') + ' €';
+            }
+          }
+        }
+      }
+    }
+  });
+}
 
 // ── INIT ─────────────────────────────────────────────
 (async function initApp(){
