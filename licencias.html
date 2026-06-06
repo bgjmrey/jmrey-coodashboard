@@ -1327,8 +1327,7 @@ function renderLic(){
     const rng=licMesRange(_ry,_rm);
     const f1=licDateStr(rng.ini), f2=licDateStr(rng.fin);
     document.getElementById('lic-period-lbl').textContent=
-      'Período de cálculo: 27 '+MESES_ES[_rm===1?12:_rm-1]+' – 26 '+MESES_ES[_rm]+' '+_ry
-      +' ('+f1+' → '+f2+')';
+      'Período de cálculo: 27 '+MESES_ES[_rm===1?12:_rm-1]+' – 26 '+MESES_ES[_rm]+' '+_ry;
   } else {
     document.getElementById('lic-period-lbl').textContent='';
   }
