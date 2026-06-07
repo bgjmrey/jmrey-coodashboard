@@ -978,20 +978,11 @@ function drillLic(filters, label){
     licFilters[col] = (val && val.from !== undefined) ? val : (val.toLowerCase ? val.toLowerCase() : val);
 
     if(val && val.from !== undefined){
-      // Date range filter — find the filter-range div in the td for this col
-      fr.querySelectorAll('td').forEach(td => {
-        const wrap = td.querySelector('.filter-range');
-        if(!wrap) return;
-        // Identify which col this td corresponds to by checking neighbouring th
-        const ths = Array.from(document.getElementById('tbl-lic').querySelectorAll('.hdr-row th'));
-        const tds = Array.from(fr.children);
-        const idx = tds.indexOf(td);
-        if(idx >= 0 && ths[idx] && ths[idx].getAttribute('data-col') === col){
-          const inputs = wrap.querySelectorAll('input');
-          if(inputs[0]) { inputs[0].value = val.from; inputs[0].dispatchEvent(new Event('change')); }
-          if(inputs[1]) { inputs[1].value = val.to;   inputs[1].dispatchEvent(new Event('change')); }
-        }
-      });
+      // Date range filter — find inputs by data-col + data-range
+      const i1 = fr.querySelector('input[data-col="'+col+'"][data-range="from"]');
+      const i2 = fr.querySelector('input[data-col="'+col+'"][data-range="to"]');
+      if(i1){ i1.value = val.from||''; i1.dispatchEvent(new Event('change')); }
+      if(i2){ i2.value = val.to||'';   i2.dispatchEvent(new Event('change')); }
     } else {
       // Text/select filter
       fr.querySelectorAll('td').forEach(td => {
@@ -1251,9 +1242,9 @@ function buildLicFilterRow(){
     if(!col){ td.className='ac-col'; fr.appendChild(td); return; }
     if(['fecha_inicio', 'fecha_fin', 'fecha_solicitud'].includes(col)){
       const w=document.createElement('div'); w.className='filter-range';
-      const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
+      const i1=document.createElement('input'); i1.type='date'; i1.title='Desde'; i1.dataset.col=col; i1.dataset.range='from';
       const sp=document.createElement('span'); sp.textContent='–';
-      const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
+      const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta'; i2.dataset.col=col; i2.dataset.range='to';
       const fn=()=>{ licFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderLic(); };
       i1.addEventListener('change',fn); i2.addEventListener('change',fn);
       w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);
@@ -1282,9 +1273,9 @@ function buildPrecFilterRow(){
     if(!col){ td.className='ac-col'; fr.appendChild(td); return; }
     if(['fecha_fin_pvp'].includes(col)){
       const w=document.createElement('div'); w.className='filter-range';
-      const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
+      const i1=document.createElement('input'); i1.type='date'; i1.title='Desde'; i1.dataset.col=col; i1.dataset.range='from';
       const sp=document.createElement('span'); sp.textContent='–';
-      const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
+      const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta'; i2.dataset.col=col; i2.dataset.range='to';
       const fn=()=>{ precFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderPrec(); };
       i1.addEventListener('change',fn); i2.addEventListener('change',fn);
       w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);
@@ -1390,9 +1381,9 @@ function buildAgtFilterRow(){
     if(!col){ td.className='ac-col'; fr.appendChild(td); return; }
     if([].includes(col)){
       const w=document.createElement('div'); w.className='filter-range';
-      const i1=document.createElement('input'); i1.type='date'; i1.title='Desde';
+      const i1=document.createElement('input'); i1.type='date'; i1.title='Desde'; i1.dataset.col=col; i1.dataset.range='from';
       const sp=document.createElement('span'); sp.textContent='–';
-      const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta';
+      const i2=document.createElement('input'); i2.type='date'; i2.title='Hasta'; i2.dataset.col=col; i2.dataset.range='to';
       const fn=()=>{ agtFilters[col]=(i1.value||i2.value)?{from:i1.value,to:i2.value}:''; renderAgt(); };
       i1.addEventListener('change',fn); i2.addEventListener('change',fn);
       w.appendChild(i1); w.appendChild(sp); w.appendChild(i2); td.appendChild(w);

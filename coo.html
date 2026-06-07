@@ -286,7 +286,7 @@ table.dt tbody td.c{text-align:center;}
   </div>
 </section>
 
-footer{background:var(--bg-dark);padding:14px var(--g);display:flex;align-items:center;justify-content:space-between;position:fixed;bottom:0;left:0;right:0;z-index:100;}
+/* footer inline style */
 .fin{max-width:var(--max);margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-4);}
 .fb{font-family:var(--ff-serif);font-size:var(--fz-h4);font-weight:500;color:var(--fg-d);}
 .fm{font-size:var(--fz-xs);color:var(--fg-d2);}
@@ -588,6 +588,11 @@ table.rt tbody td.c{text-align:center;}
   </table></div></div>
 </section>
 
+<footer style="background:var(--bg-dark);padding:14px var(--g);display:flex;align-items:center;justify-content:space-between;position:fixed;bottom:0;left:0;right:0;z-index:100;">
+  <div style="font-family:var(--ff-serif);font-size:16px;color:rgba(244,236,224,.5);">JM<span style="color:var(--accent)">REY</span></div>
+  <div id="footer-lbl" style="font-size:11px;color:rgba(244,236,224,.4);"></div>
+</footer>
+
 <!-- MODAL SERVICIO -->
 <div class="ovl" id="ovl-svc" onclick="ovlOut(event,'svc')">
   <div class="modal">
@@ -688,10 +693,6 @@ table.rt tbody td.c{text-align:center;}
 <div class="toast" id="toast"></div>
 <div class="copy-bar" id="copy-bar"><span id="copy-bar-lbl">0 filas seleccionadas</span><button class="cb-copy" onclick="copySelectedRows()">📋 Copiar</button><button class="cb-clear" onclick="clearSelection()">✕</button></div>
 
-<footer>
-  <div style="font-family:var(--ff-serif);font-size:16px;color:rgba(244,236,224,.5);">JM<span style="color:var(--accent)">REY</span></div>
-  <div id="footer-lbl" style="font-size:11px;color:rgba(244,236,224,.4);"></div>
-</footer>
 
 <script>
 // ── DATOS MAESTROS ──────────────────────────────────
@@ -2591,7 +2592,7 @@ function _drawSVGBar(containerId,labels,valores,tipo){
   const container=document.getElementById(containerId);
   if(!container) return;
 
-  const W=container.offsetWidth||800, H=340;
+  const W=container.getBoundingClientRect().width||container.offsetWidth||window.innerWidth-80||800, H=340;
   const PAD={top:50,right:20,bottom:60,left:80};
   const n=labels.length;
   const chartW=W-PAD.left-PAD.right;
