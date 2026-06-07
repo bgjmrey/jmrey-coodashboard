@@ -1924,7 +1924,7 @@ function renderAcumCOO(lics, refYear, refMonth){
     });
     // Total
     const tot=Object.values(byClient).reduce((a,v)=>({pvp:a.pvp+v.pvp,coste:a.coste+v.coste,mrgJmrey:a.mrgJmrey+v.mrgJmrey,mrgBorja:a.mrgBorja+v.mrgBorja}),{pvp:0,coste:0,mrgJmrey:0,mrgBorja:0});
-    html+=`<tr class="kt-foot"><td><strong>Total</strong></td><td class="r num">${fmtE(tot.pvp)}</td><td class="r num">${fmtE(tot.coste)}</td><td class="r num">${fmtE((tot.mrgJmrey||0)+(tot.mrgJuanma||0))}</td><td class="r num">${fmtE(tot.mrgBorja)}</td></tr>`;
+    html+=`<tr class="kt-foot"><td><strong class="drill" onclick="drillLic({},'Todos los clientes')" title="Ver todas las licencias">Total</strong></td><td class="r num drill" onclick="drillLic({},'Todos los clientes')" title="Ver todas las licencias">${fmtE(tot.pvp)}</td><td class="r num drill" onclick="drillLic({},'Todos los clientes')" title="Ver todas">${fmtE(tot.coste)}</td><td class="r num drill" onclick="drillLic({},'Todos los clientes')">${fmtE((tot.mrgJmrey||0)+(tot.mrgJuanma||0))}</td><td class="r num drill" onclick="drillLic({},'Todos los clientes')">${fmtE(tot.mrgBorja)}</td></tr>`;
   }
   document.getElementById('tbody-acum-coo').innerHTML = html;
 
@@ -1979,9 +1979,9 @@ function buildPivotCOO(pivot){
     }
   });
   html+=`<tr class="kt-foot">
-    <td><strong>Total</strong></td>
-    <td class="r num">${fmtN(totCant,0)}</td>
-    <td class="r num">${fmtE(totPvp)}</td>
+    <td><strong class="drill" onclick="drillLic({},'Todos los clientes')" title="Ver todas las licencias">Total</strong></td>
+    <td class="r num"><span class="drill" onclick="drillLic({},'Todos los clientes')" title="Ver todas las licencias">${fmtN(totCant,0)}</span></td>
+    <td class="r num"><span class="drill" onclick="drillLic({},'Todos los clientes')" title="Ver todas las licencias">${fmtE(totPvp)}</span></td>
   </tr>`;
   return html;
 }

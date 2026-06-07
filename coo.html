@@ -288,7 +288,7 @@ table.dt tbody td.c{text-align:center;}
   </div>
 </section>
 
-footer{background:var(--bg-dark);margin-top:48px;padding:var(--sp-4) var(--g);border-top:1px solid var(--accent);}
+footer{background:var(--bg-dark);padding:14px var(--g);display:flex;align-items:center;justify-content:space-between;position:fixed;bottom:0;left:0;right:0;z-index:100;}
 .fin{max-width:var(--max);margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-4);}
 .fb{font-family:var(--ff-serif);font-size:var(--fz-h4);font-weight:500;color:var(--fg-d);}
 .fm{font-size:var(--fz-xs);color:var(--fg-d2);}
@@ -412,7 +412,7 @@ table.rt tbody td.c{text-align:center;}
   <div id="login-error" style="color:#e07070;font-size:var(--fz-sm);display:none;"></div>
 </div>
 
-<div id="app-content" style="display:none"><header class="hdr">
+<div id="app-content" style="display:none;padding-bottom:52px;"><header class="hdr">
   <div class="hdr-brand">
     <a class="hdr-logo" href="index.html" style="text-decoration:none;cursor:pointer;" title="Volver al portal">JM<span>REY</span></a>
     <span class="hdr-sub">Cuadro de Mando · Dpto. BC</span>
@@ -690,10 +690,10 @@ table.rt tbody td.c{text-align:center;}
 <div class="toast" id="toast"></div>
 <div class="copy-bar" id="copy-bar"><span id="copy-bar-lbl">0 filas seleccionadas</span><button class="cb-copy" onclick="copySelectedRows()">📋 Copiar</button><button class="cb-clear" onclick="clearSelection()">✕</button></div>
 
-<footer><div class="fin">
-  <span class="fb">JMREY Business</span>
-  <span class="fm" id="footer-lbl">Cuadro de Mando · Departamento BC</span>
-</div></footer>
+<footer>
+  <div style="font-family:var(--ff-serif);font-size:16px;color:rgba(244,236,224,.5);">JM<span style="color:var(--accent)">REY</span></div>
+  <div id="footer-lbl" style="font-size:11px;color:rgba(244,236,224,.4);"></div>
+</footer>
 
 <script>
 // ── DATOS MAESTROS ──────────────────────────────────
@@ -2542,7 +2542,8 @@ function navToGrafico(){
   document.querySelector('.nav-tab[data-sec="grafico"]').classList.add('active');
   document.getElementById('sec-grafico').classList.add('active');
   initGrafSelectorsCOO();
-  renderGraficoCOO();
+  // Wait for section to be visible before drawing
+  requestAnimationFrame(()=>requestAnimationFrame(renderGraficoCOO));
 }
 
 function initGrafSelectorsCOO(){
@@ -2590,8 +2591,10 @@ function renderGraficoCOO(){
   const mkColors=vals=>vals.map((_,i)=>i===vals.length-1?'rgba(182,136,74,0.9)':'rgba(14,31,61,0.75)');
   const mkBorders=vals=>vals.map((_,i)=>i===vals.length-1?'#B6884A':'#0E1F3D');
 
-  _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas');
-  _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos');
+  requestAnimationFrame(()=>{
+    _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas');
+    _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos');
+  });
 }
 
 function _drawCOO(canvasId, labels, valores, colors, borders, tipo){
