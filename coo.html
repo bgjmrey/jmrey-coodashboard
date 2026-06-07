@@ -2568,11 +2568,10 @@ function renderGraficoCOO(){
   window._grafPeriodosCOO = periodos;
 
   const svcs = DB.servicios||[];
-  console.log('[grafico-coo] svcs:', svcs.length, 'DIRECTOR:', DIRECTOR);
   const valoresV=[], valoresC=[];
   periodos.forEach(p=>{
-    const rng = mesRange(p.year, p.month);
-    const ini = dateToStr(rng.ini), fin = dateToStr(rng.fin);
+    const rng=mesRange(p.year,p.month);
+    const ini=dateToStr(rng.ini), fin=dateToStr(rng.fin);
     let tv=0, tc=0;
     svcs.forEach(s=>{
       if(s.tecnico!==DIRECTOR) return;
@@ -2586,73 +2585,32 @@ function renderGraficoCOO(){
   });
 
   const labels=periodos.map(p=>MESES[p.month-1]+' '+p.year);
-  const colsV=valoresV.map((_,i)=>i===valoresV.length-1?'rgba(182,136,74,0.9)':'rgba(14,31,61,0.75)');
-  const brdV =valoresV.map((_,i)=>i===valoresV.length-1?'#B6884A':'#0E1F3D');
-  const colsC=valoresC.map((_,i)=>i===valoresC.length-1?'rgba(182,136,74,0.9)':'rgba(14,31,61,0.75)');
-  const brdC =valoresC.map((_,i)=>i===valoresC.length-1?'#B6884A':'#0E1F3D');
-
-  function onClickBar(tipo, idx){
-    const p=(window._grafPeriodosCOO||[])[idx];
-    if(!p) return;
-    const rng=mesRange(p.year,p.month);
-    const iniStr=dateToStr(rng.ini), finStr=dateToStr(rng.fin);
-    const dateCol=tipo==='ventas'?'fecha_acept':'fecha_entrega';
-    // Reset filters
-    svcFilters={};
-    svcFilters[dateCol]={from:iniStr,to:finStr};
-    svcFilters['tecnico']=DIRECTOR;
-    // Navigate to Servicios
-    document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
-    document.querySelector('.nav-tab[data-sec="servicios"]').classList.add('active');
-    document.getElementById('sec-servicios').classList.add('active');
-    resetSvcFilterRowDOM();
-    buildSvcFilterRow();
-    // Apply filters to DOM
-    const fr=document.getElementById('svc-filter-row');
-    const cells=Array.from(fr.querySelectorAll('td'));
-    const dateIdx=SVC_COLS.indexOf(dateCol);
-    if(dateIdx>=0){
-      const wrap=cells[dateIdx]?.querySelector('.filter-range');
-      if(wrap){wrap.children[0].value=iniStr;wrap.children[2].value=finStr;}
-    }
-    const tecIdx=SVC_COLS.indexOf('tecnico');
-    if(tecIdx>=0){
-      const sel=cells[tecIdx]?.querySelector('select');
-      if(sel) sel.value=DIRECTOR;
-    }
-    renderSvc();
-    const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    const bar=document.getElementById('drill-bar');
-    bar.style.display='flex';
-    document.getElementById('drill-bar-lbl').textContent='🔍 '+(tipo==='ventas'?'Ventas':'Consumos')+' Director · '+MESES_ES[p.month]+' '+p.year;
-  }
-
-  function loadAndDraw(){
-    if(typeof ChartDataLabels==='undefined'){
-      const s2=document.createElement('script');
-      s2.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
-      s2.onload=()=>{_drawCOO('graf-canvas-v',labels,valoresV,colsV,brdV,'ventas');_drawCOO('graf-canvas-c',labels,valoresC,colsC,brdC,'consumos');};
-      document.head.appendChild(s2);
-    } else {
-      _drawCOO('graf-canvas-v',labels,valoresV,colsV,brdV,'ventas');
-      _drawCOO('graf-canvas-c',labels,valoresC,colsC,brdC,'consumos');
-    }
-  }
+  const mkColors=vals=>vals.map((_,i)=>i===vals.length-1?'rgba(182,136,74,0.9)':'rgba(14,31,61,0.75)');
+  const mkBorders=vals=>vals.map((_,i)=>i===vals.length-1?'#B6884A':'#0E1F3D');
 
   if(typeof Chart==='undefined'){
     const s=document.createElement('script');
     s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
-    s.onload=loadAndDraw;
+    s.onload=()=>{
+      const s2=document.createElement('script');
+      s2.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
+      s2.onload=()=>{ _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas'); _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos'); };
+      document.head.appendChild(s2);
+    };
     document.head.appendChild(s);
+  } else if(typeof ChartDataLabels==='undefined'){
+    const s2=document.createElement('script');
+    s2.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
+    s2.onload=()=>{ _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas'); _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos'); };
+    document.head.appendChild(s2);
   } else {
-    loadAndDraw();
+    _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas');
+    _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos');
   }
 }
 
 function _drawCOO(canvasId, labels, valores, colors, borders, tipo){
   const canvas=document.getElementById(canvasId);
-  console.log('[grafico-coo] _drawCOO', canvasId, 'canvas:', !!canvas, 'valores:', valores);
   if(!canvas) return;
   if(canvasId==='graf-canvas-v'&&_grafChartV){_grafChartV.destroy();_grafChartV=null;}
   if(canvasId==='graf-canvas-c'&&_grafChartC){_grafChartC.destroy();_grafChartC=null;}
@@ -2682,12 +2640,34 @@ function _drawCOO(canvasId, labels, valores, colors, borders, tipo){
       onClick:(evt,elements)=>{
         if(!elements.length) return;
         const idx=elements[0].index;
-        onClickBar(tipo,idx);
+        const p=(window._grafPeriodosCOO||[])[idx];
+        if(!p) return;
+        const rng=mesRange(p.year,p.month);
+        const iniStr=dateToStr(rng.ini), finStr=dateToStr(rng.fin);
+        const dateCol=tipo==='ventas'?'fecha_acept':'fecha_entrega';
+        svcFilters={};
+        svcFilters[dateCol]={from:iniStr,to:finStr};
+        svcFilters['tecnico']=DIRECTOR;
+        document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+        document.querySelector('.nav-tab[data-sec="servicios"]').classList.add('active');
+        document.getElementById('sec-servicios').classList.add('active');
+        resetSvcFilterRowDOM();
+        buildSvcFilterRow();
+        const fr=document.getElementById('svc-filter-row');
+        const cells=Array.from(fr.querySelectorAll('td'));
+        const dateIdx=SVC_COLS.indexOf(dateCol);
+        if(dateIdx>=0){const wrap=cells[dateIdx]?.querySelector('.filter-range');if(wrap){wrap.children[0].value=iniStr;wrap.children[2].value=finStr;}}
+        const tecIdx=SVC_COLS.indexOf('tecnico');
+        if(tecIdx>=0){const sel=cells[tecIdx]?.querySelector('select');if(sel) sel.value=DIRECTOR;}
+        renderSvc();
+        const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const bar=document.getElementById('drill-bar');
+        bar.style.display='flex';
+        document.getElementById('drill-bar-lbl').textContent='🔍 '+(tipo==='ventas'?'Ventas':'Consumos')+' Director · '+MESES_ES[p.month]+' '+p.year;
       },
       onHover:(evt)=>{
-        evt.native.target.style.cursor=
-          evt.chart.getElementsAtEventForMode(evt.native,'nearest',{intersect:true},false).length
-          ?'pointer':'default';
+        evt.native.target.style.cursor=evt.chart.getElementsAtEventForMode(evt.native,'nearest',{intersect:true},false).length?'pointer':'default';
       },
       plugins:{
         legend:{display:false},
@@ -2711,6 +2691,7 @@ function _drawCOO(canvasId, labels, valores, colors, borders, tipo){
   if(canvasId==='graf-canvas-v') _grafChartV=chart;
   else _grafChartC=chart;
 }
+
 
 // ── INIT ─────────────────────────────────────────────
 (async function(){
