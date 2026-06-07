@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JMREY · Cuadro de Mando BC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>/* MSAL Browser 2.38.3 */
 /*! @azure/msal-browser v2.38.3 2023-10-27 */
 "use strict";!function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t((e="undefined"!=typeof globalThis?globalThis:e||self).msal={})}(this,(function(e){
@@ -2588,25 +2590,8 @@ function renderGraficoCOO(){
   const mkColors=vals=>vals.map((_,i)=>i===vals.length-1?'rgba(182,136,74,0.9)':'rgba(14,31,61,0.75)');
   const mkBorders=vals=>vals.map((_,i)=>i===vals.length-1?'#B6884A':'#0E1F3D');
 
-  if(typeof Chart==='undefined'){
-    const s=document.createElement('script');
-    s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
-    s.onload=()=>{
-      const s2=document.createElement('script');
-      s2.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
-      s2.onload=()=>{ _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas'); _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos'); };
-      document.head.appendChild(s2);
-    };
-    document.head.appendChild(s);
-  } else if(typeof ChartDataLabels==='undefined'){
-    const s2=document.createElement('script');
-    s2.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
-    s2.onload=()=>{ _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas'); _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos'); };
-    document.head.appendChild(s2);
-  } else {
-    _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas');
-    _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos');
-  }
+  _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas');
+  _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos');
 }
 
 function _drawCOO(canvasId, labels, valores, colors, borders, tipo){
