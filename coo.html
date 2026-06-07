@@ -2568,6 +2568,7 @@ function renderGraficoCOO(){
   window._grafPeriodosCOO = periodos;
 
   const svcs = DB.servicios||[];
+  console.log('[grafico-coo] svcs:', svcs.length, 'DIRECTOR:', DIRECTOR);
   const valoresV=[], valoresC=[];
   periodos.forEach(p=>{
     const rng = mesRange(p.year, p.month);
@@ -2651,6 +2652,7 @@ function renderGraficoCOO(){
 
 function _drawCOO(canvasId, labels, valores, colors, borders, tipo){
   const canvas=document.getElementById(canvasId);
+  console.log('[grafico-coo] _drawCOO', canvasId, 'canvas:', !!canvas, 'valores:', valores);
   if(!canvas) return;
   if(canvasId==='graf-canvas-v'&&_grafChartV){_grafChartV.destroy();_grafChartV=null;}
   if(canvasId==='graf-canvas-c'&&_grafChartC){_grafChartC.destroy();_grafChartC=null;}
