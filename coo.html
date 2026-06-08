@@ -278,11 +278,11 @@ table.dt tbody td.c{text-align:center;}
   </div>
   <div class="kc" style="padding:var(--sp-5);margin-bottom:var(--sp-5);">
     <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:var(--sp-3);">Ventas</div>
-    <div id="graf-canvas-v" style="width:100%;height:360px;position:relative;"></div>
+    <canvas id="graf-canvas-v" style="width:100%;max-height:360px;"></canvas>
   </div>
   <div class="kc" style="padding:var(--sp-5);">
     <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:var(--sp-3);">Consumos</div>
-    <div id="graf-canvas-c" style="width:100%;height:360px;position:relative;"></div>
+    <canvas id="graf-canvas-c" style="width:100%;max-height:360px;"></canvas>
   </div>
 </section>
 
@@ -423,7 +423,7 @@ table.rt tbody td.c{text-align:center;}
   <button class="nav-tab" data-sec="servicios">📋 Servicios</button>
   <button class="nav-tab" data-sec="valoraciones">⭐ Valoraciones</button>
   <button class="nav-tab" data-sec="clientes">🏢 Clientes</button>
-  <button class="nav-tab" data-sec="grafico" onclick="navToGrafico()">📈 Gráfico</button>
+  <button class="nav-tab" data-sec="grafico">📈 Gráfico</button>
 </nav>
 
 <!-- KPIs -->
@@ -998,6 +998,7 @@ document.querySelectorAll('.nav-tab').forEach(btn=>{
     if(btn.dataset.sec==='valoraciones') renderVal();
     if(btn.dataset.sec==='clientes') renderCli();
     if(btn.dataset.sec==='kpis') renderKPI();
+    if(btn.dataset.sec==='grafico'){ initGrafSelectorsCOO(); renderGraficoCOO(); }
   });
 });
 
@@ -2532,15 +2533,8 @@ function captureKPI(secId, callback){
 
 
 
-// ── GRÁFICO COO (SVG puro) ────────────────────────────────────
-function navToGrafico(){
-  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
-  document.querySelector('.nav-tab[data-sec="grafico"]').classList.add('active');
-  document.getElementById('sec-grafico').classList.add('active');
-  initGrafSelectorsCOO();
-  requestAnimationFrame(()=>requestAnimationFrame(renderGraficoCOO));
-}
+// ── GRÁFICO COO ───────────────────────────────────────────────
+let _grafChartV = null, _grafChartC = null;
 
 function initGrafSelectorsCOO(){
   const ySel=document.getElementById('graf-year-coo');
@@ -2578,97 +2572,97 @@ function renderGraficoCOO(){
   });
 
   const labels=periodos.map(p=>MESES[p.month-1]+' '+p.year);
-  _drawSVGBar('graf-canvas-v',labels,valoresV,'ventas');
-  _drawSVGBar('graf-canvas-c',labels,valoresC,'consumos');
+  const mkColors=vals=>vals.map((_,i)=>i===vals.length-1?'rgba(182,136,74,0.9)':'rgba(14,31,61,0.75)');
+  const mkBorders=vals=>vals.map((_,i)=>i===vals.length-1?'#B6884A':'#0E1F3D');
+
+  if(typeof Chart==='undefined'){
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+    s.onload=()=>{
+      const s2=document.createElement('script');
+      s2.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
+      s2.onload=()=>{
+        _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas');
+        _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos');
+      };
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s);
+  } else if(typeof ChartDataLabels==='undefined'){
+    const s2=document.createElement('script');
+    s2.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
+    s2.onload=()=>{
+      _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas');
+      _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos');
+    };
+    document.head.appendChild(s2);
+  } else {
+    _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas');
+    _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos');
+  }
 }
 
-function fmtBarCOO(n){
-  const parts=n.toFixed(2).split('.');
-  parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-  return parts.join(',')+' €';
-}
+function _drawCOO(canvasId,labels,valores,colors,borders,tipo){
+  const canvas=document.getElementById(canvasId);
+  if(!canvas) return;
+  if(canvasId==='graf-canvas-v'&&_grafChartV){_grafChartV.destroy();_grafChartV=null;}
+  if(canvasId==='graf-canvas-c'&&_grafChartC){_grafChartC.destroy();_grafChartC=null;}
 
-function _drawSVGBar(containerId,labels,valores,tipo){
-  const container=document.getElementById(containerId);
-  if(!container) return;
-
-  const rect=container.getBoundingClientRect(); const W=rect.width>50?rect.width:(window.innerWidth-80)||800; const H=340;
-  const PAD={top:50,right:20,bottom:60,left:80};
-  const n=labels.length;
-  const chartW=W-PAD.left-PAD.right;
-  const chartH=H-PAD.top-PAD.bottom;
-  const maxVal=Math.max(...valores,1);
-  const barW=Math.floor(chartW/n*0.65);
-  const gap=Math.floor(chartW/n);
-
-  function scaleY(v){return chartH - (v/maxVal)*chartH;}
-  function yTick(v){return PAD.top+scaleY(v);}
-
-  // Y axis ticks
-  const tickCount=5;
-  const tickStep=maxVal/tickCount;
-  let ticks='';
-  for(let i=0;i<=tickCount;i++){
-    const v=tickStep*i;
-    const y=yTick(v);
-    ticks+=`<line x1="${PAD.left}" y1="${y}" x2="${PAD.left+chartW}" y2="${y}" stroke="#e2d9c6" stroke-width="1"/>`;
-    ticks+=`<text x="${PAD.left-8}" y="${y+4}" text-anchor="end" font-size="10" fill="#5A5A5A" font-family="Manrope">${fmtBarCOO(v)}</text>`;
+  function fmtBar(n){
+    const parts=n.toFixed(2).split('.');
+    parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+    return parts.join(',')+' €';
   }
 
-  // Bars
-  let bars='';
-  valores.forEach((v,i)=>{
-    const isLast=i===valores.length-1;
-    const x=PAD.left+i*gap+(gap-barW)/2;
-    const bh=(v/maxVal)*chartH;
-    const y=PAD.top+chartH-bh;
-    const fill=isLast?'rgba(182,136,74,0.9)':'rgba(14,31,61,0.75)';
-    const labelColor=isLast?'#B6884A':'#0E1F3D';
-    // Click handler
-    const onclick=`window._grafCOOClick(${i},'${tipo}')`;
-    bars+=`<rect x="${x}" y="${y}" width="${barW}" height="${bh}" fill="${fill}" rx="4" style="cursor:pointer" onclick="${onclick}"/>`;
-    // Value label above bar
-    if(v>0){
-      const lx=x+barW/2, ly=y-6;
-      bars+=`<text x="${lx}" y="${ly}" text-anchor="middle" font-size="10" font-weight="600" fill="${labelColor}" font-family="Manrope" transform="rotate(-40,${lx},${ly})" style="cursor:pointer" onclick="${onclick}">${fmtBarCOO(v)}</text>`;
-    }
-    // X label
-    bars+=`<text x="${x+barW/2}" y="${PAD.top+chartH+16}" text-anchor="middle" font-size="10" fill="#5A5A5A" font-family="Manrope">${labels[i]}</text>`;
+  const chart=new Chart(canvas,{
+    type:'bar',
+    data:{labels,datasets:[{label:'Importe Director €',data:valores,backgroundColor:colors,borderColor:borders,borderWidth:1,borderRadius:4}]},
+    options:{
+      responsive:true,
+      layout:{padding:{top:28}},
+      onClick:(evt,elements)=>{
+        if(!elements.length) return;
+        const idx=elements[0].index;
+        const p=(window._grafPeriodosCOO||[])[idx];
+        if(!p) return;
+        const rng=mesRange(p.year,p.month);
+        const iniStr=dateToStr(rng.ini),finStr=dateToStr(rng.fin);
+        const dateCol=tipo==='ventas'?'fecha_acept':'fecha_entrega';
+        svcFilters={};
+        svcFilters[dateCol]={from:iniStr,to:finStr};
+        svcFilters['tecnico']=DIRECTOR;
+        document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+        document.querySelector('.nav-tab[data-sec="servicios"]').classList.add('active');
+        document.getElementById('sec-servicios').classList.add('active');
+        resetSvcFilterRowDOM();buildSvcFilterRow();
+        const fr=document.getElementById('svc-filter-row');
+        const cells=Array.from(fr.querySelectorAll('td'));
+        const dateIdx=SVC_COLS.indexOf(dateCol);
+        if(dateIdx>=0){const wrap=cells[dateIdx]?.querySelector('.filter-range');if(wrap){wrap.children[0].value=iniStr;wrap.children[2].value=finStr;}}
+        const tecIdx=SVC_COLS.indexOf('tecnico');
+        if(tecIdx>=0){const sel=cells[tecIdx]?.querySelector('select');if(sel)sel.value=DIRECTOR;}
+        renderSvc();
+        const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        const bar=document.getElementById('drill-bar');bar.style.display='flex';
+        document.getElementById('drill-bar-lbl').textContent='🔍 '+(tipo==='ventas'?'Ventas':'Consumos')+' Director · '+MESES_ES[p.month]+' '+p.year;
+      },
+      onHover:(evt)=>{evt.native.target.style.cursor=evt.chart.getElementsAtEventForMode(evt.native,'nearest',{intersect:true},false).length?'pointer':'default';},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>' '+fmtBar(ctx.parsed.y)}},
+        datalabels:{anchor:'end',align:'end',offset:2,font:{family:'Manrope',size:10,weight:'600'},color:ctx=>ctx.dataIndex===valores.length-1?'#B6884A':'#0E1F3D',formatter:v=>fmtBar(v),rotation:-45}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{family:'Manrope',size:11},color:'#5A5A5A'}},
+        y:{grid:{color:'rgba(0,0,0,0.06)'},ticks:{font:{family:'Manrope',size:11},color:'#5A5A5A',callback:v=>fmtBar(v)}}
+      }
+    },
+    plugins:[ChartDataLabels]
   });
-
-  container.innerHTML=`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
-    ${ticks}
-    <line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${PAD.top+chartH}" stroke="#c0b89a" stroke-width="1"/>
-    ${bars}
-  </svg>`;
+  if(canvasId==='graf-canvas-v') _grafChartV=chart;
+  else _grafChartC=chart;
 }
-
-window._grafCOOClick=function(idx,tipo){
-  const p=(window._grafPeriodosCOO||[])[idx];
-  if(!p) return;
-  const rng=mesRange(p.year,p.month);
-  const iniStr=dateToStr(rng.ini),finStr=dateToStr(rng.fin);
-  const dateCol=tipo==='ventas'?'fecha_acept':'fecha_entrega';
-  svcFilters={};
-  svcFilters[dateCol]={from:iniStr,to:finStr};
-  svcFilters['tecnico']=DIRECTOR;
-  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
-  document.querySelector('.nav-tab[data-sec="servicios"]').classList.add('active');
-  document.getElementById('sec-servicios').classList.add('active');
-  resetSvcFilterRowDOM(); buildSvcFilterRow();
-  const fr=document.getElementById('svc-filter-row');
-  const cells=Array.from(fr.querySelectorAll('td'));
-  const dateIdx=SVC_COLS.indexOf(dateCol);
-  if(dateIdx>=0){const wrap=cells[dateIdx]?.querySelector('.filter-range');if(wrap){wrap.children[0].value=iniStr;wrap.children[2].value=finStr;}}
-  const tecIdx=SVC_COLS.indexOf('tecnico');
-  if(tecIdx>=0){const sel=cells[tecIdx]?.querySelector('select');if(sel)sel.value=DIRECTOR;}
-  renderSvc();
-  const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const bar=document.getElementById('drill-bar');
-  bar.style.display='flex';
-  document.getElementById('drill-bar-lbl').textContent='🔍 '+(tipo==='ventas'?'Ventas':'Consumos')+' Director · '+MESES_ES[p.month]+' '+p.year;
-};
 
 
 // ── INIT ─────────────────────────────────────────────
