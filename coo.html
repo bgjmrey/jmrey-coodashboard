@@ -256,35 +256,6 @@ table.dt tbody td.c{text-align:center;}
   transform:translateY(12px);opacity:0;transition:all 260ms ease;pointer-events:none;}
 .toast.on{transform:translateY(0);opacity:1;}
 
-<!-- GRÁFICO COO -->
-<section id="sec-grafico" class="sec">
-  <div class="de-tb">
-    <div>
-      <div class="seh-ey">Evolución anual · Director (Bg)</div>
-      <div class="de-tb-t">Gráfico · Importe por Mes</div>
-    </div>
-    <div style="display:flex;gap:var(--sp-3);align-items:center;">
-      <label style="font-size:12px;font-weight:600;color:var(--fg-3);text-transform:uppercase;letter-spacing:.1em;">Hasta</label>
-      <select class="fsel" id="graf-year-coo" onchange="renderGraficoCOO()" style="width:90px;"></select>
-      <select class="fsel" id="graf-month-coo" onchange="renderGraficoCOO()">
-        <option value="1">Enero</option><option value="2">Febrero</option>
-        <option value="3">Marzo</option><option value="4">Abril</option>
-        <option value="5">Mayo</option><option value="6">Junio</option>
-        <option value="7">Julio</option><option value="8">Agosto</option>
-        <option value="9">Septiembre</option><option value="10">Octubre</option>
-        <option value="11">Noviembre</option><option value="12">Diciembre</option>
-      </select>
-    </div>
-  </div>
-  <div class="kc" style="padding:var(--sp-5);margin-bottom:var(--sp-5);">
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:var(--sp-3);">Ventas</div>
-    <canvas id="graf-canvas-v" style="width:100%;max-height:360px;"></canvas>
-  </div>
-  <div class="kc" style="padding:var(--sp-5);">
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:var(--sp-3);">Consumos</div>
-    <canvas id="graf-canvas-c" style="width:100%;max-height:360px;"></canvas>
-  </div>
-</section>
 
 /* footer inline style */
 .fin{max-width:var(--max);margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-4);}
@@ -423,7 +394,7 @@ table.rt tbody td.c{text-align:center;}
   <button class="nav-tab" data-sec="servicios">📋 Servicios</button>
   <button class="nav-tab" data-sec="valoraciones">⭐ Valoraciones</button>
   <button class="nav-tab" data-sec="clientes">🏢 Clientes</button>
-  <button class="nav-tab" data-sec="grafico">📈 Gráfico</button>
+  <button class="nav-tab" data-sec="grafico" onclick="initGrafSelectorsCOO();renderGraficoCOO()">📈 Gráfico</button>
 </nav>
 
 <!-- KPIs -->
@@ -593,6 +564,36 @@ table.rt tbody td.c{text-align:center;}
   <div id="footer-lbl" style="font-size:11px;color:rgba(244,236,224,.4);"></div>
 </footer>
 
+
+<!-- GRÁFICO COO -->
+<section id="sec-grafico" class="sec">
+  <div class="de-tb">
+    <div>
+      <div class="seh-ey">Evolución anual · Director (Bg)</div>
+      <div class="de-tb-t">Gráfico · Importe por Mes</div>
+    </div>
+    <div style="display:flex;gap:var(--sp-3);align-items:center;">
+      <label style="font-size:12px;font-weight:600;color:var(--fg-3);text-transform:uppercase;letter-spacing:.1em;">Hasta</label>
+      <select class="fsel" id="graf-year-coo" onchange="renderGraficoCOO()" style="width:90px;"></select>
+      <select class="fsel" id="graf-month-coo" onchange="renderGraficoCOO()">
+        <option value="1">Enero</option><option value="2">Febrero</option>
+        <option value="3">Marzo</option><option value="4">Abril</option>
+        <option value="5">Mayo</option><option value="6">Junio</option>
+        <option value="7">Julio</option><option value="8">Agosto</option>
+        <option value="9">Septiembre</option><option value="10">Octubre</option>
+        <option value="11">Noviembre</option><option value="12">Diciembre</option>
+      </select>
+    </div>
+  </div>
+  <div class="kc" style="padding:var(--sp-5);margin-bottom:var(--sp-5);">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:var(--sp-3);">Ventas</div>
+    <canvas id="graf-canvas-v" style="width:100%;max-height:360px;"></canvas>
+  </div>
+  <div class="kc" style="padding:var(--sp-5);">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:var(--sp-3);">Consumos</div>
+    <canvas id="graf-canvas-c" style="width:100%;max-height:360px;"></canvas>
+  </div>
+</section>
 <!-- MODAL SERVICIO -->
 <div class="ovl" id="ovl-svc" onclick="ovlOut(event,'svc')">
   <div class="modal">
