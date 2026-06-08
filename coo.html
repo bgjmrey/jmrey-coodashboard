@@ -941,7 +941,7 @@ async function hydrateDB(){
   if(!sb){ Object.assign(DB,fallback); toast('Sin Supabase — usando caché local'); return; }
   try{
     const [s,v,c,t]=await Promise.all([
-      sb.from('servicios').select('*'),
+      sb.from('servicios').select('*').order('id', {ascending: false}),
       sb.from('valoraciones').select('*'),
       sb.from('clientes').select('*'),
       sb.from('tecnicos').select('*'),
@@ -2592,7 +2592,7 @@ function _drawSVGBar(containerId,labels,valores,tipo){
   const container=document.getElementById(containerId);
   if(!container) return;
 
-  const W=container.getBoundingClientRect().width||container.offsetWidth||window.innerWidth-80||800, H=340;
+  const rect=container.getBoundingClientRect(); const W=rect.width>50?rect.width:(window.innerWidth-80)||800; const H=340;
   const PAD={top:50,right:20,bottom:60,left:80};
   const n=labels.length;
   const chartW=W-PAD.left-PAD.right;
