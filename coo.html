@@ -1539,8 +1539,13 @@ function clearSvcFilters(){
 
 function svcMatch(r, col, val){
   if(val===''||val===null||val===undefined) return true;
-  // Numeric ≥ filter
-  if(typeof val === 'number') return (parseFloat(r[col])||0) >= val;
+  // Numeric range filter
+  if(typeof val==='object' && val!==null && !val.from_date && (val.from!==undefined||val.to!==undefined)){
+    const n=parseFloat(r[col])||0;
+    if(val.from!==null && val.from!==undefined && n < val.from) return false;
+    if(val.to  !==null && val.to  !==undefined && n > val.to  ) return false;
+    return true;
+  }
   if(!val) return true;
   // Date range filter
   if(val && typeof val === 'object' && (val.from || val.to)){
@@ -2048,7 +2053,14 @@ function renderCli(){
   let cliData=DB.clientes;
   Object.entries(cliFilters).forEach(([col,val])=>{
     if(val===''||val===null||val===undefined) return;
-    if(typeof val==='number') cliData=cliData.filter(r=>(parseFloat(r[col])||0)>=val);
+    if(typeof val==='object' && val!==null && (val.from!==undefined||val.to!==undefined)){
+      cliData=cliData.filter(r=>{
+        const n=parseFloat(r[col])||0;
+        if(val.from!==null&&val.from!==undefined&&n<val.from) return false;
+        if(val.to!==null&&val.to!==undefined&&n>val.to) return false;
+        return true;
+      });
+    }
     else cliData=cliData.filter(r=>(r[col]||'').toString().toLowerCase().includes(val));
   });
   tb.innerHTML=cliData.map((r,i)=>`<tr ondblclick="editCliFn(${DB.clientes.indexOf(r)})">
