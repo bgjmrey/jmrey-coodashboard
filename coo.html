@@ -401,7 +401,7 @@ table.rt tbody td.c{text-align:center;}
 <section id="sec-kpis" class="sec active">
   <div class="fbar">
     <div class="fg"><span class="fl">Año</span>
-      <select class="fsel" id="f-year"><option value="2026" selected>2026</option><option value="2025">2025</option></select></div>
+      <select class="fsel" id="f-year"></select></div>
     <div class="fg"><span class="fl">Mes</span>
       <select class="fsel" id="f-month">
         <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
@@ -2541,8 +2541,9 @@ function initGrafSelectorsCOO(){
   const ySel=document.getElementById('graf-year-coo');
   if(ySel.options.length) return;
   const now=new Date();
-  for(let y=now.getFullYear();y>=now.getFullYear()-3;y--)
-    ySel.add(new Option(y,y));
+  const curY=now.getFullYear();
+  for(let y=curY;y>=2022;y--)
+    ySel.add(new Option(y,y,y===curY,y===curY));
   ySel.value=now.getFullYear();
   document.getElementById('graf-month-coo').value=now.getMonth()+1;
 }
