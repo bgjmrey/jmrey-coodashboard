@@ -554,7 +554,10 @@ table.rt tbody td.c{text-align:center;}
     <button class="btn btn-p" onclick="openMod('cli')">＋ Nuevo cliente</button>
   </div>
   <div class="dtw"><div class="tw"><table class="dt" id="tbl-cli">
-    <thead><tr><th>Partner</th><th>Cliente</th><th>Técnico director</th><th class="r">€/hora técnico</th><th class="r">% Margen</th><th class="c">Acc.</th></tr></thead>
+    <thead>
+      <tr><th data-col="partner">Partner</th><th data-col="cliente">Cliente</th><th data-col="tecnico">Técnico director</th><th class="r" data-col="precio">€/hora técnico</th><th class="r" data-col="margen">% Margen</th><th class="c"></th></tr>
+      <tr class="filter-row" id="cli-filter-row"></tr>
+    </thead>
     <tbody id="tbody-cli"></tbody>
   </table></div></div>
 </section>
@@ -1495,6 +1498,21 @@ function buildSvcFilterRow(){
       inp2.addEventListener('change',onChange);
       wrap.appendChild(inp1); wrap.appendChild(sep); wrap.appendChild(inp2);
       td.appendChild(wrap);
+    } else if(['h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec'].includes(col)){
+      // Numeric filter: ≥ value
+      const wrap = document.createElement('div');
+      wrap.style.cssText='display:flex;align-items:center;gap:2px;';
+      const lbl = document.createElement('span'); lbl.textContent='≥'; lbl.style.cssText='font-size:10px;color:var(--fg-d2);';
+      const inp = document.createElement('input');
+      inp.type='number'; inp.placeholder='0'; inp.dataset.col=col;
+      inp.style.cssText='width:60px;';
+      inp.addEventListener('input',e=>{
+        const v=parseFloat(e.target.value);
+        svcFilters[col]=isNaN(v)?'':v;
+        renderSvc();
+      });
+      wrap.appendChild(lbl); wrap.appendChild(inp);
+      td.appendChild(wrap);
     } else {
       const inp = document.createElement('input');
       inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
@@ -1520,6 +1538,9 @@ function clearSvcFilters(){
 // clearDrillFilter defined below with drillKPIExact
 
 function svcMatch(r, col, val){
+  if(val===''||val===null||val===undefined) return true;
+  // Numeric ≥ filter
+  if(typeof val === 'number') return (parseFloat(r[col])||0) >= val;
   if(!val) return true;
   // Date range filter
   if(val && typeof val === 'object' && (val.from || val.to)){
@@ -1987,16 +2008,56 @@ function delVal(i){
 // ── CLIENTES ─────────────────────────────────────────
 let editCli=null;
 
+let cliFilters={};
+
+function buildCliFilterRow(){
+  const fr=document.getElementById('cli-filter-row');
+  if(fr.children.length) return;
+  const cols=['partner','cliente','tecnico','precio','margen'];
+  const textCols=['partner','cliente','tecnico'];
+  cols.forEach(col=>{
+    const td=document.createElement('td');
+    if(textCols.includes(col)){
+      const inp=document.createElement('input');
+      inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
+      inp.addEventListener('input',e=>{cliFilters[col]=e.target.value.toLowerCase();renderCli();});
+      td.appendChild(inp);
+    } else {
+      const wrap=document.createElement('div');
+      wrap.style.cssText='display:flex;align-items:center;gap:2px;';
+      const lbl=document.createElement('span'); lbl.textContent='≥'; lbl.style.cssText='font-size:10px;color:var(--fg-d2);';
+      const inp=document.createElement('input'); inp.type='number'; inp.placeholder='0'; inp.dataset.col=col;
+      inp.style.cssText='width:55px;';
+      inp.addEventListener('input',e=>{
+        const v=parseFloat(e.target.value);
+        cliFilters[col]=isNaN(v)?'':v;
+        renderCli();
+      });
+      wrap.appendChild(lbl); wrap.appendChild(inp);
+      td.appendChild(wrap);
+    }
+    fr.appendChild(td);
+  });
+  fr.appendChild(document.createElement('td'));
+}
+
 function renderCli(){
+  buildCliFilterRow();
   const tb=document.getElementById('tbody-cli');
-  if(!DB.clientes.length){tb.innerHTML=`<tr><td colspan="5" class="ec">Sin clientes.</td></tr>`;return;}
-  tb.innerHTML=DB.clientes.map((r,i)=>`<tr ondblclick="editCliFn(${i})">
+  if(!DB.clientes.length){tb.innerHTML=`<tr><td colspan="6" class="ec">Sin clientes.</td></tr>`;return;}
+  let cliData=DB.clientes;
+  Object.entries(cliFilters).forEach(([col,val])=>{
+    if(val===''||val===null||val===undefined) return;
+    if(typeof val==='number') cliData=cliData.filter(r=>(parseFloat(r[col])||0)>=val);
+    else cliData=cliData.filter(r=>(r[col]||'').toString().toLowerCase().includes(val));
+  });
+  tb.innerHTML=cliData.map((r,i)=>`<tr ondblclick="editCliFn(${DB.clientes.indexOf(r)})">
     <td><span class="bdg b-gray">${r.partner||'—'}</span></td>
     <td style="font-weight:600">${r.cliente||'—'}</td>
     <td style="font-size:var(--fz-xs)">${shortMail(r.tecnico)}</td>
     <td class="r" style="font-weight:600">${r.precio!=null?fmtE(r.precio):'—'}</td>
     <td class="r">${r.margen!=null?fmt(r.margen,0)+' %':'—'}</td>
-    <td class="c"><button class="bi" onclick="editCliFn(${i})">✏️</button> <button class="bi" onclick="delCli(${i})">🗑️</button></td>
+    <td class="c"><button class="bi" onclick="editCliFn(${DB.clientes.indexOf(r)})">✏️</button> <button class="bi" onclick="delCli(${DB.clientes.indexOf(r)})">🗑️</button></td>
   </tr>`).join('');
 }
 

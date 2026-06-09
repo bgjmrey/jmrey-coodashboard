@@ -1225,6 +1225,9 @@ function hl(url, label, title){
 }
 
 function licMatch(r, col, val){
+  if(val===''||val===null||val===undefined) return true;
+  // Numeric ≥ filter
+  if(typeof val==='number') return (parseFloat(r[col])||0) >= val;
   if(!val) return true;
   if(typeof val==='object' && (val.from||val.to)){
     const v=(r[col]||'').substring(0,10);
@@ -1257,6 +1260,13 @@ function buildLicFilterRow(){
       (opts[col]||['']).forEach(v=>sel.add(new Option(v||'—',v)));
       sel.addEventListener('change',e=>{ licFilters[col]=e.target.value; renderLic(); });
       td.appendChild(sel);
+    } else if(['dias_fact','cantidad','pvp_mes_compl','pvp','importe','coste_mes_compl','coste','importe_coste','importe_margen_total','importe_margen_jmrey','importe_margen_juanma','importe_margen_borja','importe_margen_agente'].includes(col)){
+      const wrap=document.createElement('div'); wrap.style.cssText='display:flex;align-items:center;gap:2px;';
+      const lbl=document.createElement('span'); lbl.textContent='≥'; lbl.style.cssText='font-size:10px;color:var(--fg-d2);';
+      const inp=document.createElement('input'); inp.type='number'; inp.placeholder='0'; inp.dataset.col=col;
+      inp.style.cssText='width:58px;';
+      inp.addEventListener('input',e=>{ const v=parseFloat(e.target.value); licFilters[col]=isNaN(v)?'':v; renderLic(); });
+      wrap.appendChild(lbl); wrap.appendChild(inp); td.appendChild(wrap);
     } else {
       const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
       inp.addEventListener('input',e=>{ licFilters[col]=e.target.value.toLowerCase(); renderLic(); });
@@ -1288,6 +1298,13 @@ function buildPrecFilterRow(){
       (opts[col]||['']).forEach(v=>sel.add(new Option(v||'—',v)));
       sel.addEventListener('change',e=>{ precFilters[col]=e.target.value; renderPrec(); });
       td.appendChild(sel);
+    } else if(['pvp_mes','coste_mes','pvp_mes_arrow','coste_mes_arrow'].includes(col)){
+      const wrap=document.createElement('div'); wrap.style.cssText='display:flex;align-items:center;gap:2px;';
+      const lbl=document.createElement('span'); lbl.textContent='≥'; lbl.style.cssText='font-size:10px;color:var(--fg-d2);';
+      const inp=document.createElement('input'); inp.type='number'; inp.placeholder='0'; inp.dataset.col=col;
+      inp.style.cssText='width:58px;';
+      inp.addEventListener('input',e=>{ const v=parseFloat(e.target.value); precFilters[col]=isNaN(v)?'':v; renderPrec(); });
+      wrap.appendChild(lbl); wrap.appendChild(inp); td.appendChild(wrap);
     } else {
       const inp=document.createElement('input'); inp.type='text'; inp.placeholder='…'; inp.dataset.col=col;
       inp.addEventListener('input',e=>{ precFilters[col]=e.target.value.toLowerCase(); renderPrec(); });
