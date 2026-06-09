@@ -2684,6 +2684,14 @@ function _drawCOO(canvasId,labels,valores,colors,borders,tipo){
   populateSvcSelects();
   populateValSelects();
   populateCliSelects();
+  // Poblar selector de año (KPIs)
+  (function(){
+    const ySel=document.getElementById('f-year');
+    ySel.innerHTML='';
+    const curY=new Date().getFullYear();
+    for(let y=curY;y>=2022;y--)
+      ySel.add(new Option(y,y,y===curY,y===curY));
+  })();
   renderKPI();
 })();
 </script>
