@@ -1500,9 +1500,9 @@ function buildSvcFilterRow(){
       td.appendChild(wrap);
     } else if(['h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec'].includes(col)){
       const wrap=document.createElement('div'); wrap.className='filter-range';
-      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:52px;';
+      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:38px;';
       const sp=document.createElement('span'); sp.textContent='–';
-      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:52px;';
+      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:38px;';
       const fn=()=>{
         const v1=i1.value, v2=i2.value;
         svcFilters[col]=(v1!==''||v2!=='')?{from:v1!==''?parseFloat(v1):null,to:v2!==''?parseFloat(v2):null}:'';
@@ -2025,9 +2025,9 @@ function buildCliFilterRow(){
       td.appendChild(inp);
     } else {
       const wrap=document.createElement('div'); wrap.className='filter-range';
-      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:48px;';
+      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:32px;';
       const sp=document.createElement('span'); sp.textContent='–';
-      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:48px;';
+      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:32px;';
       const fn=()=>{
         const v1=i1.value, v2=i2.value;
         cliFilters[col]=(v1!==''||v2!=='')?{from:v1!==''?parseFloat(v1):null,to:v2!==''?parseFloat(v2):null}:'';
