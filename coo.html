@@ -589,6 +589,11 @@ table.rt tbody td.c{text-align:center;}
         <option value="9">Septiembre</option><option value="10">Octubre</option>
         <option value="11">Noviembre</option><option value="12">Diciembre</option>
       </select>
+      <label style="font-size:12px;font-weight:600;color:var(--fg-3);text-transform:uppercase;letter-spacing:.1em;">Tipo</label>
+      <select class="fsel" id="graf-tipo-coo" onchange="renderGraficoCOO()" style="width:80px;">
+        <option value="bar" selected>Barras</option>
+        <option value="line">Líneas</option>
+      </select>
       <label style="font-size:12px;font-weight:600;color:var(--fg-3);text-transform:uppercase;letter-spacing:.1em;">Períodos</label>
       <select class="fsel" id="graf-periodos-coo" onchange="renderGraficoCOO()" style="width:64px;">
         <option value="6">6</option><option value="12">12</option>
@@ -2690,8 +2695,9 @@ async function renderGraficoCOO(){
       const s2=document.createElement('script');
       s2.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js';
       s2.onload=()=>{
-        _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas');
-        _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos');
+        const ct=document.getElementById('graf-tipo-coo')?.value||'bar';
+        _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas',ct);
+        _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos',ct);
       };
       document.head.appendChild(s2);
     };
@@ -2705,12 +2711,13 @@ async function renderGraficoCOO(){
     };
     document.head.appendChild(s2);
   } else {
-    _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas');
-    _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos');
+    const ct2=document.getElementById('graf-tipo-coo')?.value||'bar';
+    _drawCOO('graf-canvas-v',labels,valoresV,mkColors(valoresV),mkBorders(valoresV),'ventas',ct2);
+    _drawCOO('graf-canvas-c',labels,valoresC,mkColors(valoresC),mkBorders(valoresC),'consumos',ct2);
   }
 }
 
-function _drawCOO(canvasId,labels,valores,colors,borders,tipo){
+function _drawCOO(canvasId,labels,valores,colors,borders,tipo,chartType){
   const canvas=document.getElementById(canvasId);
   if(!canvas) return;
   if(canvasId==='graf-canvas-v'&&_grafChartV){_grafChartV.destroy();_grafChartV=null;}
@@ -2722,8 +2729,9 @@ function _drawCOO(canvasId,labels,valores,colors,borders,tipo){
     return parts.join(',')+' €';
   }
 
+  const isLine = chartType==='line';
   const chart=new Chart(canvas,{
-    type:'bar',
+    type:chartType||'bar',
     data:{labels,datasets:[{label:'Importe Director €',data:valores,backgroundColor:colors,borderColor:borders,borderWidth:1,borderRadius:4}]},
     options:{
       responsive:true,
