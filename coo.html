@@ -596,7 +596,7 @@ table.rt tbody td.c{text-align:center;}
     <canvas id="graf-canvas-v" style="width:100%;max-height:360px;"></canvas>
   </div>
   <div class="kc" style="padding:var(--sp-5);">
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:var(--sp-3);">Consumos</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);margin-bottom:var(--sp-3);">Consumos (Imp. Técnicas + Imp. Director)</div>
     <canvas id="graf-canvas-c" style="width:100%;max-height:360px;"></canvas>
   </div>
 </section>
@@ -2641,7 +2641,7 @@ function renderGraficoCOO(){
     svcs.forEach(s=>{
       if(s.tecnico!==DIRECTOR) return;
       if((s.fecha_acept||'').substring(0,10)>=ini&&(s.fecha_acept||'').substring(0,10)<=fin) tv+=parseFloat(s.imp_tec)||0;
-      if((s.fecha_entrega||'').substring(0,10)>=ini&&(s.fecha_entrega||'').substring(0,10)<=fin) tc+=parseFloat(s.imp_tec)||0;
+      if((s.fecha_entrega||'').substring(0,10)>=ini&&(s.fecha_entrega||'').substring(0,10)<=fin) tc+=(parseFloat(s.imp_tec)||0)+(parseFloat(s.imp_dir)||0);
     });
     valoresV.push(Math.round(tv*100)/100);
     valoresC.push(Math.round(tc*100)/100);
