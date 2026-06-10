@@ -552,6 +552,7 @@ table.rt tbody td.c{text-align:center;}
   <div class="de-tb">
     <div><div class="seh-ey">Gestión de datos</div>
       <div class="de-tb-t">Clientes &amp; Tarifas</div></div>
+    <button class="btn btn-s" onclick="recalcAllImpTec()" title="Recalcular Imp. H.Técnicas e Imp. H.Director para todos los servicios de cada cliente">🔄 Recalc. Importes</button>
     <button class="btn btn-s" onclick="exportTableXLS('tbl-cli','clientes')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-5 4h2.5l1.5 2 1.5-2H16l-2.5 3.5L16 17h-2.5L12 15l-1.5 2H8l2.5-3.5L8 10z"/></svg>Excel</button>
     <button class="btn btn-p" onclick="openMod('cli')">＋ Nuevo cliente</button>
   </div>
@@ -2739,6 +2740,62 @@ function _drawCOO(canvasId,labels,valores,colors,borders,tipo){
   else _grafChartC=chart;
 }
 
+
+
+// ── RECALC IMP_TEC / IMP_DIR DESDE TABLA CLIENTES ───────────
+async function recalcAllImpTec(){
+  const sb = getSB();
+  if(!sb){ toast('Sin conexión a Supabase'); return; }
+
+  let updated = 0, skipped = 0;
+  const batch = [];
+
+  for(const svc of DB.servicios){
+    const tarifa = getTarifa(svc.proyecto||'', svc.cliente2||'');
+    if(tarifa <= 0){ skipped++; continue; }
+
+    const new_imp_tec = Math.round(((svc.h_tec||0) * tarifa) * 100) / 100;
+    const new_imp_dir = Math.round(((svc.h_gest||0) * 30) * 100) / 100;
+
+    // Skip if already correct
+    if(Math.abs((svc.imp_tec||0) - new_imp_tec) < 0.01 &&
+       Math.abs((svc.imp_dir||0) - new_imp_dir) < 0.01){
+      skipped++; continue;
+    }
+
+    batch.push({ id: svc.id, titulo: svc.titulo, imp_tec: new_imp_tec, imp_dir: new_imp_dir });
+    // Update local DB immediately
+    svc.imp_tec = new_imp_tec;
+    svc.imp_dir = new_imp_dir;
+    updated++;
+  }
+
+  if(batch.length === 0){
+    toast('Todos los importes ya están al día (' + skipped + ' servicios revisados)');
+    return;
+  }
+
+  toast('Actualizando ' + batch.length + ' servicios...');
+
+  // Update Supabase in batches of 50
+  let errors = 0;
+  for(let i = 0; i < batch.length; i += 50){
+    const chunk = batch.slice(i, i + 50);
+    for(const row of chunk){
+      const { error } = await sb.from('servicios')
+        .update({ imp_tec: row.imp_tec, imp_dir: row.imp_dir })
+        .eq('id', row.id)
+        .eq('titulo', row.titulo);
+      if(error){ errors++; console.error('recalc error:', error); }
+    }
+  }
+
+  renderSvc(); renderKPI();
+  if(errors > 0)
+    toast('Actualizado con ' + errors + ' errores. ' + updated + ' servicios procesados.');
+  else
+    toast('✅ ' + updated + ' servicios actualizados (' + skipped + ' sin tarifa o ya correctos)');
+}
 
 // ── INIT ─────────────────────────────────────────────
 (async function(){
