@@ -745,6 +745,17 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
           <option value="9">Septiembre</option><option value="10">Octubre</option>
           <option value="11">Noviembre</option><option value="12">Diciembre</option>
         </select>
+        <label style="font-size:12px;font-weight:600;color:var(--fg-3);text-transform:uppercase;letter-spacing:.1em;">Tipo</label>
+        <select class="fsel" id="graf-tipo" onchange="renderGrafico()" style="width:80px;">
+          <option value="bar" selected>Barras</option>
+          <option value="line">Líneas</option>
+        </select>
+        <label style="font-size:12px;font-weight:600;color:var(--fg-3);text-transform:uppercase;letter-spacing:.1em;">Períodos</label>
+        <select class="fsel" id="graf-periodos" onchange="renderGrafico()" style="width:64px;">
+          <option value="6">6</option><option value="12">12</option>
+          <option value="13" selected>13</option><option value="18">18</option>
+          <option value="24">24</option><option value="36">36</option>
+        </select>
       </div>
     </div>
   </div>
@@ -2282,9 +2293,9 @@ function renderGrafico(){
 
   const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
-  // Generar los 13 períodos (mes actual + 12 anteriores)
+  const nPeriodos = parseInt(document.getElementById('graf-periodos')?.value||13);
   const periodos = [];
-  for(let i = 12; i >= 0; i--){
+  for(let i = nPeriodos-1; i >= 0; i--){
     let m = month - i;
     let y = year;
     while(m <= 0){ m += 12; y--; }
@@ -2336,9 +2347,10 @@ function renderGrafico(){
   }
 }
 
-function _drawGrafico(labels, valores, colors, borders){
+function _drawGrafico(labels, valores, colors, borders, chartType){
   const canvas = document.getElementById('graf-canvas');
   if(_grafChart){ _grafChart.destroy(); _grafChart = null; }
+  const isLine = chartType==='line';
 
   function fmtBar(n){
     const parts=n.toFixed(2).split('.');
@@ -2347,16 +2359,20 @@ function _drawGrafico(labels, valores, colors, borders){
   }
 
   _grafChart = new Chart(canvas, {
-    type: 'bar',
+    type: chartType||'bar',
     data: {
       labels,
       datasets: [{
         label: 'Importe COO (€)',
         data: valores,
-        backgroundColor: colors,
+        backgroundColor: isLine?borders:colors,
         borderColor: borders,
-        borderWidth: 1,
-        borderRadius: 4,
+        borderWidth: isLine?2:1,
+        borderRadius: isLine?0:4,
+        fill: isLine?false:undefined,
+        tension: isLine?0.35:0,
+        pointBackgroundColor: borders,
+        pointRadius: isLine?4:0,
       }]
     },
     options: {
