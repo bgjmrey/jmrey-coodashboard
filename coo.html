@@ -1535,33 +1535,31 @@ function clearSvcFilters(){
 // Also called from drill-bar ✕
 // clearDrillFilter defined below with drillKPIExact
 
+const SVC_NUM_COLS = ['h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec','precio','margen'];
+const SVC_DATE_COLS = ['fecha_acept','fecha_fprev','fecha_entrega'];
+
 function svcMatch(r, col, val){
   if(val===''||val===null||val===undefined) return true;
-  // Numeric range filter
-  if(typeof val==='object' && val!==null && !val.from_date && (val.from!==undefined||val.to!==undefined)){
-    const n=parseFloat(r[col])||0;
-    if(val.from!==null && val.from!==undefined && n < val.from) return false;
-    if(val.to  !==null && val.to  !==undefined && n > val.to  ) return false;
+  if(typeof val==='object' && val!==null){
+    // Numeric range: from/to are numbers
+    if(SVC_NUM_COLS.includes(col)){
+      const n=parseFloat(r[col])||0;
+      if(val.from!==null && val.from!==undefined && n < val.from) return false;
+      if(val.to  !==null && val.to  !==undefined && n > val.to  ) return false;
+      return true;
+    }
+    // Date range: from/to are strings like '2022-03-07'
+    if(SVC_DATE_COLS.includes(col)){
+      const d = (r[col]||'').substring(0,10);
+      if(val.from && d < val.from) return false;
+      if(val.to   && d > val.to  ) return false;
+      return true;
+    }
     return true;
   }
-  if(!val) return true;
-  // Date range filter
-  if(val && typeof val === 'object' && (val.from || val.to)){
-    const d = r[col]||'';
-    if(val.from && d < val.from) return false;
-    if(val.to   && d > val.to)   return false;
-    return true;
-  }
-  const map = {
-    id: r.id, titulo: (r.titulo||'').toLowerCase(), linea: (r.linea||'').toLowerCase(),
-    proyecto: r.proyecto, cliente2: (r.cliente2||'').toLowerCase(),
-    tecnico: r.tecnico, estado: r.estado, id_val: (r.id_val||'').toLowerCase(),
-    h_partner: String(r.h_partner), h_jmrey: String(r.h_jmrey||0),
-    h_prod: String(r.h_prod), h_tec: String(r.h_tec), h_gest: String(r.h_gest),
-    imp_tec: String(r.imp_tec),
-    fecha_acept: r.fecha_acept||'', fecha_fprev: r.fecha_fprev||'', fecha_entrega: r.fecha_entrega||''
-  };
-  return (map[col]||'').toLowerCase().includes(val);
+  // Text/select exact or substring match
+  const v = (r[col]||'').toString().toLowerCase();
+  return v.includes(val.toString().toLowerCase());
 }
 
 function renderSvc(){
