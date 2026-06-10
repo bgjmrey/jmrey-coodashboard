@@ -2622,7 +2622,7 @@ function initGrafSelectorsCOO(){
   document.getElementById('graf-month-coo').value=now.getMonth()+1;
 }
 
-function renderGraficoCOO(){
+async function renderGraficoCOO(){
   initGrafSelectorsCOO();
   const year=parseInt(document.getElementById('graf-year-coo').value);
   const month=parseInt(document.getElementById('graf-month-coo').value);
@@ -2632,7 +2632,28 @@ function renderGraficoCOO(){
   for(let i=12;i>=0;i--){let m=month-i,y=year;while(m<=0){m+=12;y--;}periodos.push({year:y,month:m});}
   window._grafPeriodosCOO=periodos;
 
-  const svcs=DB.servicios||[];
+  // Rango global: del inicio del primer período al fin del último
+  const rngFirst=mesRange(periodos[0].year,periodos[0].month);
+  const rngLast =mesRange(periodos[periodos.length-1].year,periodos[periodos.length-1].month);
+  const globalIni=dateToStr(rngFirst.ini), globalFin=dateToStr(rngLast.fin);
+
+  // Consultar Supabase directamente para datos frescos
+  let svcs=DB.servicios||[];
+  const sb=getSB();
+  if(sb){
+    const fields='tecnico,fecha_acept,fecha_entrega,imp_tec,imp_dir,h_gest';
+    const [r1,r2]=await Promise.all([
+      sb.from('servicios').select(fields).gte('fecha_acept',globalIni).lte('fecha_acept',globalFin),
+      sb.from('servicios').select(fields).gte('fecha_entrega',globalIni).lte('fecha_entrega',globalFin)
+    ]);
+    const merged=[...(r1.data||[]),...(r2.data||[])];
+    const seen=new Set();
+    svcs=merged.filter(s=>{
+      const k=`${s.fecha_acept||''}|${s.fecha_entrega||''}|${s.tecnico}|${s.imp_tec||0}`;
+      if(seen.has(k)) return false; seen.add(k); return true;
+    });
+  }
+
   const valoresV=[],valoresC=[];
   periodos.forEach(p=>{
     const rng=mesRange(p.year,p.month);
@@ -2641,9 +2662,7 @@ function renderGraficoCOO(){
     svcs.forEach(s=>{
       const fa=(s.fecha_acept||'').substring(0,10);
       const fe=(s.fecha_entrega||'').substring(0,10);
-      // Ventas: imp_tec del Director por fecha_acept
       if(s.tecnico===DIRECTOR && fa>=ini && fa<=fin) tv+=parseFloat(s.imp_tec)||0;
-      // Consumos: imp_tec (Director) + imp_dir (cualquiera con h_gest>0), por fecha_entrega
       if(fe>=ini && fe<=fin){
         if(s.tecnico===DIRECTOR) tc+=parseFloat(s.imp_tec)||0;
         if((s.h_gest||0)>0)     tc+=parseFloat(s.imp_dir)||0;
