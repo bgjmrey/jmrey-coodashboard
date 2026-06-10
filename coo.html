@@ -335,7 +335,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
 .filter-row input:focus,.filter-row select:focus{border-color:var(--accent);}
 .filter-row .ac-col{width:72px;}
 table.rt tbody tr{border-bottom:1px solid var(--border-s);transition:background 100ms;}
-table.rt td,table.rt th{overflow:hidden;}
+table.rt td,table.rt th{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 table.rt tbody tr:nth-child(even){background:var(--bg-e);}
 table.rt tbody tr:hover{background:var(--ivory-200);}
 table.rt tbody td{padding:6px var(--sp-3);color:var(--fg-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -488,8 +488,8 @@ table.rt tbody td.c{text-align:center;}
       <thead>
         <tr class="hdr-row">
           <th data-col="id">ID<span class="rh"></span></th>
-          <th data-col="titulo" style="min-width:180px">Título<span class="rh"></span></th>
-          <th data-col="linea" style="min-width:120px">Línea negocio<span class="rh"></span></th>
+          <th data-col="titulo">Título<span class="rh"></span></th>
+          <th data-col="linea">Línea negocio<span class="rh"></span></th>
           <th data-col="proyecto">Proyecto<span class="rh"></span></th>
           <th data-col="cliente2">Cliente<span class="rh"></span></th>
           <th data-col="tecnico">Técnico<span class="rh"></span></th>
@@ -531,7 +531,7 @@ table.rt tbody td.c{text-align:center;}
           <th data-col="id_svc">ID Servicio<span class="rh"></span></th>
           <th data-col="id_val">ID Val.<span class="rh"></span></th>
           <th data-col="cliente">Cliente<span class="rh"></span></th>
-          <th data-col="titulo" style="min-width:180px">Título<span class="rh"></span></th>
+          <th data-col="titulo">Título<span class="rh"></span></th>
           <th data-col="tecnico">Técnico<span class="rh"></span></th>
           <th data-col="h_prod" class="r">H.Prod<span class="rh"></span></th>
           <th data-col="h_gest" class="r">H.Gest<span class="rh"></span></th>
@@ -1502,9 +1502,9 @@ function buildSvcFilterRow(){
       td.appendChild(wrap);
     } else if(['h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec'].includes(col)){
       const wrap=document.createElement('div'); wrap.className='filter-range';
-      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:28px;font-size:11px;padding:2px 3px;';
+      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:20px;font-size:10px;padding:1px 2px;';
       const sp=document.createElement('span'); sp.textContent='–';
-      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:28px;font-size:11px;padding:2px 3px;';
+      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:20px;font-size:10px;padding:1px 2px;';
       const fn=()=>{
         const v1=i1.value, v2=i2.value;
         svcFilters[col]=(v1!==''||v2!=='')?{from:v1!==''?parseFloat(v1):null,to:v2!==''?parseFloat(v2):null}:'';
@@ -2027,9 +2027,9 @@ function buildCliFilterRow(){
       td.appendChild(inp);
     } else {
       const wrap=document.createElement('div'); wrap.className='filter-range';
-      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:24px;font-size:11px;padding:2px 3px;';
+      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:18px;font-size:10px;padding:1px 2px;';
       const sp=document.createElement('span'); sp.textContent='–';
-      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:24px;font-size:11px;padding:2px 3px;';
+      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:18px;font-size:10px;padding:1px 2px;';
       const fn=()=>{
         const v1=i1.value, v2=i2.value;
         cliFilters[col]=(v1!==''||v2!=='')?{from:v1!==''?parseFloat(v1):null,to:v2!==''?parseFloat(v2):null}:'';
@@ -2301,9 +2301,9 @@ function initResize(tableId){
     }
     function moveDrag(clientX){
       const w = Math.max(10, startW + clientX - startX);
-      th.style.minWidth = w + 'px';
-      th.style.width = w + 'px';
+      th.style.minWidth = '0';
       th.style.maxWidth = w + 'px';
+      th.style.width = w + 'px';
     }
     function endDrag(){
       handle.classList.remove('dragging');
