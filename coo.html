@@ -1499,19 +1499,17 @@ function buildSvcFilterRow(){
       wrap.appendChild(inp1); wrap.appendChild(sep); wrap.appendChild(inp2);
       td.appendChild(wrap);
     } else if(['h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec'].includes(col)){
-      // Numeric filter: ≥ value
-      const wrap = document.createElement('div');
-      wrap.style.cssText='display:flex;align-items:center;gap:2px;';
-      const lbl = document.createElement('span'); lbl.textContent='≥'; lbl.style.cssText='font-size:10px;color:var(--fg-d2);';
-      const inp = document.createElement('input');
-      inp.type='number'; inp.placeholder='0'; inp.dataset.col=col;
-      inp.style.cssText='width:60px;';
-      inp.addEventListener('input',e=>{
-        const v=parseFloat(e.target.value);
-        svcFilters[col]=isNaN(v)?'':v;
+      const wrap=document.createElement('div'); wrap.className='filter-range';
+      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:52px;';
+      const sp=document.createElement('span'); sp.textContent='–';
+      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:52px;';
+      const fn=()=>{
+        const v1=i1.value, v2=i2.value;
+        svcFilters[col]=(v1!==''||v2!=='')?{from:v1!==''?parseFloat(v1):null,to:v2!==''?parseFloat(v2):null}:'';
         renderSvc();
-      });
-      wrap.appendChild(lbl); wrap.appendChild(inp);
+      };
+      i1.addEventListener('input',fn); i2.addEventListener('input',fn);
+      wrap.appendChild(i1); wrap.appendChild(sp); wrap.appendChild(i2);
       td.appendChild(wrap);
     } else {
       const inp = document.createElement('input');
@@ -2028,17 +2026,17 @@ function buildCliFilterRow(){
       inp.addEventListener('input',e=>{cliFilters[col]=e.target.value.toLowerCase();renderCli();});
       td.appendChild(inp);
     } else {
-      const wrap=document.createElement('div');
-      wrap.style.cssText='display:flex;align-items:center;gap:2px;';
-      const lbl=document.createElement('span'); lbl.textContent='≥'; lbl.style.cssText='font-size:10px;color:var(--fg-d2);';
-      const inp=document.createElement('input'); inp.type='number'; inp.placeholder='0'; inp.dataset.col=col;
-      inp.style.cssText='width:55px;';
-      inp.addEventListener('input',e=>{
-        const v=parseFloat(e.target.value);
-        cliFilters[col]=isNaN(v)?'':v;
+      const wrap=document.createElement('div'); wrap.className='filter-range';
+      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:48px;';
+      const sp=document.createElement('span'); sp.textContent='–';
+      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:48px;';
+      const fn=()=>{
+        const v1=i1.value, v2=i2.value;
+        cliFilters[col]=(v1!==''||v2!=='')?{from:v1!==''?parseFloat(v1):null,to:v2!==''?parseFloat(v2):null}:'';
         renderCli();
-      });
-      wrap.appendChild(lbl); wrap.appendChild(inp);
+      };
+      i1.addEventListener('input',fn); i2.addEventListener('input',fn);
+      wrap.appendChild(i1); wrap.appendChild(sp); wrap.appendChild(i2);
       td.appendChild(wrap);
     }
     fr.appendChild(td);
