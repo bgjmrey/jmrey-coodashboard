@@ -1267,9 +1267,9 @@ function buildLicFilterRow(){
       td.appendChild(sel);
     } else if(['dias_fact','cantidad','pvp_mes_compl','pvp','importe','coste_mes_compl','coste','importe_coste','importe_margen_total','importe_margen_jmrey','importe_margen_juanma','importe_margen_borja','importe_margen_agente'].includes(col)){
       const wrap=document.createElement('div'); wrap.className='filter-range';
-      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:38px;';
+      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:28px;font-size:11px;padding:2px 3px;';
       const sp=document.createElement('span'); sp.textContent='–'; sp.style.cssText='font-size:10px;color:var(--fg-d2);';
-      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:38px;';
+      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:28px;font-size:11px;padding:2px 3px;';
       const fn=()=>{
         const v1=i1.value, v2=i2.value;
         licFilters[col]=(v1!==''||v2!=='')?{from:v1!==''?parseFloat(v1):null,to:v2!==''?parseFloat(v2):null}:'';
@@ -1310,9 +1310,9 @@ function buildPrecFilterRow(){
       td.appendChild(sel);
     } else if(['pvp_mes','coste_mes','pvp_mes_arrow','coste_mes_arrow'].includes(col)){
       const wrap=document.createElement('div'); wrap.className='filter-range';
-      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:38px;';
+      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:28px;font-size:11px;padding:2px 3px;';
       const sp=document.createElement('span'); sp.textContent='–'; sp.style.cssText='font-size:10px;color:var(--fg-d2);';
-      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:38px;';
+      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:28px;font-size:11px;padding:2px 3px;';
       const fn=()=>{
         const v1=i1.value, v2=i2.value;
         precFilters[col]=(v1!==''||v2!=='')?{from:v1!==''?parseFloat(v1):null,to:v2!==''?parseFloat(v2):null}:'';

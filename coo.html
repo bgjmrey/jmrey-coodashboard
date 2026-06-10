@@ -327,6 +327,7 @@ table.rt .hdr-row th{background:var(--bg-dark);padding:7px var(--sp-3);font-size
 table.rt .hdr-row th.r{text-align:right;}
 table.rt .hdr-row th.ac-col{text-align:center;width:72px;}
 table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);padding:3px 4px;}
+.filter-row td{padding-bottom:5px !important;}
 .filter-row input,.filter-row select{
   font-family:var(--ff-sans);font-size:var(--fz-xs);color:var(--fg-1);
   background:var(--bg-e);border:1px solid var(--border);border-radius:3px;
@@ -334,6 +335,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
 .filter-row input:focus,.filter-row select:focus{border-color:var(--accent);}
 .filter-row .ac-col{width:72px;}
 table.rt tbody tr{border-bottom:1px solid var(--border-s);transition:background 100ms;}
+table.rt td,table.rt th{overflow:hidden;}
 table.rt tbody tr:nth-child(even){background:var(--bg-e);}
 table.rt tbody tr:hover{background:var(--ivory-200);}
 table.rt tbody td{padding:6px var(--sp-3);color:var(--fg-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1500,9 +1502,9 @@ function buildSvcFilterRow(){
       td.appendChild(wrap);
     } else if(['h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec'].includes(col)){
       const wrap=document.createElement('div'); wrap.className='filter-range';
-      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:38px;';
+      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:28px;font-size:11px;padding:2px 3px;';
       const sp=document.createElement('span'); sp.textContent='–';
-      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:38px;';
+      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:28px;font-size:11px;padding:2px 3px;';
       const fn=()=>{
         const v1=i1.value, v2=i2.value;
         svcFilters[col]=(v1!==''||v2!=='')?{from:v1!==''?parseFloat(v1):null,to:v2!==''?parseFloat(v2):null}:'';
@@ -2025,9 +2027,9 @@ function buildCliFilterRow(){
       td.appendChild(inp);
     } else {
       const wrap=document.createElement('div'); wrap.className='filter-range';
-      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:32px;';
+      const i1=document.createElement('input'); i1.type='number'; i1.placeholder='min'; i1.style.cssText='width:24px;font-size:11px;padding:2px 3px;';
       const sp=document.createElement('span'); sp.textContent='–';
-      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:32px;';
+      const i2=document.createElement('input'); i2.type='number'; i2.placeholder='max'; i2.style.cssText='width:24px;font-size:11px;padding:2px 3px;';
       const fn=()=>{
         const v1=i1.value, v2=i2.value;
         cliFilters[col]=(v1!==''||v2!=='')?{from:v1!==''?parseFloat(v1):null,to:v2!==''?parseFloat(v2):null}:'';
@@ -2065,7 +2067,7 @@ function renderCli(){
     <td style="font-size:var(--fz-xs)">${shortMail(r.tecnico)}</td>
     <td class="r" style="font-weight:600">${r.precio!=null?fmtE(r.precio):'—'}</td>
     <td class="r">${r.margen!=null?fmt(r.margen,0)+' %':'—'}</td>
-    <td class="c"><button class="bi" onclick="editCliFn(${DB.clientes.indexOf(r)})">✏️</button> <button class="bi" onclick="delCli(${DB.clientes.indexOf(r)})">🗑️</button></td>
+    <td class="c" style="white-space:nowrap"><button class="bi" onclick="editCliFn(${DB.clientes.indexOf(r)})">✏️</button><button class="bi" onclick="delCli(${DB.clientes.indexOf(r)})">🗑️</button></td>
   </tr>`).join('');
 }
 
@@ -2298,8 +2300,10 @@ function initResize(tableId){
       handle.classList.add('dragging');
     }
     function moveDrag(clientX){
-      const w = Math.max(20, startW + clientX - startX);
+      const w = Math.max(10, startW + clientX - startX);
+      th.style.minWidth = w + 'px';
       th.style.width = w + 'px';
+      th.style.maxWidth = w + 'px';
     }
     function endDrag(){
       handle.classList.remove('dragging');
