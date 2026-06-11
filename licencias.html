@@ -447,7 +447,10 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       </select>
     </div>
         <div class="fdiv"></div>
-    <div class="fg" style="justify-content:flex-end">
+    <div class="fg" style="justify-content:flex-end;gap:var(--sp-3);align-items:center;">
+      <span id="badge-periodo" style="display:none;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:3px 10px;border-radius:20px;background:var(--accent);color:#fff;">🔒 CERRADO</span>
+      <button id="btn-cerrar-periodo" class="btn btn-s" onclick="cerrarPeriodo()" style="white-space:nowrap">🔒 Cerrar período</button>
+      <button id="btn-abrir-periodo" class="btn btn-s" onclick="abrirPeriodo()" style="white-space:nowrap;display:none;">🔓 Abrir período</button>
       <button class="btn btn-s" onclick="sendLicKpiEmail()" style="white-space:nowrap">&#x2709;&#xFE0F; Enviar por email</button>
     </div>
   </div>
@@ -1025,6 +1028,152 @@ function clearLicDrillFilter(){
   renderLic();
 }
 
+
+// ── PERÍODOS CERRADOS ────────────────────────────────────────
+function isPeriodoCerrado(year, month){
+  return (DB.periodos_cerrados||[]).some(p=>p.anio===year && p.mes===month);
+}
+
+// Devuelve licencias para KPIs: cerradas→licencia_periodo_cerrado, abiertas→licencias
+function getLicsAcumPeriodo(year, month){
+  if(isPeriodoCerrado(year, month)){
+    // Datos del período cerrado: ya tienen importes calculados, sin necesidad de calcLicRowSimple
+    return {
+      source: 'cerrado',
+      lics: (DB.licencias_cerradas||[]).filter(r=>r.anio===year && r.mes===month)
+    };
+  }
+  // Período abierto: calcular desde licencias originales
+  const acumFin = licDateStr(licMesRange(year,month).fin);
+  const mesIni  = year+'-'+String(month).padStart(2,'0')+'-01';
+  const mesFin  = year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
+  function licActiva(r){
+    if(!r.fecha_fin || r.anio_mes_fin===999999) return true;
+    const fin=new Date(r.fecha_fin);
+    return fin.getFullYear()*100+(fin.getMonth()+1) >= year*100+month;
+  }
+  return {
+    source: 'abierto',
+    lics: (DB.licencias||[]).filter(r=>{
+      const fi=(r.fecha_inicio||'').substring(0,10);
+      return fi.length===10 && fi<=acumFin && licActiva(r);
+    }),
+    licsMes: (DB.licencias||[]).filter(r=>{
+      const fi=(r.fecha_inicio||'').substring(0,10);
+      return fi>=mesIni && fi<=mesFin && licActiva(r);
+    })
+  };
+}
+
+async function cerrarPeriodo(){
+  const year  = parseInt(document.getElementById('lic-kpi-year').value);
+  const month = parseInt(document.getElementById('lic-kpi-month').value);
+  if(isPeriodoCerrado(year, month)){
+    toast('Este período ya está cerrado'); return;
+  }
+  const MESES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  if(!confirm('¿Cerrar '+MESES[month]+' '+year+'? Se guardarán los importes actuales y el período quedará bloqueado.')) return;
+
+  const sb=getSB(); if(!sb){ toast('Sin conexión'); return; }
+  toast('Cerrando período...');
+
+  // 1. Insert en periodo_cerrado
+  const {error:e1}=await sb.from('periodo_cerrado').insert({anio:year, mes:month});
+  if(e1){ toast('Error al cerrar: '+e1.message); return; }
+
+  // 2. Calcular y guardar registros en licencia_periodo_cerrado
+  const acumFin = licDateStr(licMesRange(year,month).fin);
+  function licActiva(r){
+    if(!r.fecha_fin || r.anio_mes_fin===999999) return true;
+    const fin=new Date(r.fecha_fin);
+    return fin.getFullYear()*100+(fin.getMonth()+1) >= year*100+month;
+  }
+  const licsActivas = (DB.licencias||[]).filter(r=>{
+    const fi=(r.fecha_inicio||'').substring(0,10);
+    return fi.length===10 && fi<=acumFin && licActiva(r);
+  });
+
+  // Calcular importes con calcLicRowSimple para el período
+  const rows=[];
+  for(const r of licsActivas){
+    const c=calcLicRowSimple(r, year, month);
+    if(!c) continue;
+    const diasMes=new Date(year,month,0).getDate();
+    const pvpMes  =lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio)?.pvp_mes||r.pvp_mes_compl||0;
+    const costeMes=lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio)?.coste_mes||r.coste_mes_compl||0;
+    const dias=calcDiasKPI(r,year,month);
+    const pvp  = dias<diasMes ? pvpMes*dias/diasMes  : pvpMes;
+    const coste= dias<diasMes ? costeMes*dias/diasMes: costeMes;
+    const cant=parseFloat(r.cantidad)||0;
+    const agt=lookupAgente(r.agente);
+    const mrg=pvp-coste;
+    rows.push({
+      anio:year, mes:month, licencia_id:r.id,
+      anio_mes:r.anio_mes, proveedor:r.proveedor,
+      nro_contrato:r.nro_contrato, nro_pedido_cliente:r.nro_pedido_cliente,
+      fecha_solicitud:r.fecha_solicitud, anio_mes_inicio:r.anio_mes_inicio,
+      fecha_inicio:r.fecha_inicio, anio_mes_fin:r.anio_mes_fin, fecha_fin:r.fecha_fin,
+      dias_fact:dias, concepto:r.concepto, linea_producto:r.linea_producto,
+      compromiso:r.compromiso, pago:r.pago, proy:r.proy, cliente:r.cliente,
+      cantidad:cant,
+      pvp_mes_compl:pvpMes, pvp:pvp, importe:pvp*cant,
+      coste_mes_compl:costeMes, coste:coste, importe_coste:coste*cant,
+      pct_margen:pvp>0?mrg/pvp:0, margen:mrg, importe_margen_total:(pvp-coste)*cant,
+      pct_jmrey:agt.pct_jmrey||0, margen_jmrey:(mrg*(agt.pct_jmrey||0)), importe_margen_jmrey:(mrg*(agt.pct_jmrey||0)*cant),
+      pct_juanma:agt.pct_juanma||0, margen_juanma:(mrg*(agt.pct_juanma||0)), importe_margen_juanma:(mrg*(agt.pct_juanma||0)*cant),
+      pct_borja:agt.pct_borja||0, margen_borja:(mrg*(agt.pct_borja||0)), importe_margen_borja:(mrg*(agt.pct_borja||0)*cant),
+      agente:r.agente, pct_agente:agt.margen||0, margen_agente:(mrg*(agt.margen||0)), importe_margen_agente:(mrg*(agt.margen||0)*cant),
+      hl_fecha_solicitud:r.hl_fecha_solicitud, hl_fecha_inicio:r.hl_fecha_inicio, hl_fecha_fin:r.hl_fecha_fin
+    });
+  }
+
+  // Insert en lotes de 50
+  let errores=0;
+  for(let i=0;i<rows.length;i+=50){
+    const {error:e2}=await sb.from('licencia_periodo_cerrado').insert(rows.slice(i,i+50));
+    if(e2){ errores++; console.error('cerrar error:',e2); }
+  }
+
+  if(errores>0){ toast('Cerrado con '+errores+' errores'); return; }
+
+  // Reload DB
+  await hydrateDB();
+  updateBadgePeriodo(year, month);
+  renderLicKPI();
+  toast('✅ Período '+MESES[month]+' '+year+' cerrado ('+rows.length+' registros)');
+}
+
+async function abrirPeriodo(){
+  const year  = parseInt(document.getElementById('lic-kpi-year').value);
+  const month = parseInt(document.getElementById('lic-kpi-month').value);
+  if(!isPeriodoCerrado(year, month)){
+    toast('Este período no está cerrado'); return;
+  }
+  const MESES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  if(!confirm('¿Reabrir '+MESES[month]+' '+year+'? Se eliminarán los datos del período cerrado.')) return;
+
+  const sb=getSB(); if(!sb){ toast('Sin conexión'); return; }
+  toast('Reabriendo período...');
+
+  const [r1,r2]=await Promise.all([
+    sb.from('licencia_periodo_cerrado').delete().eq('anio',year).eq('mes',month),
+    sb.from('periodo_cerrado').delete().eq('anio',year).eq('mes',month)
+  ]);
+  if(r1.error||r2.error){ toast('Error al reabrir: '+(r1.error?.message||r2.error?.message)); return; }
+
+  await hydrateDB();
+  updateBadgePeriodo(year, month);
+  renderLicKPI();
+  toast('✅ Período '+MESES[month]+' '+year+' reabierto');
+}
+
+function updateBadgePeriodo(year, month){
+  const cerrado = isPeriodoCerrado(year, month);
+  document.getElementById('badge-periodo').style.display = cerrado ? 'inline-block' : 'none';
+  document.getElementById('btn-cerrar-periodo').style.display = cerrado ? 'none' : 'inline-block';
+  document.getElementById('btn-abrir-periodo').style.display  = cerrado ? 'inline-block' : 'none';
+}
+
 // ── DB ──────────────────────────────────────────────────────
 const DB = { licencias:[], precios:[], agentes:[] };
 
@@ -1073,14 +1222,18 @@ function closeMod(id){ document.getElementById('mod-'+id).style.display='none'; 
 async function hydrateDB(){
   const sb=getSB(); if(!sb) return;
   try{
-    const [la,lp,ll] = await Promise.all([
+    const [la,lp,ll,lpc,pc] = await Promise.all([
       sb.from('agentes').select('*').order('agente'),
       sb.from('precios_licencias').select('*').order('concepto').order('compromiso').order('pago').order('fecha_fin_pvp',{nullsFirst:false}),
-      sb.from('licencias').select('*').order('anio_mes',{ascending:false}).order('cliente')
+      sb.from('licencias').select('*').order('anio_mes',{ascending:false}).order('cliente'),
+      sb.from('licencia_periodo_cerrado').select('*'),
+      sb.from('periodo_cerrado').select('*')
     ]);
-    if(la.data) DB.agentes   = la.data;
-    if(lp.data) DB.precios   = lp.data;
-    if(ll.data) DB.licencias = ll.data;
+    if(la.data)  DB.agentes            = la.data;
+    if(lp.data)  DB.precios            = lp.data;
+    if(ll.data)  DB.licencias          = ll.data;
+    if(lpc.data) DB.licencias_cerradas = lpc.data;
+    if(pc.data)  DB.periodos_cerrados  = pc.data;
     toast('Cargado: '+DB.agentes.length+' agentes, '+DB.precios.length+' precios, '+DB.licencias.length+' licencias');
   } catch(e){
     const msg=e?.message||'';
@@ -1227,6 +1380,9 @@ function calcRow(r, refYear, refMonth){
 
 // ── RENDER LICENCIAS ─────────────────────────────────────────
 let licFilters={};
+// Datos adicionales para períodos cerrados
+if(!DB.periodos_cerrados) DB.periodos_cerrados=[];
+if(!DB.licencias_cerradas) DB.licencias_cerradas=[];
 let precFilters={};
 let agtFilters={};
 
@@ -1783,31 +1939,31 @@ function renderLicKPI(){
   const year=parseInt(document.getElementById('lic-kpi-year').value);
   const month=parseInt(document.getElementById('lic-kpi-month').value);
   window._licKPIYear=year; window._licKPIMonth=month;
-  // Re-render Licencias tab if currently visible
+  updateBadgePeriodo(year, month);
   if(document.getElementById('sec-licencias').classList.contains('active')) renderLic();
   const MESES_ES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const mesIni=year+'-'+String(month).padStart(2,'0')+'-01';
-  const mesFin=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
-  const acumFin=licDateStr(licMesRange(year,month).fin);
-  // Excluir licencias cuya fecha_fin ya pasó antes del período
-  function licActiva(r, refY, refM){
-    if(!r.fecha_fin || r.anio_mes_fin===999999) return true;
-    const fin=new Date(r.fecha_fin);
-    const finMes=fin.getFullYear()*100+(fin.getMonth()+1);
-    return finMes >= refY*100+refM;
+  updateBadgePeriodo(year, month);
+  const periodoData = getLicsAcumPeriodo(year, month);
+  const licAcum = periodoData.lics;
+  // licMes: nuevas licencias del mes (solo períodos abiertos)
+  let licMes = [];
+  if(periodoData.source === 'abierto'){
+    licMes = periodoData.licsMes||[];
   }
-  const licMes=DB.licencias.filter(r=>{
-    const fi=(r.fecha_inicio||'').substring(0,10);
-    return fi>=mesIni && fi<=mesFin && licActiva(r,year,month);
-  });
-  const licAcum=DB.licencias.filter(r=>{
-    const fi=(r.fecha_inicio||'').substring(0,10);
-    return fi.length===10 && fi<=acumFin && licActiva(r,year,month);
-  });
+  // Para períodos cerrados, las "nuevas" del mes también vienen de licencia_periodo_cerrado
+  // pero filtradas por fecha_inicio del mes
+  if(periodoData.source === 'cerrado'){
+    const mesIni=year+'-'+String(month).padStart(2,'0')+'-01';
+    const mesFin=year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
+    licMes = licAcum.filter(r=>{
+      const fi=(r.fecha_inicio||'').substring(0,10);
+      return fi>=mesIni && fi<=mesFin;
+    });
+  }
   document.getElementById('lic-kpi-period').textContent='Acumulado '+MESES_ES[month]+' '+year;
-  renderNuevasLicencias(licMes, year, month);
-  renderAcumCOO(licAcum, year, month);
-  renderAcumAgente(licAcum, year, month);
+  renderNuevasLicencias(licMes, year, month, periodoData.source);
+  renderAcumCOO(licAcum, year, month, periodoData.source);
+  renderAcumAgente(licAcum, year, month, periodoData.source);
 }
 
 function fmtE(v){ if(v===null||v===undefined||isNaN(parseFloat(v))) return '—'; const n=parseFloat(v); const parts=n.toFixed(2).split('.'); parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.'); return parts.join(',')+' €'; }
@@ -1818,7 +1974,7 @@ const _licExpanded = new Set(); // 'fecha' pivots
 const _licExpanded2 = new Set(); // 'linea' pivots
 const _licExpandedSets = { '_licExpanded': _licExpanded, '_licExpanded2': _licExpanded2 };
 
-function renderNuevasLicencias(lics, refYear, refMonth){
+function renderNuevasLicencias(lics, refYear, refMonth, source){
   const today = new Date().toISOString().slice(0,10);
 
   // Pivot 1: Cliente > Fecha > Concepto
@@ -1840,7 +1996,16 @@ function renderNuevasLicencias(lics, refYear, refMonth){
   // Pivot 2: Cliente > Línea > Concepto
   const p2 = {};
   lics.forEach(r=>{
-    const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    let c;
+    if(source==='cerrado'){
+      // Datos ya calculados en licencia_periodo_cerrado
+      const cant=parseFloat(r.cantidad)||0;
+      c={cant, pvpTotal:(r.importe||0), costeTotal:(r.importe_coste||0),
+         mrgJmrey:(r.importe_margen_jmrey||0), mrgJuanma:(r.importe_margen_juanma||0),
+         mrgBorja:(r.importe_margen_borja||0), mrgAgente:(r.importe_margen_agente||0)};
+    } else {
+      c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    }
     const cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p2[cli]) p2[cli]={cant:0,pvp:0,coste:0,children:{}};
     p2[cli].cant+=c.cant; p2[cli].pvp+=c.pvpTotal; p2[cli].coste+=c.costeTotal;
@@ -1937,7 +2102,7 @@ function toggleLicPivot(key, setName){
 
 // ── 3.2 Acumulado COO ──
 const _acumExpanded = new Set();
-function renderAcumCOO(lics, refYear, refMonth){
+function renderAcumCOO(lics, refYear, refMonth, source){
   // Tabla resumen por cliente
   const byClient = {};
   lics.forEach(r=>{
@@ -1968,7 +2133,16 @@ function renderAcumCOO(lics, refYear, refMonth){
   // Tabla dinámica: Cliente > Línea > Concepto con Cantidad e Importe
   const p={};
   lics.forEach(r=>{
-    const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    let c;
+    if(source==='cerrado'){
+      // Datos ya calculados en licencia_periodo_cerrado
+      const cant=parseFloat(r.cantidad)||0;
+      c={cant, pvpTotal:(r.importe||0), costeTotal:(r.importe_coste||0),
+         mrgJmrey:(r.importe_margen_jmrey||0), mrgJuanma:(r.importe_margen_juanma||0),
+         mrgBorja:(r.importe_margen_borja||0), mrgAgente:(r.importe_margen_agente||0)};
+    } else {
+      c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    }
     const cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[cli]) p[cli]={cant:0,pvp:0,children:{}};
     p[cli].cant+=c.cant; p[cli].pvp+=c.mrgBorja;
@@ -2030,10 +2204,18 @@ function toggleAcumCOO(key){
 
 // ── 3.3 Acumulado Agente ──
 const _acumAgtExpanded = new Set();
-function renderAcumAgente(lics, refYear, refMonth){
+function renderAcumAgente(lics, refYear, refMonth, source){
   const p={};
   lics.forEach(r=>{
-    const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    let c;
+    if(source==='cerrado'){
+      const cant=parseFloat(r.cantidad)||0;
+      c={cant, pvpTotal:(r.importe||0), costeTotal:(r.importe_coste||0),
+         mrgJmrey:(r.importe_margen_jmrey||0), mrgJuanma:(r.importe_margen_juanma||0),
+         mrgBorja:(r.importe_margen_borja||0), mrgAgente:(r.importe_margen_agente||0)};
+    } else {
+      c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    }
     const agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[agt]) p[agt]={cant:0,pvp:0,children:{}};
     p[agt].cant+=c.cant; p[agt].pvp+=(c.mrgAgente||0);
@@ -2303,10 +2485,15 @@ function renderGrafico(){
   }
 
   window._grafPeriodos = periodos;
-  // Para cada período calcular importe COO (mrgBorja) sumando todas las licencias activas
+  // Para cada período: usar datos cerrados si disponibles, o calcular desde licencias
   const valores = periodos.map(p => {
+    const pd = getLicsAcumPeriodo(p.year, p.month);
     let total = 0;
-    DB.licencias.forEach(r => {
+    if(pd.source === 'cerrado'){
+      pd.lics.forEach(r=>{ total += (parseFloat(r.importe_margen_borja)||0); });
+      return Math.round(total*100)/100;
+    }
+    pd.lics.forEach(r => {
       const c = calcLicRowSimple(r, p.year, p.month);
       if(!c) return;
       total += c.mrgBorja;
