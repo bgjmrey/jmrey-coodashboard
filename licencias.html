@@ -446,11 +446,13 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
         <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
       </select>
     </div>
+    <div class="fg" style="align-items:flex-end;gap:var(--sp-2);">
+      <span id="badge-periodo" style="display:none;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:3px 10px;border-radius:20px;background:var(--accent);color:#fff;">🔒 CERRADO</span>
+      <button id="btn-cerrar-periodo" class="btn btn-s" onclick="cerrarPeriodo()" style="white-space:nowrap">🔒 Cerrar</button>
+      <button id="btn-abrir-periodo" class="btn btn-s" onclick="abrirPeriodo()" style="white-space:nowrap;display:none;">🔓 Abrir</button>
+    </div>
         <div class="fdiv"></div>
     <div class="fg" style="justify-content:flex-end;gap:var(--sp-3);align-items:center;">
-      <span id="badge-periodo" style="display:none;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:3px 10px;border-radius:20px;background:var(--accent);color:#fff;">🔒 CERRADO</span>
-      <button id="btn-cerrar-periodo" class="btn btn-s" onclick="cerrarPeriodo()" style="white-space:nowrap">🔒 Cerrar período</button>
-      <button id="btn-abrir-periodo" class="btn btn-s" onclick="abrirPeriodo()" style="white-space:nowrap;display:none;">🔓 Abrir período</button>
       <button class="btn btn-s" onclick="sendLicKpiEmail()" style="white-space:nowrap">&#x2709;&#xFE0F; Enviar por email</button>
     </div>
   </div>
@@ -1031,7 +1033,7 @@ function clearLicDrillFilter(){
 
 // ── PERÍODOS CERRADOS ────────────────────────────────────────
 function isPeriodoCerrado(year, month){
-  return (DB.periodos_cerrados||[]).some(p=>p.anio===year && p.mes===month);
+  return (DB.periodos_cerrados||[]).some(p=>parseInt(p.anio)===parseInt(year) && parseInt(p.mes)===parseInt(month));
 }
 
 // Devuelve licencias para KPIs: cerradas→licencia_periodo_cerrado, abiertas→licencias
@@ -1040,7 +1042,7 @@ function getLicsAcumPeriodo(year, month){
     // Datos del período cerrado: ya tienen importes calculados, sin necesidad de calcLicRowSimple
     return {
       source: 'cerrado',
-      lics: (DB.licencias_cerradas||[]).filter(r=>r.anio===year && r.mes===month)
+      lics: (DB.licencias_cerradas||[]).filter(r=>parseInt(r.anio)===parseInt(year) && parseInt(r.mes)===parseInt(month))
     };
   }
   // Período abierto: calcular desde licencias originales
@@ -1175,7 +1177,7 @@ function updateBadgePeriodo(year, month){
 }
 
 // ── DB ──────────────────────────────────────────────────────
-const DB = { licencias:[], precios:[], agentes:[] };
+const DB = { licencias:[], precios:[], agentes:[], periodos_cerrados:[], licencias_cerradas:[] };
 
 // ── UTILITIES ───────────────────────────────────────────────
 let _toastTimer;
@@ -1234,7 +1236,7 @@ async function hydrateDB(){
     if(ll.data)  DB.licencias          = ll.data;
     if(lpc.data) DB.licencias_cerradas = lpc.data;
     if(pc.data)  DB.periodos_cerrados  = pc.data;
-    toast('Cargado: '+DB.agentes.length+' agentes, '+DB.precios.length+' precios, '+DB.licencias.length+' licencias');
+    toast('Cargado: '+DB.agentes.length+' agentes, '+DB.precios.length+' precios, '+DB.licencias.length+' licencias | Cerrados: '+DB.periodos_cerrados.length+' | Lics cerradas: '+DB.licencias_cerradas.length);
   } catch(e){
     const msg=e?.message||'';
     if(!msg.includes('DataCloneError')&&!msg.includes('postMessage'))
