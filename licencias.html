@@ -447,7 +447,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       </select>
     </div>
     <div class="fg" style="align-items:flex-end;gap:var(--sp-2);">
-      <span id="badge-periodo" style="display:none;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:3px 10px;border-radius:20px;background:var(--accent);color:#fff;">🔒 CERRADO</span>
+      <span id="badge-periodo" style="display:none;font-size:18px;line-height:1;" title="Período cerrado">🔒</span>
       <button id="btn-cerrar-periodo" class="btn btn-s" onclick="cerrarPeriodo()" style="white-space:nowrap">🔒 Cerrar</button>
       <button id="btn-abrir-periodo" class="btn btn-s" onclick="abrirPeriodo()" style="white-space:nowrap;display:none;">🔓 Abrir</button>
     </div>
@@ -1982,7 +1982,15 @@ function renderNuevasLicencias(lics, refYear, refMonth, source){
   // Pivot 1: Cliente > Fecha > Concepto
   const p1 = {};
   lics.forEach(r=>{
-    const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    let c;
+    if(source==='cerrado'){
+      const cant=parseFloat(r.cantidad)||0;
+      c={cant, pvpTotal:(parseFloat(r.importe)||0), costeTotal:(parseFloat(r.importe_coste)||0),
+         mrgJmrey:(parseFloat(r.importe_margen_jmrey)||0), mrgJuanma:(parseFloat(r.importe_margen_juanma)||0),
+         mrgBorja:(parseFloat(r.importe_margen_borja)||0)};
+    } else {
+      c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    }
     const cli=r.cliente||'—', fecha=(r.fecha_inicio||'').substring(0,10);
     if(!p1[cli]) p1[cli]={cant:0,pvp:0,coste:0,children:{}};
     p1[cli].cant+=c.cant; p1[cli].pvp+=c.pvpTotal; p1[cli].coste+=c.costeTotal;
@@ -2108,7 +2116,15 @@ function renderAcumCOO(lics, refYear, refMonth, source){
   // Tabla resumen por cliente
   const byClient = {};
   lics.forEach(r=>{
-    const c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    let c;
+    if(source==='cerrado'){
+      const cant=parseFloat(r.cantidad)||0;
+      c={cant, pvpTotal:(parseFloat(r.importe)||0), costeTotal:(parseFloat(r.importe_coste)||0),
+         mrgJmrey:(parseFloat(r.importe_margen_jmrey)||0), mrgJuanma:(parseFloat(r.importe_margen_juanma)||0),
+         mrgBorja:(parseFloat(r.importe_margen_borja)||0), mrgAgente:(parseFloat(r.importe_margen_agente)||0)};
+    } else {
+      c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
+    }
     const cli=r.cliente||'—';
     if(!byClient[cli]) byClient[cli]={pvp:0,coste:0,mrgJmrey:0,mrgJuanma:0,mrgBorja:0};
     byClient[cli].pvp+=c.pvpTotal; byClient[cli].coste+=c.costeTotal;
