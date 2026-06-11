@@ -1039,10 +1039,14 @@ function isPeriodoCerrado(year, month){
 // Devuelve licencias para KPIs: cerradas→licencia_periodo_cerrado, abiertas→licencias
 function getLicsAcumPeriodo(year, month){
   if(isPeriodoCerrado(year, month)){
-    // Datos del período cerrado: ya tienen importes calculados, sin necesidad de calcLicRowSimple
+    // Acumulado: todos los registros cerrados hasta este período inclusive
+    const refYM = parseInt(year)*100 + parseInt(month);
     return {
       source: 'cerrado',
-      lics: (DB.licencias_cerradas||[]).filter(r=>parseInt(r.periodo_anio)===parseInt(year) && parseInt(r.periodo_mes)===parseInt(month))
+      lics: (DB.licencias_cerradas||[]).filter(r=>{
+        const rYM = parseInt(r.periodo_anio)*100 + parseInt(r.periodo_mes);
+        return rYM <= refYM;
+      })
     };
   }
   // Período abierto: calcular desde licencias originales
@@ -1174,6 +1178,24 @@ function updateBadgePeriodo(year, month){
   document.getElementById('badge-periodo').style.display = cerrado ? 'inline-block' : 'none';
   document.getElementById('btn-cerrar-periodo').style.display = cerrado ? 'none' : 'inline-block';
   document.getElementById('btn-abrir-periodo').style.display  = cerrado ? 'inline-block' : 'none';
+}
+
+
+// ── HELPER: obtener datos calculados de una licencia ─────────
+function getCalcRow(r, refYear, refMonth, source){
+  if(source==='cerrado'){
+    const cant=parseFloat(r.cantidad)||0;
+    return {
+      cant,
+      pvpTotal:   parseFloat(r.importe)||0,
+      costeTotal: parseFloat(r.importe_coste)||0,
+      mrgJmrey:   parseFloat(r.importe_margen_jmrey)||0,
+      mrgJuanma:  parseFloat(r.importe_margen_juanma)||0,
+      mrgBorja:   parseFloat(r.importe_margen_borja)||0,
+      mrgAgente:  parseFloat(r.importe_margen_agente)||0,
+    };
+  }
+  return calcLicRowSimple(r, refYear, refMonth);
 }
 
 // ── DB ──────────────────────────────────────────────────────
@@ -1982,15 +2004,7 @@ function renderNuevasLicencias(lics, refYear, refMonth, source){
   // Pivot 1: Cliente > Fecha > Concepto
   const p1 = {};
   lics.forEach(r=>{
-    let c;
-    if(source==='cerrado'){
-      const cant=parseFloat(r.cantidad)||0;
-      c={cant, pvpTotal:(parseFloat(r.importe)||0), costeTotal:(parseFloat(r.importe_coste)||0),
-         mrgJmrey:(parseFloat(r.importe_margen_jmrey)||0), mrgJuanma:(parseFloat(r.importe_margen_juanma)||0),
-         mrgBorja:(parseFloat(r.importe_margen_borja)||0)};
-    } else {
-      c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
-    }
+    const c=getCalcRow(r,refYear,refMonth,source); if(!c) return;
     const cli=r.cliente||'—', fecha=(r.fecha_inicio||'').substring(0,10);
     if(!p1[cli]) p1[cli]={cant:0,pvp:0,coste:0,children:{}};
     p1[cli].cant+=c.cant; p1[cli].pvp+=c.pvpTotal; p1[cli].coste+=c.costeTotal;
@@ -2006,16 +2020,7 @@ function renderNuevasLicencias(lics, refYear, refMonth, source){
   // Pivot 2: Cliente > Línea > Concepto
   const p2 = {};
   lics.forEach(r=>{
-    let c;
-    if(source==='cerrado'){
-      // Datos ya calculados en licencia_periodo_cerrado
-      const cant=parseFloat(r.cantidad)||0;
-      c={cant, pvpTotal:(r.importe||0), costeTotal:(r.importe_coste||0),
-         mrgJmrey:(r.importe_margen_jmrey||0), mrgJuanma:(r.importe_margen_juanma||0),
-         mrgBorja:(r.importe_margen_borja||0), mrgAgente:(r.importe_margen_agente||0)};
-    } else {
-      c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
-    }
+    const c=getCalcRow(r,refYear,refMonth,source); if(!c) return;
     const cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p2[cli]) p2[cli]={cant:0,pvp:0,coste:0,children:{}};
     p2[cli].cant+=c.cant; p2[cli].pvp+=c.pvpTotal; p2[cli].coste+=c.costeTotal;
@@ -2116,15 +2121,7 @@ function renderAcumCOO(lics, refYear, refMonth, source){
   // Tabla resumen por cliente
   const byClient = {};
   lics.forEach(r=>{
-    let c;
-    if(source==='cerrado'){
-      const cant=parseFloat(r.cantidad)||0;
-      c={cant, pvpTotal:(parseFloat(r.importe)||0), costeTotal:(parseFloat(r.importe_coste)||0),
-         mrgJmrey:(parseFloat(r.importe_margen_jmrey)||0), mrgJuanma:(parseFloat(r.importe_margen_juanma)||0),
-         mrgBorja:(parseFloat(r.importe_margen_borja)||0), mrgAgente:(parseFloat(r.importe_margen_agente)||0)};
-    } else {
-      c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
-    }
+    const c=getCalcRow(r,refYear,refMonth,source); if(!c) return;
     const cli=r.cliente||'—';
     if(!byClient[cli]) byClient[cli]={pvp:0,coste:0,mrgJmrey:0,mrgJuanma:0,mrgBorja:0};
     byClient[cli].pvp+=c.pvpTotal; byClient[cli].coste+=c.costeTotal;
@@ -2151,16 +2148,7 @@ function renderAcumCOO(lics, refYear, refMonth, source){
   // Tabla dinámica: Cliente > Línea > Concepto con Cantidad e Importe
   const p={};
   lics.forEach(r=>{
-    let c;
-    if(source==='cerrado'){
-      // Datos ya calculados en licencia_periodo_cerrado
-      const cant=parseFloat(r.cantidad)||0;
-      c={cant, pvpTotal:(r.importe||0), costeTotal:(r.importe_coste||0),
-         mrgJmrey:(r.importe_margen_jmrey||0), mrgJuanma:(r.importe_margen_juanma||0),
-         mrgBorja:(r.importe_margen_borja||0), mrgAgente:(r.importe_margen_agente||0)};
-    } else {
-      c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
-    }
+    const c=getCalcRow(r,refYear,refMonth,source); if(!c) return;
     const cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[cli]) p[cli]={cant:0,pvp:0,children:{}};
     p[cli].cant+=c.cant; p[cli].pvp+=c.mrgBorja;
@@ -2225,15 +2213,7 @@ const _acumAgtExpanded = new Set();
 function renderAcumAgente(lics, refYear, refMonth, source){
   const p={};
   lics.forEach(r=>{
-    let c;
-    if(source==='cerrado'){
-      const cant=parseFloat(r.cantidad)||0;
-      c={cant, pvpTotal:(r.importe||0), costeTotal:(r.importe_coste||0),
-         mrgJmrey:(r.importe_margen_jmrey||0), mrgJuanma:(r.importe_margen_juanma||0),
-         mrgBorja:(r.importe_margen_borja||0), mrgAgente:(r.importe_margen_agente||0)};
-    } else {
-      c=calcLicRowSimple(r,refYear,refMonth); if(!c) return;
-    }
+    const c=getCalcRow(r,refYear,refMonth,source); if(!c) return;
     const agt=r.agente||'-', cli=r.cliente||'—', linea=r.linea_producto||'—';
     if(!p[agt]) p[agt]={cant:0,pvp:0,children:{}};
     p[agt].cant+=c.cant; p[agt].pvp+=(c.mrgAgente||0);
