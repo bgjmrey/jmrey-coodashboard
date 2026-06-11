@@ -446,8 +446,8 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
         <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
       </select>
     </div>
-    <div class="fg" style="align-items:flex-end;gap:var(--sp-2);">
-      <span id="badge-periodo" style="display:none;font-size:18px;line-height:1;" title="Período cerrado">🔒</span>
+    <div style="display:flex;align-items:center;gap:var(--sp-2);">
+      <span id="badge-periodo" style="display:none;font-size:20px;line-height:1;" title="Período cerrado">🔒</span>
       <button id="btn-cerrar-periodo" class="btn btn-s" onclick="cerrarPeriodo()" style="white-space:nowrap">🔒 Cerrar</button>
       <button id="btn-abrir-periodo" class="btn btn-s" onclick="abrirPeriodo()" style="white-space:nowrap;display:none;">🔓 Abrir</button>
     </div>
@@ -1042,7 +1042,7 @@ function getLicsAcumPeriodo(year, month){
     // Datos del período cerrado: ya tienen importes calculados, sin necesidad de calcLicRowSimple
     return {
       source: 'cerrado',
-      lics: (DB.licencias_cerradas||[]).filter(r=>parseInt(r.anio)===parseInt(year) && parseInt(r.mes)===parseInt(month))
+      lics: (DB.licencias_cerradas||[]).filter(r=>parseInt(r.periodo_anio)===parseInt(year) && parseInt(r.periodo_mes)===parseInt(month))
     };
   }
   // Período abierto: calcular desde licencias originales
@@ -1110,7 +1110,7 @@ async function cerrarPeriodo(){
     const agt=lookupAgente(r.agente);
     const mrg=pvp-coste;
     rows.push({
-      anio:year, mes:month, licencia_id:r.id,
+      periodo_anio:year, periodo_mes:month, licencia_id:r.id,
       anio_mes:r.anio_mes, proveedor:r.proveedor,
       nro_contrato:r.nro_contrato, nro_pedido_cliente:r.nro_pedido_cliente,
       fecha_solicitud:r.fecha_solicitud, anio_mes_inicio:r.anio_mes_inicio,
@@ -1158,7 +1158,7 @@ async function abrirPeriodo(){
   toast('Reabriendo período...');
 
   const [r1,r2]=await Promise.all([
-    sb.from('licencia_periodo_cerrado').delete().eq('anio',year).eq('mes',month),
+    sb.from('licencia_periodo_cerrado').delete().eq('periodo_anio',year).eq('periodo_mes',month),
     sb.from('periodo_cerrado').delete().eq('anio',year).eq('mes',month)
   ]);
   if(r1.error||r2.error){ toast('Error al reabrir: '+(r1.error?.message||r2.error?.message)); return; }
