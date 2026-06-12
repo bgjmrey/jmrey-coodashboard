@@ -1248,7 +1248,7 @@ async function hydrateDB(){
       sb.from('agentes').select('*').order('agente'),
       sb.from('precios_licencias').select('*').order('concepto').order('compromiso').order('pago').order('fecha_fin_pvp',{nullsFirst:false}),
       sb.from('licencias').select('*').order('anio_mes',{ascending:false}).order('cliente'),
-      sb.from('licencia_periodo_cerrado').select('*'),
+      sb.from('licencia_periodo_cerrado').select('*').limit(100000),
       sb.from('periodo_cerrado').select('*')
     ]);
     if(la.data)  DB.agentes            = la.data;
