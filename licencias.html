@@ -1244,22 +1244,28 @@ function closeMod(id){ document.getElementById('mod-'+id).style.display='none'; 
 async function hydrateDB(){
   const sb=getSB(); if(!sb) return;
   try{
-    const [la,lp,ll,lpc,pc] = await Promise.all([
+    const [la,lp,ll,pc] = await Promise.all([
       sb.from('agentes').select('*').order('agente'),
       sb.from('precios_licencias').select('*').order('concepto').order('compromiso').order('pago').order('fecha_fin_pvp',{nullsFirst:false}),
       sb.from('licencias').select('*').order('anio_mes',{ascending:false}).order('cliente'),
-      sb.from('licencia_periodo_cerrado').select('*').limit(10000),
       sb.from('periodo_cerrado').select('*')
     ]);
-    if(la.data)  DB.agentes            = la.data;
-    if(lp.data)  DB.precios            = lp.data;
-    if(ll.data)  DB.licencias          = ll.data;
-    if(lpc.data) DB.licencias_cerradas = lpc.data; else console.error('lpc error:',lpc.error);
-    if(pc.data)  DB.periodos_cerrados  = pc.data;  else console.error('pc error:',pc.error);
-    console.log('licencias_cerradas:', DB.licencias_cerradas.length, 'periodos_cerrados:', DB.periodos_cerrados.length);
-    // Check 2026-04 specifically
-    const test2604 = DB.licencias_cerradas.filter(r=>parseInt(r.periodo_anio)===2026 && parseInt(r.periodo_mes)===4);
-    console.log('2026-04 records:', test2604.length, 'borja sum:', test2604.reduce((a,r)=>a+(parseFloat(r.importe_margen_borja)||0),0).toFixed(2));
+    if(la.data) DB.agentes           = la.data;
+    if(lp.data) DB.precios           = lp.data;
+    if(ll.data) DB.licencias         = ll.data;
+    if(pc.data) DB.periodos_cerrados = pc.data;
+
+    // Paginar licencia_periodo_cerrado (puede superar 1000 rows)
+    let lpcAll = [], lpcFrom = 0, lpcPage;
+    do {
+      lpcPage = await sb.from('licencia_periodo_cerrado').select('*').range(lpcFrom, lpcFrom+999);
+      if(lpcPage.data && lpcPage.data.length > 0){
+        lpcAll = lpcAll.concat(lpcPage.data);
+        lpcFrom += lpcPage.data.length;
+      } else { break; }
+    } while(lpcPage.data && lpcPage.data.length === 1000);
+    DB.licencias_cerradas = lpcAll;
+
     toast('Cargado: '+DB.agentes.length+' ag, '+DB.licencias.length+' lic | Cerrados: '+DB.periodos_cerrados.length+' | LPC: '+DB.licencias_cerradas.length);
   } catch(e){
     const msg=e?.message||'';
