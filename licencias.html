@@ -1039,14 +1039,12 @@ function isPeriodoCerrado(year, month){
 // Devuelve licencias para KPIs: cerradas→licencia_periodo_cerrado, abiertas→licencias
 function getLicsAcumPeriodo(year, month){
   if(isPeriodoCerrado(year, month)){
-    // Acumulado: todos los registros cerrados hasta este período inclusive
-    const refYM = parseInt(year)*100 + parseInt(month);
+    // Solo los registros del período exacto
     return {
       source: 'cerrado',
-      lics: (DB.licencias_cerradas||[]).filter(r=>{
-        const rYM = parseInt(r.periodo_anio)*100 + parseInt(r.periodo_mes);
-        return rYM <= refYM;
-      })
+      lics: (DB.licencias_cerradas||[]).filter(r=>
+        parseInt(r.periodo_anio)===parseInt(year) && parseInt(r.periodo_mes)===parseInt(month)
+      )
     };
   }
   // Período abierto: calcular desde licencias originales
