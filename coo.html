@@ -622,7 +622,7 @@ table.rt tbody td.c{text-align:center;}
         <div class="fi s2"><label>Título</label><input type="text" id="s-tit"></div>
         <div class="fi"><label>Cliente</label><select id="s-cli"><option value="">— seleccionar —</option></select></div>
         <div class="fi"><label>Línea de negocio</label><select id="s-lin"><option value="">— seleccionar —</option></select></div>
-        <div class="fi"><label>Técnico asignado</label><div style="display:flex;gap:6px;"><input id="s-tec" list="s-tec-list" placeholder="Email técnico..." autocomplete="off" style="flex:1;" oninput="syncTecInput(this)"><datalist id="s-tec-list"></datalist></div></div>
+        <div class="fi"><label>Técnico asignado</label><select id="s-tec" onchange="onTecChange(this)"><option value="">— seleccionar —</option></select><input id="s-tec-new" placeholder="Email nuevo técnico..." style="display:none;margin-top:6px;" autocomplete="off"></div>
         <div class="fi"><label>Estado</label><select id="s-est"><option value="">— seleccionar —</option></select></div>
         <div class="fi"><label>Id. valoración</label>
           <select id="s-idval" onchange="loadHorasFromVal()">
@@ -1618,7 +1618,7 @@ function renderSvc(){
 function populateSvcSelects(){
   const proyectos=[...new Set(DB.clientes.map(c=>c.partner))].sort();
   document.getElementById('s-proy').innerHTML='<option value="">— seleccionar —</option>'+proyectos.map(p=>`<option value="${p}">${p}</option>`).join('');
-  _refreshTecDatalist();
+  _refreshTecSel();
   document.getElementById('s-est').innerHTML='<option value="">— seleccionar —</option>'+MASTER.estados.map(e=>`<option value="${e}">${e}</option>`).join('');
   document.getElementById('s-lin').innerHTML='<option value="">— seleccionar —</option>'+MASTER.lineas.map(l=>`<option value="${l}">${l}</option>`).join('');
 }
@@ -1696,7 +1696,8 @@ function editSvcFn(i){
   document.getElementById('s-cli').innerHTML='<option value="">— seleccionar —</option>'+clis.map(c=>`<option value="${c}">${c}</option>`).join('');
   document.getElementById('s-cli').value=r.cliente2||'';
   document.getElementById('s-lin').value=r.linea||'';
-  document.getElementById('s-tec').value=r.tecnico||'';
+  _refreshTecSel(r.tecnico||'');
+  document.getElementById('s-tec-new').style.display='none';
   document.getElementById('s-est').value=r.estado||'';
   document.getElementById('s-hp').value=r.h_prod??'';
   document.getElementById('s-ht').value=r.h_tec??'';
@@ -1725,7 +1726,7 @@ function saveSvc(){
     proyecto:document.getElementById('s-proy').value,
     cliente2:document.getElementById('s-cli').value,
     linea:document.getElementById('s-lin').value,
-    tecnico:document.getElementById('s-tec').value,
+    tecnico:tecEmail,
     estado:document.getElementById('s-est').value,
     h_prod:parseFloat(document.getElementById('s-hp').value)||0,
     h_tec:parseFloat(document.getElementById('s-ht').value)||0,
@@ -2130,6 +2131,8 @@ function openMod(t){
     document.getElementById('s-idval').innerHTML='<option value="">— sin valoración —</option>';
     ['s-proy','s-cli','s-lin','s-est'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('s-tec').value='';
+    document.getElementById('s-tec-new').value='';
+    document.getElementById('s-tec-new').style.display='none';
     document.getElementById('svc-mt').textContent='Nuevo servicio';
     document.getElementById('s-cli').innerHTML='<option value="">— seleccionar —</option>';
   }
@@ -2850,8 +2853,50 @@ function ensureTecnico(email){
   const exists = DB.tecnicos.some(t=>t.email===email);
   if(!exists){
     DB.tecnicos.push({email, nombre:email, activo:true});
-    _refreshTecDatalist();
+    _refreshTecSel();
     // Also update the tecnicos table in Supabase
+    const sb=getSB();
+    if(sb) sb.from('tecnicos').upsert({email, nombre:email, activo:true}).then(()=>{});
+  }
+}
+
+
+// ── TÉCNICO SELECT ───────────────────────────────────────────
+function _refreshTecSel(selectedVal){
+  const sel = document.getElementById('s-tec');
+  if(!sel) return;
+  const cur = selectedVal !== undefined ? selectedVal : sel.value;
+  sel.innerHTML = '<option value="">— seleccionar —</option>'
+    + DB.tecnicos.filter(t=>t.activo).map(t=>`<option value="${t.email}">${t.nombre}</option>`).join('')
+    + '<option value="__nuevo__">✏️ Nuevo técnico...</option>';
+  sel.value = (cur && [...sel.options].some(o=>o.value===cur)) ? cur : '';
+}
+
+function onTecChange(sel){
+  const inp = document.getElementById('s-tec-new');
+  if(sel.value === '__nuevo__'){
+    inp.style.display = 'block';
+    inp.focus();
+  } else {
+    inp.style.display = 'none';
+    inp.value = '';
+  }
+}
+
+function getTecValue(){
+  const sel = document.getElementById('s-tec');
+  if(sel.value === '__nuevo__'){
+    return document.getElementById('s-tec-new').value.trim();
+  }
+  return sel.value;
+}
+
+function ensureTecnico(email){
+  if(!email) return;
+  const exists = DB.tecnicos.some(t=>t.email===email);
+  if(!exists){
+    DB.tecnicos.push({email, nombre:email, activo:true});
+    _refreshTecSel(email);
     const sb=getSB();
     if(sb) sb.from('tecnicos').upsert({email, nombre:email, activo:true}).then(()=>{});
   }
