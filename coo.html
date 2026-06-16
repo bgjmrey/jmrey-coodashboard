@@ -622,7 +622,7 @@ table.rt tbody td.c{text-align:center;}
         <div class="fi s2"><label>Título</label><input type="text" id="s-tit"></div>
         <div class="fi"><label>Cliente</label><select id="s-cli"><option value="">— seleccionar —</option></select></div>
         <div class="fi"><label>Línea de negocio</label><select id="s-lin"><option value="">— seleccionar —</option></select></div>
-        <div class="fi"><label>Técnico asignado</label><select id="s-tec"><option value="">— seleccionar —</option></select></div>
+        <div class="fi"><label>Técnico asignado</label><div style="display:flex;gap:6px;"><input id="s-tec" list="s-tec-list" placeholder="Email técnico..." autocomplete="off" style="flex:1;" oninput="syncTecInput(this)"><datalist id="s-tec-list"></datalist></div></div>
         <div class="fi"><label>Estado</label><select id="s-est"><option value="">— seleccionar —</option></select></div>
         <div class="fi"><label>Id. valoración</label>
           <select id="s-idval" onchange="loadHorasFromVal()">
@@ -1618,7 +1618,7 @@ function renderSvc(){
 function populateSvcSelects(){
   const proyectos=[...new Set(DB.clientes.map(c=>c.partner))].sort();
   document.getElementById('s-proy').innerHTML='<option value="">— seleccionar —</option>'+proyectos.map(p=>`<option value="${p}">${p}</option>`).join('');
-  document.getElementById('s-tec').innerHTML='<option value="">— seleccionar —</option>'+DB.tecnicos.filter(t=>t.activo).map(t=>`<option value="${t.email}">${t.nombre}</option>`).join('');
+  _refreshTecDatalist();
   document.getElementById('s-est').innerHTML='<option value="">— seleccionar —</option>'+MASTER.estados.map(e=>`<option value="${e}">${e}</option>`).join('');
   document.getElementById('s-lin').innerHTML='<option value="">— seleccionar —</option>'+MASTER.lineas.map(l=>`<option value="${l}">${l}</option>`).join('');
 }
@@ -2128,7 +2128,8 @@ function openMod(t){
   if(t==='svc' && editSvc===null){
     ['s-id','s-tit','s-hp','s-ht','s-hg','s-hpar','s-hjmrey','s-it','s-id2','s-fa','s-ffprev','s-fe','s-obs','s-hl-func','s-hl-acept','s-hl-fprev2','s-hl-entrega'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('s-idval').innerHTML='<option value="">— sin valoración —</option>';
-    ['s-proy','s-cli','s-lin','s-tec','s-est'].forEach(id=>document.getElementById(id).value='');
+    ['s-proy','s-cli','s-lin','s-est'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('s-tec').value='';
     document.getElementById('svc-mt').textContent='Nuevo servicio';
     document.getElementById('s-cli').innerHTML='<option value="">— seleccionar —</option>';
   }
@@ -2827,6 +2828,33 @@ async function recalcAllImpTec(){
     toast('Actualizado con ' + errors + ' errores. ' + updated + ' servicios procesados.');
   else
     toast('✅ ' + updated + ' servicios actualizados (' + skipped + ' sin tarifa o ya correctos)');
+}
+
+
+// ── TÉCNICO COMBO ────────────────────────────────────────────
+function _refreshTecDatalist(){
+  const dl = document.getElementById('s-tec-list');
+  if(!dl) return;
+  const opts = DB.tecnicos.filter(t=>t.activo).map(t=>`<option value="${t.email}">${t.nombre} &lt;${t.email}&gt;</option>`);
+  dl.innerHTML = opts.join('');
+}
+
+function syncTecInput(inp){
+  // If user typed something not in DB.tecnicos, we'll add it on save
+  // No action needed here — the value is read directly from inp.value
+}
+
+// Store new technician email in DB.tecnicos after save so it's available in future sessions
+function ensureTecnico(email){
+  if(!email) return;
+  const exists = DB.tecnicos.some(t=>t.email===email);
+  if(!exists){
+    DB.tecnicos.push({email, nombre:email, activo:true});
+    _refreshTecDatalist();
+    // Also update the tecnicos table in Supabase
+    const sb=getSB();
+    if(sb) sb.from('tecnicos').upsert({email, nombre:email, activo:true}).then(()=>{});
+  }
 }
 
 // ── INIT ─────────────────────────────────────────────
