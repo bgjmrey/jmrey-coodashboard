@@ -1720,6 +1720,8 @@ function editSvcFn(i){
 
 function saveSvc(){
   const r0 = editSvc!==null ? DB.servicios[editSvc] : null;
+  const tecEmail = getTecValue();
+  ensureTecnico(tecEmail);
   const o={
     id:document.getElementById('s-id').value.trim(),
     titulo:document.getElementById('s-tit').value.trim(),
