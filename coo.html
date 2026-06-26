@@ -2003,7 +2003,7 @@ function saveVal(){
     svc.h_jmrey   = hCliente;
     if(tarifa>0){
       svc.imp_tec = (svc.h_tec||0) * tarifa;
-      svc.imp_dir = (svc.h_gest||0) * 30;
+      svc.imp_dir = (svc.h_gest||0) * tarifa;
     }
     const _svcRow = DB.servicios[svcIdx];
     ss('svc', DB.servicios, _svcRow, 'update');
@@ -2236,16 +2236,13 @@ function toggleAllTec(tipo){
   expSet.clear();
   if(!anyExp) allTecs.forEach(t=>expSet.add(t));
   const tp = calcTecPivot(svcs);
+  const totP = tp.reduce((a,r)=>a+r.h_prod,0);
+  const totT = tp.reduce((a,r)=>a+r.h_tec,0);
+  const totG = tp.reduce((a,r)=>a+r.h_gest,0);
   if(tipo==='ventas'){
-    const vP=parseFloat(document.getElementById('f-ov').value)||225;
-    const vT=vP*(new Date().getMonth()+1);
-    const vG=parseFloat(document.getElementById('f-ov').value)||225;
-    renderTecPivot(tp,svcs,vP,vT,vG,'tbody-tec-v','tfoot-tec-v','ventas');
+    renderTecPivot(tp,svcs,totP,totT,totG,'tbody-tec-v','tfoot-tec-v','ventas');
   } else {
-    const cP=parseFloat(document.getElementById('f-oc').value)||225;
-    const cT=cP*(new Date().getMonth()+1);
-    const cG=parseFloat(document.getElementById('f-oc').value)||225;
-    renderTecPivot(tp,svcs,cP,cT,cG,'tbody-tec','tfoot-tec','consumos');
+    renderTecPivot(tp,svcs,totP,totT,totG,'tbody-tec','tfoot-tec','consumos');
   }
 }
 
@@ -2793,7 +2790,7 @@ async function recalcAllImpTec(){
     if(tarifa <= 0){ skipped++; continue; }
 
     const new_imp_tec = Math.round(((svc.h_tec||0) * tarifa) * 100) / 100;
-    const new_imp_dir = Math.round(((svc.h_gest||0) * 30) * 100) / 100;
+    const new_imp_dir = Math.round(((svc.h_gest||0) * tarifa) * 100) / 100;
 
     // Skip if already correct
     if(Math.abs((svc.imp_tec||0) - new_imp_tec) < 0.01 &&
