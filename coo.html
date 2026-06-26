@@ -1749,6 +1749,12 @@ function saveSvc(){
     hl_contacto:r0?.hl_contacto||'', hl_tecnico:r0?.hl_tecnico||'', hl_estado:r0?.hl_estado||'',
     row_id:r0?.row_id||null,
   };
+  // Recalcular imp_tec e imp_dir usando tarifa del cliente
+  const _tarifa = getTarifa(o.proyecto||'', o.cliente2||'');
+  if(_tarifa > 0){
+    o.imp_tec = Math.round((o.h_tec||0) * _tarifa * 100) / 100;
+    o.imp_dir = Math.round((o.h_gest||0) * _tarifa * 100) / 100;
+  }
   if(!o.titulo){toast('El título es obligatorio','err');return;}
   const _newSvc=editSvc===null;
   if(!_newSvc) DB.servicios[editSvc]=o; else DB.servicios.push(o);
