@@ -1678,7 +1678,7 @@ function autoCalc(){
   // Importes
   if(tarifa > 0){
     document.getElementById('s-it').value  = (ht * tarifa).toFixed(2);
-    document.getElementById('s-id2').value = (hg * 30).toFixed(2);
+    document.getElementById('s-id2').value = (hg * tarifa).toFixed(2);
   }
 }
 ['s-proy','s-cli','s-ht','s-hg'].forEach(id=>document.getElementById(id).addEventListener('change',autoCalc));
