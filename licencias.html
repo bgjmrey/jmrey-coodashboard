@@ -403,18 +403,27 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
   .fbar{flex-wrap:wrap;gap:6px;}
   .fg,.fg2,.fg3{flex-wrap:wrap;gap:6px;}
   .fdiv{display:none;}
-  .dtw,.tw,.kc,.kpi-split-side,.sec{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  /* Scroll horizontal en wrappers de tabla */
+  .dtw,.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;display:block;width:100%;}
+  /* Anular overflow:hidden de .kc para que .tw pueda hacer scroll */
+  .kc{overflow:visible;}
   table.dt,table.rt{min-width:600px;}
   table.kt{min-width:0;width:100%;table-layout:auto;}
   table.kt thead th{white-space:normal;font-size:10px;padding:5px 6px;}
   table.kt tbody td,table.kt tfoot td{padding:5px 6px;font-size:11px;}
+  /* Grids a 1 columna */
   .sg{grid-template-columns:1fr;}
   .kpi-split{grid-template-columns:1fr;}
   .kpi-divider{display:none;}
-  .kpi-split-side{padding-left:0!important;padding-right:0!important;overflow-x:auto;}
+  .kpi-split-side{padding-left:0!important;padding-right:0!important;}
   .tg2{grid-template-columns:1fr;}
-  #sec-kpis,.sec{overflow-x:hidden;}
-  .app-content{overflow-x:hidden;}
+  /* Grid de 3 cols de KPIs licencias → 1 col */
+  #sec-kpis .kpi-split > div[style*="grid"]{grid-template-columns:1fr!important;}
+  /* Secciones no desbordan el viewport */
+  #sec-kpis,#sec-licencias,.app-content{overflow-x:hidden;}
+  /* Padding lateral en bloques de KPI */
+  #sec-kpis [style*="padding:0 var(--sp-5)"]{padding:0!important;}
+  #sec-kpis [style*="padding-left:var(--sp-5)"]{padding-left:0!important;}
   .mod-box{width:95vw!important;max-width:95vw!important;max-height:90vh;overflow-y:auto;}
 }
 
