@@ -418,12 +418,11 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
   .kpi-split-side{padding-left:0!important;padding-right:0!important;}
   .tg2{grid-template-columns:1fr;}
   /* Grid de 3 cols de KPIs licencias → 1 col */
-  #sec-kpis .kpi-split > div[style*="grid"]{grid-template-columns:1fr!important;}
+  #kpi-3col-grid{grid-template-columns:1fr!important;gap:var(--sp-4)!important;}
+  #kpi-3col-grid > [style*="background:var(--border)"]{display:none!important;}
+  #kpi-3col-grid > div[style*="padding"]{padding-left:0!important;padding-right:0!important;}
   /* Secciones no desbordan el viewport */
   #sec-kpis,#sec-licencias,.app-content{overflow-x:hidden;}
-  /* Padding lateral en bloques de KPI */
-  #sec-kpis [style*="padding:0 var(--sp-5)"]{padding:0!important;}
-  #sec-kpis [style*="padding-left:var(--sp-5)"]{padding-left:0!important;}
   .mod-box{width:95vw!important;max-width:95vw!important;max-height:90vh;overflow-y:auto;}
 }
 
@@ -537,7 +536,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
 
 
   <!-- GRID 3 COLUMNAS -->
-  <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;">
+  <div id="kpi-3col-grid" style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;">
 
     <!-- 3.1 NUEVAS LICENCIAS -->
     <div style="padding-right:var(--sp-5);">
