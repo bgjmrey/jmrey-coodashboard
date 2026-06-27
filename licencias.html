@@ -2706,6 +2706,36 @@ function _drawGrafico(labels, valores, colors, borders, chartType){
   });
 }
 
+
+// ── MOBILE KPI LAYOUT ────────────────────────────────────────
+function fixMobileKPILayout(){
+  const isMobile = window.matchMedia('(max-width:1024px), (hover:none) and (pointer:coarse)').matches;
+  const grid = document.getElementById('kpi-3col-grid');
+  if(!grid) return;
+  if(isMobile){
+    grid.style.display = 'flex';
+    grid.style.flexDirection = 'column';
+    grid.style.gap = 'var(--sp-4)';
+    // Hide the 1px divider divs
+    Array.from(grid.children).forEach(child=>{
+      const bg = child.style.background || '';
+      if(bg.includes('border')) child.style.display = 'none';
+      // Remove column padding
+      child.style.paddingLeft = '0';
+      child.style.paddingRight = '0';
+    });
+  } else {
+    grid.style.display = '';
+    grid.style.flexDirection = '';
+    grid.style.gap = '';
+    Array.from(grid.children).forEach(child=>{
+      const origBg = child.getAttribute('data-orig-bg');
+      if(origBg) child.style.background = origBg;
+    });
+  }
+}
+window.addEventListener('load', fixMobileKPILayout);
+window.addEventListener('resize', fixMobileKPILayout);
 // ── INIT ─────────────────────────────────────────────
 (async function initApp(){
   // Wait for Supabase CDN to load (same pattern as COO)
