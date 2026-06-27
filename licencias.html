@@ -2716,21 +2716,25 @@ function fixMobileKPILayout(){
     grid.style.display = 'flex';
     grid.style.flexDirection = 'column';
     grid.style.gap = 'var(--sp-4)';
-    // Hide the 1px divider divs
     Array.from(grid.children).forEach(child=>{
       const bg = child.style.background || '';
       if(bg.includes('border')) child.style.display = 'none';
-      // Remove column padding
       child.style.paddingLeft = '0';
       child.style.paddingRight = '0';
     });
   } else {
-    grid.style.display = '';
+    // Restore desktop grid
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = '1fr 1px 1fr 1px 1fr';
     grid.style.flexDirection = '';
-    grid.style.gap = '';
+    grid.style.gap = '0';
     Array.from(grid.children).forEach(child=>{
-      const origBg = child.getAttribute('data-orig-bg');
-      if(origBg) child.style.background = origBg;
+      const bg = child.style.background || '';
+      // Restore dividers
+      child.style.display = '';
+      // Restore original padding
+      if(child.dataset.origPr) child.style.paddingRight = child.dataset.origPr;
+      if(child.dataset.origPl) child.style.paddingLeft = child.dataset.origPl;
     });
   }
 }
