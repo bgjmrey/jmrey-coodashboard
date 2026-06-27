@@ -384,6 +384,98 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
 .fi input,.fi select,.fi textarea{font-family:var(--ff-sans);font-size:var(--fz-sm);color:var(--fg-2);background:var(--bg-e);border:1px solid var(--border);border-radius:var(--r-md);padding:6px var(--sp-3);outline:none;width:100%;}
 .fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--accent);}
 .fi textarea{min-height:80px;resize:vertical;}
+
+
+  .sc-val{font-size:1.2rem;}
+  table.dt,table.rt,table.kt{min-width:480px;}
+}
+
+/* ── RESPONSIVE: MÓVIL Y TABLET (táctil) ────────────────────
+   pointer:coarse = pantalla táctil (móvil/tablet)
+   pointer:fine   = ratón (ordenador) → nunca se activa aquí
+   ─────────────────────────────────────────────────────────── */
+
+/* Móvil pequeño: táctil + ≤480px */
+@media(pointer:coarse) and (max-width:480px){
+  .nav{overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;gap:0;-webkit-overflow-scrolling:touch;}
+  .nav-tab{font-size:10px;padding:7px 8px;white-space:nowrap;flex-shrink:0;}
+  .fbar{flex-wrap:wrap;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);}
+  .fg,.fg2,.fg3{flex-wrap:wrap;gap:var(--sp-2);}
+  .fdiv{display:none;}
+  .btn,.btn-s{font-size:11px;padding:6px 10px;min-height:36px;}
+  .fsel,input.fsel,select.fsel{font-size:13px;min-height:36px;}
+  label.fl{font-size:11px;}
+  .sg,.tg2{grid-template-columns:1fr;}
+  .kpi-split{grid-template-columns:1fr;}
+  .kpi-divider{display:none;}
+  .kpi-split-side:first-child{padding-right:0;}
+  .kpi-split-side:last-child{padding-left:0;}
+  .dtw,.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table.dt,table.rt,table.kt{min-width:420px;font-size:11px;}
+  .app-content{padding:var(--sp-2);}
+  .kc{padding:var(--sp-2)!important;}
+  .mod-box{width:98vw!important;max-width:98vw!important;max-height:92vh;overflow-y:auto;}
+  .mod-body{padding:var(--sp-2);}
+  footer{padding:8px var(--sp-2)!important;flex-wrap:wrap;gap:var(--sp-2);}
+  .sc-val{font-size:1.2rem;}
+  .sc-lbl{font-size:10px;}
+}
+
+/* Móvil normal: táctil + 481px–767px */
+@media(pointer:coarse) and (min-width:481px) and (max-width:767px){
+  .nav{overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;gap:0;-webkit-overflow-scrolling:touch;}
+  .nav-tab{font-size:11px;padding:8px 11px;white-space:nowrap;flex-shrink:0;}
+  .fbar{flex-wrap:wrap;gap:var(--sp-2);padding:var(--sp-3);}
+  .fg,.fg2,.fg3{flex-wrap:wrap;gap:var(--sp-2);}
+  .fdiv{display:none;}
+  .btn,.btn-s{font-size:12px;padding:6px 11px;min-height:36px;}
+  .fsel,input.fsel,select.fsel{font-size:13px;min-height:36px;}
+  .sg,.tg2{grid-template-columns:1fr;}
+  .kpi-split{grid-template-columns:1fr;}
+  .kpi-divider{display:none;}
+  .kpi-split-side:first-child{padding-right:0;}
+  .kpi-split-side:last-child{padding-left:0;}
+  .dtw,.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table.dt,table.rt,table.kt{min-width:520px;font-size:12px;}
+  .app-content{padding:var(--sp-3);}
+  .kc{padding:var(--sp-3)!important;}
+  .mod-box{width:96vw!important;max-width:96vw!important;max-height:90vh;overflow-y:auto;}
+  footer{padding:10px var(--sp-3)!important;flex-wrap:wrap;}
+  .sc-val{font-size:1.3rem;}
+}
+
+/* Tablet: táctil + 768px–1199px */
+@media(pointer:coarse) and (min-width:768px) and (max-width:1199px){
+  .nav{overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;}
+  .nav-tab{font-size:12px;padding:9px 14px;white-space:nowrap;flex-shrink:0;}
+  .fbar{flex-wrap:wrap;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);}
+  .fg,.fg2,.fg3{flex-wrap:wrap;gap:var(--sp-3);}
+  .fdiv{display:none;}
+  .btn,.btn-s{font-size:12px;padding:7px 12px;min-height:38px;}
+  .fsel,input.fsel,select.fsel{font-size:13px;min-height:38px;}
+  .sg{grid-template-columns:1fr 1fr;}
+  .tg2{grid-template-columns:1fr;}
+  .kpi-split{grid-template-columns:1fr;}
+  .kpi-divider{display:none;}
+  .kpi-split-side:first-child{padding-right:0;}
+  .kpi-split-side:last-child{padding-left:0;}
+  .dtw,.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table.dt,table.rt,table.kt{min-width:640px;}
+  .app-content{padding:var(--sp-4);}
+  .mod-box{width:90vw!important;max-width:90vw!important;max-height:88vh;overflow-y:auto;}
+  .sc-val{font-size:1.5rem;}
+}
+
+/* Licencias: ajustes adicionales táctil */
+@media(pointer:coarse) and (max-width:767px){
+  #badge-periodo{font-size:16px;}
+  #btn-cerrar-periodo,#btn-abrir-periodo{font-size:11px;padding:5px 8px;min-height:34px;}
+  #graf-tipo,#graf-periodos{font-size:11px;width:auto!important;}
+  #graf-year-coo,#graf-month-coo,#graf-year,#graf-month{font-size:11px;}
+}
+@media(pointer:coarse) and (min-width:768px) and (max-width:1199px){
+  #btn-cerrar-periodo,#btn-abrir-periodo{min-height:38px;}
+}
 </style>
 <body>
 
@@ -2441,19 +2533,24 @@ function sendLicKpiEmail(){
 
   toast('Generando captura...');
   captureKPI(function(canvas){
-    // Abrir Outlook con asunto y texto
-    window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
-    if(canvas){
-      // Copiar imagen al portapapeles para pegar en Outlook
+    if(canvas && navigator.clipboard && window.ClipboardItem){
       canvas.toBlob(blob=>{
-        if(navigator.clipboard && window.ClipboardItem){
-          navigator.clipboard.write([new ClipboardItem({'image/png':blob})])
-            .then(()=>{ setTimeout(()=>toast('📋 Imagen copiada — pégala en el email con Ctrl+V'), 800); })
-            .catch(()=>{ setTimeout(()=>toast('✉️ Email abierto — adjunta la imagen manualmente'), 800); });
-        } else {
-          setTimeout(()=>toast('✉️ Email abierto — adjunta la imagen manualmente'), 800);
-        }
+        navigator.clipboard.write([new ClipboardItem({'image/png':blob})])
+          .then(()=>{
+            toast('📋 Imagen copiada al portapapeles');
+            setTimeout(()=>{
+              window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
+              setTimeout(()=>toast('✉️ Email abierto — pega la imagen con Ctrl+V'),800);
+            },400);
+          })
+          .catch(()=>{
+            window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
+            setTimeout(()=>toast('✉️ Email abierto — adjunta la imagen manualmente'),800);
+          });
       });
+    } else {
+      window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
+      setTimeout(()=>toast('✉️ Email abierto'),400);
     }
   });
 }
