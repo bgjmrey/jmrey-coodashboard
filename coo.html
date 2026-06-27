@@ -375,14 +375,32 @@ table.rt tbody td.c{text-align:center;}
   .fbar{flex-wrap:wrap;gap:6px;}
   .fg,.fg2,.fg3{flex-wrap:wrap;gap:6px;}
   .fdiv{display:none;}
-  .dtw,.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  table.dt,table.rt,table.kt{min-width:600px;}
+
+  /* Todos los contenedores de tablas con scroll horizontal */
+  .dtw,.tw,.kc,.kpi-split-side,.sec{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* Tablas: dejar que fluyan pero en contenedor scrollable */
+  table.dt,table.rt{min-width:600px;}
+  table.kt{min-width:0;width:100%;table-layout:auto;}
+  table.kt thead th{white-space:normal;font-size:10px;padding:5px 6px;}
+  table.kt tbody td,table.kt tfoot td{padding:5px 6px;font-size:11px;}
+
+  /* KPI layout */
+  .sg{grid-template-columns:1fr;}
   .kpi-split{grid-template-columns:1fr;}
   .kpi-divider{display:none;}
-  .kpi-split-side:first-child{padding-right:0;}
-  .kpi-split-side:last-child{padding-left:0;}
+  .kpi-split-side{padding-left:0!important;padding-right:0!important;overflow-x:auto;}
   .tg2{grid-template-columns:1fr;}
+
+  /* Secciones */
+  #sec-kpis,#sec-licencias,#sec-servicios,.sec{overflow-x:hidden;}
+  .app-content{overflow-x:hidden;}
+
+  /* Modal */
   .mod-box{width:95vw!important;max-width:95vw!important;max-height:90vh;overflow-y:auto;}
+
+  /* Progress bars */
+  .pr-bar{max-width:100%;}
 }
 
 /* ── Pantalla táctil: botones más grandes para dedos ── */
@@ -409,6 +427,31 @@ table.rt tbody td.c{text-align:center;}
   .sc-val{font-size:1.15rem;}
   table.dt,table.rt,table.kt{min-width:420px;font-size:11px;}
   .app-content{padding:6px;}
+}
+
+/* ── KPI tables mobile fix ── */
+@media (max-width:767px){
+  /* Remove min-width on KPI tables so they fit */
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}
+  table.kt{min-width:0!important;width:100%;font-size:11px;}
+  table.kt thead th{white-space:normal;padding:5px 6px;font-size:10px;letter-spacing:0;}
+  table.kt tbody td,table.kt tfoot td{padding:5px 6px;font-size:11px;}
+  /* KPI card full width */
+  .kc{margin-bottom:8px;}
+  /* Tec pivot table */
+  table.rt{min-width:0!important;font-size:11px;}
+  table.rt thead th{white-space:normal;padding:4px 5px;font-size:10px;}
+  table.rt tbody td{padding:4px 5px;}
+  /* KPI sections stack */
+  .sg{grid-template-columns:1fr!important;}
+  .kpi-split{grid-template-columns:1fr!important;}
+  .kpi-split-side:first-child,.kpi-split-side:last-child{padding:0!important;}
+  .kpi-divider{display:none!important;}
+}
+@media (max-width:480px){
+  table.kt{font-size:10px;}
+  table.kt thead th{font-size:9px;padding:4px 4px;}
+  table.kt tbody td,table.kt tfoot td{padding:4px 4px;font-size:10px;}
 }
 </style>
 </head>
