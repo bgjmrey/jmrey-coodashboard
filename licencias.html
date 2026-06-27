@@ -2709,33 +2709,23 @@ function _drawGrafico(labels, valores, colors, borders, chartType){
 
 // ── MOBILE KPI LAYOUT ────────────────────────────────────────
 function fixMobileKPILayout(){
-  const isMobile = window.matchMedia('(max-width:1024px), (hover:none) and (pointer:coarse)').matches;
   const grid = document.getElementById('kpi-3col-grid');
   if(!grid) return;
-  if(isMobile){
-    grid.style.display = 'flex';
-    grid.style.flexDirection = 'column';
-    grid.style.gap = 'var(--sp-4)';
-    Array.from(grid.children).forEach(child=>{
-      const bg = child.style.background || '';
-      if(bg.includes('border')) child.style.display = 'none';
-      child.style.paddingLeft = '0';
-      child.style.paddingRight = '0';
-    });
+  const ch = Array.from(grid.children); // [0]=nuevas,[1]=div,[2]=COO,[3]=div,[4]=agente
+  if(window.innerWidth <= 900){
+    grid.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:stretch;';
+    ch[1].style.display = 'none';  // hide divider
+    ch[3].style.display = 'none';  // hide divider
+    ch[0].style.cssText = 'padding:0;';
+    ch[2].style.cssText = 'padding:0;';
+    ch[4].style.cssText = 'padding:0;';
   } else {
-    // Restore desktop grid
-    grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = '1fr 1px 1fr 1px 1fr';
-    grid.style.flexDirection = '';
-    grid.style.gap = '0';
-    Array.from(grid.children).forEach(child=>{
-      const bg = child.style.background || '';
-      // Restore dividers
-      child.style.display = '';
-      // Restore original padding
-      if(child.dataset.origPr) child.style.paddingRight = child.dataset.origPr;
-      if(child.dataset.origPl) child.style.paddingLeft = child.dataset.origPl;
-    });
+    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;';
+    ch[1].style.cssText = 'background:var(--border);';
+    ch[3].style.cssText = 'background:var(--border);';
+    ch[0].style.cssText = 'padding-right:var(--sp-5);';
+    ch[2].style.cssText = 'padding:0 var(--sp-5);';
+    ch[4].style.cssText = 'padding-left:var(--sp-5);';
   }
 }
 window.addEventListener('load', fixMobileKPILayout);
