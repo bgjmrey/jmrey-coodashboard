@@ -564,6 +564,23 @@ table.rt tbody td.c{text-align:center;}
           <tbody id="tbody-tec"></tbody><tfoot id="tfoot-tec"></tfoot>
         </table></div>
       </div>
+
+      <div class="kpi-side-label" style="margin-top:var(--sp-5);">Planificado</div>
+      <div class="sg" id="kpi-cards-p"></div>
+      <div class="kc">
+        <div class="kc-hd"><span class="kc-t">Planificado</span><span class="kc-b" id="badge-p">—</span></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th>Colaborador</th><th>H.Prod.</th><th>H.Gest.</th><th>H.Téc.</th><th>H.Partner</th><th>Imp.Téc. €</th><th>Imp.Dir. €</th><th>Total €</th></tr></thead>
+          <tbody id="tbody-p"></tbody><tfoot id="tfoot-p"></tfoot>
+        </table></div>
+      </div>
+      <div class="kc">
+        <div class="kc-hd"><div><div class="kc-t">Planificado Técnico Equipo</div><div class="kc-s">Por técnico asignado</div></div></div>
+        <div class="tw"><table class="kt">
+          <thead><tr><th style="cursor:pointer;user-select:none;" onclick="toggleAllTec('planificado')" title="Expandir/contraer todo">Técnico / Tarea ⇕</th><th>H.Prod.</th><th>H.Téc.</th><th>H.Gest.</th></tr></thead>
+          <tbody id="tbody-tec-p"></tbody><tfoot id="tfoot-tec-p"></tfoot>
+        </table></div>
+      </div>
     </div>
   </div>
 </section>
@@ -1439,15 +1456,22 @@ function renderKPI(){
 
   const svcsV = DB.servicios.filter(s=>inRange(s.fecha_acept,   range));
   const svcsC = DB.servicios.filter(s=>inRange(s.fecha_entrega, range));
+  // Planificado: fecha_fprev en el mes seleccionado (siempre vista mes, no acumulado)
+  const planRange = mesRange(year, month);
+  const svcsP = DB.servicios.filter(s=>inRange(s.fecha_fprev, planRange));
 
   const {rows:vRows,tot:vTot} = calcKPI(svcsV);
   const {rows:cRows,tot:cTot} = calcKPI(svcsC);
+  const {rows:pRows,tot:pTot} = calcKPI(svcsP);
   const dirV = calcDirector(svcsV);
   const dirC = calcDirector(svcsC);
+  const dirP = calcDirector(svcsP);
   const tecPivot  = calcTecPivot(svcsC);
   const tecPivotV = calcTecPivot(svcsV);
+  const tecPivotP = calcTecPivot(svcsP);
   window._lastSvcsC = svcsC;
   window._lastSvcsV = svcsV;
+  window._lastSvcsP = svcsP;
 
   const mesNom = MESES[month];
   const lbl = vista==='mes'
@@ -1457,6 +1481,7 @@ function renderKPI(){
   document.getElementById('kpi-title').textContent = lbl;
   document.getElementById('badge-v').textContent   = lbl;
   document.getElementById('badge-c').textContent   = lbl;
+  document.getElementById('badge-p').textContent   = `27 ${MESES[month===1?12:month-1]} – 26 ${mesNom} ${year}`;
   document.getElementById('footer-lbl').textContent = `${lbl} · Dpto. BC`;
 
   const objVM = parseFloat(document.getElementById('f-ov').value)||225;
@@ -1506,6 +1531,19 @@ function renderKPI(){
   const cTotExt  = {...cTot, _tot:(cTot.imp_tec||0)+(cTot.imp_dir||0)};
   fillKT('tbody-c','tfoot-c',cRowsExt,['h_prod','h_gest','h_tec','h_partner','imp_tec','imp_dir','_tot'],cTotExt);
 
+  // Planificado KPI cards
+  document.getElementById('kpi-cards-p').innerHTML=`
+    <div class="sc anim" style="animation-delay:50ms">
+      <div class="sc-lbl">Horas planificadas Director</div>
+      <div class="sc-val num drill" onclick="drillKPIDate('fprev')" title="Ver líneas planificadas Director">${fmt(dirP.consumo.h_total,2)}</div>
+      <div class="sc-sub">Téc: <span class="drill" onclick="drillKPIDate('fprev','bg')">${fmt(dirP.consumo.h_tec,2)}</span> + Gest: <span class="drill" onclick="drillKPIDate('fprev','any')">${fmt(dirP.consumo.h_gest,2)}</span> · ${fmtE(dirP.consumo.imp_total)}</div>
+    </div>
+    <div class="sc anim" style="animation-delay:150ms">
+      <div class="sc-lbl">H. Producción Planificado</div>
+      <div class="sc-val num drill" onclick="drillKPIDate('fprev','all')">${fmt(pTot.h_prod,2)}</div>
+      <div class="sc-sub">H.Téc. total: <span class="drill" onclick="drillKPIDate('fprev','tec')">${fmt(pTot.h_tec,2)}</span></div>
+    </div>`;
+
   const tTotP=tecPivot.reduce((a,r)=>a+r.h_prod,0);
   const tTotT=tecPivot.reduce((a,r)=>a+r.h_tec,0);
   const tTotG=tecPivot.reduce((a,r)=>a+r.h_gest,0);
@@ -1515,6 +1553,13 @@ function renderKPI(){
   const vTotT=tecPivotV.reduce((a,r)=>a+r.h_tec,0);
   const vTotG=tecPivotV.reduce((a,r)=>a+r.h_gest,0);
   renderTecPivot(tecPivotV, svcsV, vTotP, vTotT, vTotG, 'tbody-tec-v', 'tfoot-tec-v');
+
+  // Planificado tables
+  fillKT('tbody-p','tfoot-p', pRows, ['h_prod','h_gest','h_tec','h_partner','imp_tec','imp_dir','_tot'], pTot);
+  const ppTotP=tecPivotP.reduce((a,r)=>a+r.h_prod,0);
+  const ppTotT=tecPivotP.reduce((a,r)=>a+r.h_tec,0);
+  const ppTotG=tecPivotP.reduce((a,r)=>a+r.h_gest,0);
+  renderTecPivot(tecPivotP, svcsP, ppTotP, ppTotT, ppTotG, 'tbody-tec-p', 'tfoot-tec-p');
 }
 
 // Map col → {tipo, campo, scope} for drill-down
@@ -2332,8 +2377,9 @@ function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId, tipo){
 }
 
 function toggleAllTec(tipo){
-  const expSet = tipo==='ventas' ? _tecExpandedV : _tecExpanded;
-  const svcs = tipo==='ventas' ? (window._lastSvcsV||[]) : (window._lastSvcsC||[]);
+  const expSet = tipo==='ventas' ? _tecExpandedV : tipo==='planificado' ? (_tecExpandedP||new Set()) : _tecExpanded;
+  if(tipo==='planificado' && !window._tecExpandedP) window._tecExpandedP = new Set();
+  const svcs = tipo==='ventas' ? (window._lastSvcsV||[]) : tipo==='planificado' ? (window._lastSvcsP||[]) : (window._lastSvcsC||[]);
   const allTecs = [...new Set(svcs.map(s=>s.tecnico).filter(Boolean))];
   const anyExp = allTecs.some(t=>expSet.has(t));
   expSet.clear();
@@ -2344,6 +2390,8 @@ function toggleAllTec(tipo){
   const totG = tp.reduce((a,r)=>a+r.h_gest,0);
   if(tipo==='ventas'){
     renderTecPivot(tp,svcs,totP,totT,totG,'tbody-tec-v','tfoot-tec-v','ventas');
+  } else if(tipo==='planificado'){
+    renderTecPivot(tp,svcs,totP,totT,totG,'tbody-tec-p','tfoot-tec-p','planificado');
   } else {
     renderTecPivot(tp,svcs,totP,totT,totG,'tbody-tec','tfoot-tec','consumos');
   }
@@ -3002,6 +3050,39 @@ function ensureTecnico(email){
     const sb=getSB();
     if(sb) sb.from('tecnicos').upsert({email, nombre:email, activo:true}).then(()=>{});
   }
+}
+
+
+function drillKPIDate(dateCol, scope){
+  const year  = parseInt(document.getElementById('f-year').value);
+  const month = parseInt(document.getElementById('f-month').value);
+  const rng = mesRange(year, month);
+  const iniStr = dateToStr(rng.ini), finStr = dateToStr(rng.fin);
+
+  if(scope==='bg')       window._drillScopeFilter = r => r.tecnico === DIRECTOR;
+  else if(scope==='any') window._drillScopeFilter = r => (r.h_gest||0) > 0;
+  else if(scope==='tec') window._drillScopeFilter = null;
+  else                   window._drillScopeFilter = null;
+
+  svcFilters = {};
+  svcFilters['fecha_fprev'] = {from: iniStr, to: finStr};
+
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelector('.nav-tab[data-sec="servicios"]').classList.add('active');
+  document.getElementById('sec-servicios').classList.add('active');
+  resetSvcFilterRowDOM(); buildSvcFilterRow();
+  const fr = document.getElementById('svc-filter-row');
+  const cells = Array.from(fr.querySelectorAll('td'));
+  const fprevIdx = SVC_COLS.indexOf('fecha_fprev');
+  if(fprevIdx>=0){
+    const wrap = cells[fprevIdx]?.querySelector('.filter-range');
+    if(wrap){ wrap.children[0].value=iniStr; wrap.children[2].value=finStr; }
+  }
+  renderSvc();
+  const bar = document.getElementById('drill-bar');
+  bar.style.display = 'flex';
+  document.getElementById('drill-bar-lbl').textContent = `🔍 Planificado · ${MESES[month]} ${year}`;
 }
 
 // ── INIT ─────────────────────────────────────────────
