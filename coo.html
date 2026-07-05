@@ -760,7 +760,7 @@ table.rt tbody td.c{text-align:center;}
         <div class="fi s2"><label>📄 Documento funcional</label><input type="url" id="s-hl-func" placeholder="https://..."></div>
         <div class="fi"><label>Fecha aceptación</label><input type="date" id="s-fa"></div>
         <div class="fi"><label>✉️ Email aceptación</label><input type="url" id="s-hl-acept" placeholder="https://..."></div>
-        <div class="fi"><label>Fecha entrega prevista</label><input type="date" id="s-ffprev"></div>
+        <div class="fi"><label>Fecha entrega prevista</label><div style="display:flex;gap:6px;align-items:center;"><input type="date" id="s-ffprev" style="flex:1;" onchange="onFfprevDateChange()"><input type="text" id="s-ffprev-code" placeholder="2D/1S…" autocomplete="off" style="width:68px;font-size:12px;" oninput="onFfprevCodeInput()" title="Código: 2D=días, 1S=semanas, 3M=meses, 1A=año"></div><div id="s-ffprev-calc" style="font-size:11px;color:var(--fg-3);margin-top:3px;display:none;"></div></div>
         <div class="fi"><label>✉️ Email entrega prevista</label><input type="url" id="s-hl-fprev2" placeholder="https://..."></div>
         <div class="fi"><label>Fecha entrega real</label><input type="date" id="s-fe"></div>
         <div class="fi"><label>✉️ Email entrega real</label><input type="url" id="s-hl-entrega" placeholder="https://..."></div>
@@ -1824,6 +1824,7 @@ function autoCalc(){
   }
 }
 ['s-proy','s-cli','s-ht','s-hg'].forEach(id=>document.getElementById(id).addEventListener('change',autoCalc));
+  document.getElementById('s-fa').addEventListener('change', calcFprevFromCode);
 ['s-ht','s-hg'].forEach(id=>document.getElementById(id).addEventListener('input',autoCalc));
 
 function editSvcFn(i){
@@ -3083,6 +3084,99 @@ function drillKPIDate(dateCol, scope){
   const bar = document.getElementById('drill-bar');
   bar.style.display = 'flex';
   document.getElementById('drill-bar-lbl').textContent = `🔍 Planificado · ${MESES[month]} ${year}`;
+}
+
+
+// ── FESTIVOS BIZKAIA + CÁLCULO FECHA PREVISTA ────────────────
+// Festivos fijos nacionales + Bizkaia (dd-MM)
+const FESTIVOS_FIJOS = new Set([
+  '01-01','06-01','19-03','01-05','15-08','12-10','01-11','06-12','08-12','25-12',
+  // Bizkaia específicos
+  '02-05', // Día del Trabajo Bizkaia (ajustado)
+]);
+
+// Festivos variables por año (Semana Santa + otros) — hardcoded para 2024-2028
+const FESTIVOS_VAR = {
+  2024: ['29-03','01-04','20-05','24-06','25-07'],
+  2025: ['18-04','21-04','02-06','24-06','25-07'],
+  2026: ['03-04','06-04','25-05','24-06','25-07'],
+  2027: ['26-03','29-03','17-05','24-06','25-07'],
+  2028: ['14-04','17-04','05-06','24-06','25-07'],
+};
+
+function esFestivo(d){
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  const key = `${dd}-${mm}`;
+  if(FESTIVOS_FIJOS.has(key)) return true;
+  const vars = FESTIVOS_VAR[yyyy] || [];
+  return vars.includes(key);
+}
+
+function esDiaLaboral(d){
+  const dow = d.getDay(); // 0=Dom, 6=Sab
+  if(dow === 0 || dow === 6) return false;
+  return !esFestivo(d);
+}
+
+function addDiasLaborales(startDate, dias){
+  let d = new Date(startDate);
+  let count = 0;
+  // Si el punto de inicio no es laborable, avanzar al siguiente
+  while(!esDiaLaboral(d)){
+    d.setDate(d.getDate()+1);
+  }
+  while(count < dias){
+    d.setDate(d.getDate()+1);
+    if(esDiaLaboral(d)) count++;
+  }
+  return d;
+}
+
+function parseFprevCode(code){
+  // Returns {dias, tipo} or null if not a code
+  const m = /^(\d+)([DSMA])$/i.exec(code.trim().toUpperCase());
+  if(!m) return null;
+  const n = parseInt(m[1]);
+  const t = m[2];
+  // Convert to working days
+  if(t==='D') return n;
+  if(t==='S') return n*5;
+  if(t==='M') return n*22; // approx working days per month
+  if(t==='A') return n*261; // approx working days per year
+  return null;
+}
+
+function calcFprevFromCode(){
+  const faVal = document.getElementById('s-fa').value;
+  const codeVal = (document.getElementById('s-ffprev-code')?.value||'').trim();
+  const calcDiv = document.getElementById('s-ffprev-calc');
+  if(!faVal || !codeVal){ calcDiv.style.display='none'; return; }
+
+  const dias = parseFprevCode(codeVal);
+  if(dias === null){ calcDiv.style.display='none'; return; }
+
+  const startDate = new Date(faVal + 'T00:00:00');
+  const result = addDiasLaborales(startDate, dias);
+  const yyyy = result.getFullYear();
+  const mm = String(result.getMonth()+1).padStart(2,'0');
+  const dd = String(result.getDate()).padStart(2,'0');
+  const isoResult = `${yyyy}-${mm}-${dd}`;
+
+  // Write directly into the date field
+  document.getElementById('s-ffprev').value = isoResult;
+  calcDiv.textContent = `→ ${dd}/${mm}/${yyyy} (${dias} días laborables)`;
+  calcDiv.style.display = 'block';
+}
+
+function onFfprevCodeInput(){
+  calcFprevFromCode();
+}
+
+function onFfprevDateChange(){
+  // User picked a date manually — clear the code hint
+  document.getElementById('s-ffprev-calc').style.display='none';
 }
 
 // ── INIT ─────────────────────────────────────────────
