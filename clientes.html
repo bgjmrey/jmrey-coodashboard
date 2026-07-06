@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JMREY · Clientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --jmrey-navy-900:#0E1F3D;--jmrey-navy-800:#14274A;--jmrey-navy-700:#1E3157;--jmrey-navy-600:#2A3F66;
+  --jmrey-gold-700:#A47535;--jmrey-gold-600:#B6884A;--jmrey-gold-500:#C39247;--jmrey-gold-300:#D7B27A;
+  --jmrey-ivory-50:#FAF7F2;--jmrey-ivory-100:#F3F0EA;--jmrey-ivory-200:#ECE7DD;--jmrey-ivory-300:#E2D9C6;
+  --jmrey-ink-900:#14171C;--jmrey-ink-700:#2E2F33;--jmrey-ink-500:#5A5A5A;--jmrey-ink-400:#7A7669;
+  --jmrey-ink-300:#B4AFA2;--jmrey-ink-200:#D9D2C2;--jmrey-paper:#FFFFFF;
+  --bg:var(--jmrey-ivory-100);--bg-elevated:var(--jmrey-ivory-50);--bg-card:var(--jmrey-paper);--bg-dark:var(--jmrey-navy-900);
+  --fg-1:var(--jmrey-navy-900);--fg-2:var(--jmrey-ink-900);--fg-3:var(--jmrey-ink-500);--fg-4:var(--jmrey-ink-400);
+  --fg-on-dark:#F4ECE0;--fg-on-dark-2:#B6884A;
+  --accent:var(--jmrey-gold-600);--accent-strong:var(--jmrey-gold-700);--accent-soft:var(--jmrey-gold-300);
+  --border:var(--jmrey-ink-200);--border-soft:var(--jmrey-ivory-300);
+  --radius-md:6px;--radius-lg:10px;--radius-xl:14px;
+  --shadow-sm:0 2px 6px rgba(20,23,28,.05),0 1px 2px rgba(20,23,28,.04);
+  --shadow-md:0 8px 24px -8px rgba(20,23,28,.10),0 2px 6px rgba(20,23,28,.04);
+  --font-serif:'Cormorant Garamond',Georgia,serif;
+  --font-sans:'Manrope',system-ui,sans-serif;
+  --space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;--space-7:48px;--space-8:64px;
+  --container:1240px;--gutter:clamp(20px,4vw,56px);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--fg-2);line-height:1.6;}
+h1,h2,h3{font-family:var(--font-serif);font-weight:500;letter-spacing:-0.01em;line-height:1.08;color:var(--fg-1);}
+.wrap{max-width:var(--container);margin:0 auto;padding:0 var(--gutter);}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);}
+
+/* TOPBAR */
+.topbar{background:var(--bg-dark);padding:16px 0;}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;}
+.topbar .brand{font-family:var(--font-serif);font-size:22px;color:var(--fg-on-dark);text-decoration:none;}
+.topbar .back{font-size:13px;color:var(--fg-on-dark-2);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color 160ms;}
+.topbar .back:hover{color:var(--fg-on-dark);}
+
+/* HEADER */
+.page-header{padding:var(--space-7) 0 var(--space-6);border-bottom:1px solid var(--border-soft);}
+.page-header h1{font-size:clamp(32px,4vw,48px);margin-top:var(--space-3);}
+.rule{width:48px;height:2px;background:var(--accent);border:none;margin:var(--space-4) 0 0;}
+
+/* SEARCH */
+.search-bar{margin:var(--space-6) 0 var(--space-5);}
+.search-bar input{width:100%;max-width:400px;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-lg);font-family:var(--font-sans);font-size:14px;background:var(--bg-card);color:var(--fg-2);outline:none;transition:border-color 160ms;}
+.search-bar input:focus{border-color:var(--accent);}
+
+/* GRID */
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4);padding-bottom:var(--space-8);}
+.client-card{background:var(--bg-card);border:1px solid var(--border-soft);border-radius:var(--radius-xl);padding:var(--space-5);box-shadow:var(--shadow-sm);cursor:pointer;text-decoration:none;display:block;transition:box-shadow 220ms cubic-bezier(.16,1,.3,1),border-color 220ms,transform 220ms;}
+.client-card:hover{box-shadow:var(--shadow-md);border-color:var(--accent-soft);transform:translateY(-2px);}
+.client-card .card-icon{width:44px;height:44px;background:var(--jmrey-navy-900);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:var(--space-3);}
+.client-card .card-eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;}
+.client-card .card-name{font-family:var(--font-serif);font-size:20px;font-weight:500;color:var(--fg-1);margin-bottom:var(--space-2);}
+.client-card .card-meta{font-size:12px;color:var(--fg-4);}
+.client-card .card-arrow{margin-top:var(--space-4);font-size:18px;color:var(--accent-soft);transition:color 160ms;}
+.client-card:hover .card-arrow{color:var(--accent);}
+
+/* FOOTER */
+footer{background:var(--bg-dark);padding:var(--space-5) 0;margin-top:var(--space-7);}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(180,136,74,.3);padding-top:var(--space-4);}
+footer .brand{color:var(--fg-on-dark);font-family:var(--font-serif);font-size:18px;}
+footer .fnote{font-size:12px;color:var(--fg-on-dark-2);}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">JMREY</a>
+    <a class="back" href="index.html">← Portal</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="wrap">
+    <div class="eyebrow">JMREY GROUP</div>
+    <h1>Clientes</h1>
+    <hr class="rule">
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="search-bar">
+    <input type="text" id="search" placeholder="Buscar cliente…" oninput="filterCards()">
+  </div>
+  <div class="clients-grid" id="grid">
+
+    <a class="client-card" href="gruposicore.html">
+      <div class="card-icon">🏢</div>
+      <div class="card-eyebrow">JMREY · BC</div>
+      <div class="card-name">Grupo Sicore</div>
+      <div class="card-meta">Bolsas de horas · Business Central</div>
+      <div class="card-arrow">→</div>
+    </a>
+
+    <!-- Añadir más clientes aquí -->
+
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="brand">JMREY</div>
+    <div class="fnote">Portal de clientes</div>
+  </div>
+</footer>
+
+<script>
+function filterCards(){
+  const q = document.getElementById('search').value.toLowerCase();
+  document.querySelectorAll('.client-card').forEach(card => {
+    const txt = card.textContent.toLowerCase();
+    card.style.display = txt.includes(q) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
