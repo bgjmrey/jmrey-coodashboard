@@ -81,6 +81,8 @@ h1,h2{font-family:var(--font-serif);font-weight:500;letter-spacing:-0.01em;line-
 .btn-ghost{background:none;border:1px solid var(--border);color:var(--fg-2);}
 .btn-ghost:hover{border-color:var(--accent);}
 
+.bi{background:none;border:none;cursor:pointer;font-size:14px;padding:3px 5px;border-radius:var(--radius-sm);transition:background 140ms;color:var(--fg-3);}
+.bi:hover{background:var(--jmrey-ivory-200);color:var(--fg-1);}
 .view-btn{background:var(--bg-card);border:none;padding:7px 12px;font-size:15px;cursor:pointer;color:var(--fg-3);transition:background 140ms,color 140ms;}
 .view-btn:hover{background:var(--jmrey-ivory-200);color:var(--fg-1);}
 .view-btn.active{background:var(--jmrey-navy-900);color:var(--fg-on-dark);}
@@ -138,10 +140,10 @@ footer .fnote{font-size:12px;color:var(--fg-on-dark-2);}
   </div>
 </div>
 
-<!-- Modal nuevo cliente -->
+<!-- Modal edición cliente -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
-    <h3>Nuevo cliente</h3>
+    <h3 id="modal-title">Nuevo cliente</h3>
     <div class="fi"><label>Partner (código proyecto)</label><input id="m-partner" placeholder="Ej. JMREY, EQM…"></div>
     <div class="fi"><label>Cliente</label><input id="m-cliente" placeholder="Nombre del cliente"></div>
     <div class="fi"><label>Técnico director (email)</label><input id="m-tecnico" type="email" placeholder="bg@jmrey.com"></div>
@@ -149,6 +151,7 @@ footer .fnote{font-size:12px;color:var(--fg-on-dark-2);}
     <div class="fi"><label>% Margen</label><input id="m-margen" type="number" step="0.01" placeholder="0"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button id="btn-del-modal" class="btn" style="background:#c0392b;color:#fff;display:none;" onclick="deleteClienteModal()">🗑 Eliminar</button>
       <button class="btn btn-primary" onclick="saveCliente()">Guardar</button>
     </div>
   </div>
@@ -169,6 +172,7 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 let clientes = [];
 let currentView = 'cards';
 let listFilters = {partner:'',cliente:'',tecnico:''};
+let editIdx = null; // null=new, number=edit index in clientes array
 
 
 // Map de partner+cliente → página HTML del cliente
@@ -217,13 +221,13 @@ function renderList(){
     <thead>
       <tr>
         <th>Partner</th><th>Cliente</th><th>Técnico director</th>
-        <th class="r">€/hora</th><th class="r">% Margen</th><th>Ficha</th>
+        <th class="r">€/hora</th><th class="r">% Margen</th><th>Ficha</th><th style="width:72px;text-align:center;">Acc.</th>
       </tr>
       <tr class="filter-row-list">
         <th><input placeholder="…" oninput="listFilters.partner=this.value.toLowerCase();renderList()"></th>
         <th><input placeholder="…" oninput="listFilters.cliente=this.value.toLowerCase();renderList()"></th>
         <th><input placeholder="…" oninput="listFilters.tecnico=this.value.toLowerCase();renderList()"></th>
-        <th></th><th></th><th></th>
+        <th></th><th></th><th></th><th></th>
       </tr>
     </thead>
     <tbody>
@@ -235,13 +239,18 @@ function renderList(){
         )
         .map(c => {
           const page = clientePage(c);
-          return `<tr>
+          const fi = clientes.indexOf(c);
+          return `<tr ondblclick="openModal(${fi})" style="cursor:pointer;">
             <td>${esc(c.partner||'—')}</td>
             <td><strong>${esc(c.cliente||'—')}</strong></td>
             <td>${esc(c.tecnico||'—')}</td>
             <td class="r">${c.precio ? c.precio+' €' : '—'}</td>
             <td class="r">${c.margen ? c.margen+'%' : '—'}</td>
-            <td class="link-cell">${page ? `<a href="${page}">Ver ficha →</a>` : '—'}</td>
+            <td class="link-cell">${page ? `<a href="${page}" onclick="event.stopPropagation()">Ver ficha →</a>` : '—'}</td>
+            <td style="white-space:nowrap;">
+              <button class="bi" onclick="event.stopPropagation();openModal(${fi})" title="Editar">✏️</button>
+              <button class="bi" onclick="event.stopPropagation();deleteCard(${fi})" title="Eliminar">🗑️</button>
+            </td>
           </tr>`;
         }).join('')}
     </tbody>
@@ -268,17 +277,23 @@ function renderCards(){
     const page = clientePage(c);
     const href = page ? `href="${page}"` : 'href="#" onclick="return false"';
     const arrow = page ? '→' : '<span style="font-size:12px;color:var(--fg-4)">Sin ficha</span>';
-    return `<a class="client-card" ${href}>
-      <div class="card-icon">🏢</div>
-      <div class="card-eyebrow">${esc(c.partner||'—')}</div>
-      <div class="card-name">${esc(c.cliente||'—')}</div>
-      <div class="card-meta">
+    const fi = clientes.indexOf(c);
+    return `<div class="client-card" ondblclick="openModal(${fi})" style="position:relative;">
+      <div style="position:absolute;top:10px;right:10px;display:flex;gap:2px;">
+        <button class="bi" onclick="event.stopPropagation();openModal(${fi})" title="Editar">✏️</button>
+        <button class="bi" onclick="event.stopPropagation();deleteCard(${fi})" title="Eliminar">🗑️</button>
+      </div>
+      ${page ? `<a href="${page}" onclick="event.stopPropagation();" style="position:absolute;inset:0;z-index:0;border-radius:var(--radius-xl);"></a>` : ''}
+      <div class="card-icon" style="position:relative;z-index:1;">🏢</div>
+      <div class="card-eyebrow" style="position:relative;z-index:1;">${esc(c.partner||'—')}</div>
+      <div class="card-name" style="position:relative;z-index:1;">${esc(c.cliente||'—')}</div>
+      <div class="card-meta" style="position:relative;z-index:1;">
         ${c.tecnico ? `<span>👤 ${esc(c.tecnico)}</span>` : ''}
         ${c.precio ? `<span>💶 ${c.precio} €/h</span>` : ''}
         ${c.margen ? `<span>📊 ${c.margen}% margen</span>` : ''}
       </div>
-      <div class="card-arrow">${arrow}</div>
-    </a>`;
+      <div class="card-arrow" style="position:relative;z-index:1;">${arrow}</div>
+    </div>`;
   }).join('');
 }
 
@@ -291,8 +306,16 @@ function showError(msg){
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // Modal
-function openModal(){
-  ['m-partner','m-cliente','m-tecnico','m-precio','m-margen'].forEach(id=>document.getElementById(id).value='');
+function openModal(idx){
+  editIdx = (idx !== undefined) ? idx : null;
+  const r = editIdx !== null ? clientes[editIdx] : {};
+  document.getElementById('modal-title').textContent = editIdx !== null ? 'Editar cliente' : 'Nuevo cliente';
+  document.getElementById('m-partner').value = r.partner||'';
+  document.getElementById('m-cliente').value = r.cliente||'';
+  document.getElementById('m-tecnico').value = r.tecnico||'';
+  document.getElementById('m-precio').value  = r.precio??'';
+  document.getElementById('m-margen').value  = r.margen??'';
+  document.getElementById('btn-del-modal').style.display = editIdx !== null ? 'inline-flex' : 'none';
   document.getElementById('modal-bg').classList.add('open');
   document.getElementById('m-partner').focus();
 }
@@ -308,7 +331,31 @@ async function saveCliente(){
     margen:  parseFloat(document.getElementById('m-margen').value)||0,
   };
   if(!o.partner||!o.cliente){ alert('Partner y Cliente son obligatorios'); return; }
-  const {error} = await sb.from('clientes').insert(o);
+  let error;
+  if(editIdx !== null){
+    const r = clientes[editIdx];
+    ({error} = await sb.from('clientes').update(o).eq('id', r.id));
+  } else {
+    ({error} = await sb.from('clientes').insert(o));
+  }
+  if(error){ alert('Error: '+error.message); return; }
+  closeModal();
+  await loadClientes();
+
+async function deleteCard(idx){
+  const r = clientes[idx];
+  if(!confirm(`¿Eliminar ${r.partner} / ${r.cliente}?`)) return;
+  const {error} = await sb.from('clientes').delete().eq('id', r.id);
+  if(error){ alert('Error: '+error.message); return; }
+  await loadClientes();
+}
+}
+
+async function deleteClienteModal(){
+  if(editIdx === null) return;
+  const r = clientes[editIdx];
+  if(!confirm(`¿Eliminar el cliente ${r.partner} / ${r.cliente}?`)) return;
+  const {error} = await sb.from('clientes').delete().eq('id', r.id);
   if(error){ alert('Error: '+error.message); return; }
   closeModal();
   await loadClientes();
