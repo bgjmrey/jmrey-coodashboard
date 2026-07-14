@@ -81,6 +81,24 @@ h1,h2{font-family:var(--font-serif);font-weight:500;letter-spacing:-0.01em;line-
 .btn-ghost{background:none;border:1px solid var(--border);color:var(--fg-2);}
 .btn-ghost:hover{border-color:var(--accent);}
 
+.view-btn{background:var(--bg-card);border:none;padding:7px 12px;font-size:15px;cursor:pointer;color:var(--fg-3);transition:background 140ms,color 140ms;}
+.view-btn:hover{background:var(--jmrey-ivory-200);color:var(--fg-1);}
+.view-btn.active{background:var(--jmrey-navy-900);color:var(--fg-on-dark);}
+
+/* List view table */
+.list-table{width:100%;border-collapse:collapse;background:var(--bg-card);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:var(--space-8);}
+.list-table thead th{background:var(--bg-dark);color:var(--fg-on-dark);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;text-align:left;padding:10px 14px;}
+.list-table thead th.r{text-align:right;}
+.list-table tbody td{padding:9px 14px;font-size:13px;border-bottom:1px solid var(--border-soft);color:var(--fg-2);}
+.list-table tbody td.r{text-align:right;font-variant-numeric:tabular-nums;}
+.list-table tbody tr:hover td{background:var(--jmrey-ivory-200);}
+.list-table tbody tr:last-child td{border-bottom:none;}
+.list-table .link-cell a{color:var(--accent);text-decoration:none;font-weight:600;}
+.list-table .link-cell a:hover{text-decoration:underline;}
+.filter-row-list th{background:var(--jmrey-navy-800)!important;padding:4px 8px!important;}
+.filter-row-list input{width:100%;padding:4px 8px;border:1px solid rgba(255,255,255,.15);border-radius:4px;background:rgba(255,255,255,.08);color:#fff;font-size:12px;font-family:var(--font-sans);outline:none;}
+.filter-row-list input::placeholder{color:rgba(255,255,255,.35);}
+.filter-row-list input:focus{border-color:var(--accent);}
 footer{background:var(--bg-dark);padding:var(--space-5) 0;margin-top:var(--space-7);}
 footer .wrap{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(180,136,74,.3);padding-top:var(--space-4);}
 footer .brand{color:var(--fg-on-dark);font-family:var(--font-serif);font-size:18px;}
@@ -106,7 +124,11 @@ footer .fnote{font-size:12px;color:var(--fg-on-dark-2);}
 
 <div class="wrap">
   <div class="toolbar">
-    <input type="text" class="search-input" id="search" placeholder="Buscar cliente o partner…" oninput="renderCards()">
+    <input type="text" class="search-input" id="search" placeholder="Buscar cliente o partner…" oninput="render()">
+    <div style="display:flex;gap:4px;border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;">
+      <button id="btn-cards" class="view-btn active" onclick="setView('cards')" title="Tarjetas">⊞</button>
+      <button id="btn-list"  class="view-btn"        onclick="setView('list')"  title="Lista">☰</button>
+    </div>
     <button class="btn btn-primary btn-sm" onclick="openModal()">+ Nuevo cliente</button>
   </div>
   <div class="clients-grid" id="grid">
@@ -145,6 +167,9 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 const sb = supabase.createClient(SB_URL, SB_KEY);
 let clientes = [];
+let currentView = 'cards';
+let listFilters = {partner:'',cliente:'',tecnico:''};
+
 
 // Map de partner+cliente → página HTML del cliente
 const CLIENT_PAGES = {
@@ -159,12 +184,74 @@ async function loadClientes(){
   const {data, error} = await sb.from('clientes').select('*').order('partner').order('cliente');
   if(error){ showError(error.message); return; }
   clientes = data || [];
-  renderCards();
+  render();
+}
+
+function setView(v){
+  currentView = v;
+  document.getElementById('btn-cards').classList.toggle('active', v==='cards');
+  document.getElementById('btn-list').classList.toggle('active',  v==='list');
+  render();
+}
+
+function render(){
+  if(currentView === 'list') renderList();
+  else renderCards();
+}
+
+function renderList(){
+  const q = document.getElementById('search').value.toLowerCase();
+  const grid = document.getElementById('grid');
+  document.getElementById('grid').style.display = '';
+  const filtered = clientes.filter(c =>
+    (c.partner||'').toLowerCase().includes(q) ||
+    (c.cliente||'').toLowerCase().includes(q) ||
+    (c.tecnico||'').toLowerCase().includes(q)
+  );
+  if(!filtered.length){
+    grid.innerHTML = `<div class="state-msg"><div class="icon">🔍</div><p>Sin resultados</p></div>`;
+    return;
+  }
+  grid.style.display = 'block';
+  grid.innerHTML = `<table class="list-table">
+    <thead>
+      <tr>
+        <th>Partner</th><th>Cliente</th><th>Técnico director</th>
+        <th class="r">€/hora</th><th class="r">% Margen</th><th>Ficha</th>
+      </tr>
+      <tr class="filter-row-list">
+        <th><input placeholder="…" oninput="listFilters.partner=this.value.toLowerCase();renderList()"></th>
+        <th><input placeholder="…" oninput="listFilters.cliente=this.value.toLowerCase();renderList()"></th>
+        <th><input placeholder="…" oninput="listFilters.tecnico=this.value.toLowerCase();renderList()"></th>
+        <th></th><th></th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      ${filtered
+        .filter(c =>
+          (c.partner||'').toLowerCase().includes(listFilters.partner) &&
+          (c.cliente||'').toLowerCase().includes(listFilters.cliente) &&
+          (c.tecnico||'').toLowerCase().includes(listFilters.tecnico)
+        )
+        .map(c => {
+          const page = clientePage(c);
+          return `<tr>
+            <td>${esc(c.partner||'—')}</td>
+            <td><strong>${esc(c.cliente||'—')}</strong></td>
+            <td>${esc(c.tecnico||'—')}</td>
+            <td class="r">${c.precio ? c.precio+' €' : '—'}</td>
+            <td class="r">${c.margen ? c.margen+'%' : '—'}</td>
+            <td class="link-cell">${page ? `<a href="${page}">Ver ficha →</a>` : '—'}</td>
+          </tr>`;
+        }).join('')}
+    </tbody>
+  </table>`;
 }
 
 function renderCards(){
   const q = document.getElementById('search').value.toLowerCase();
   const grid = document.getElementById('grid');
+  document.getElementById('grid').style.display = '';
   const filtered = clientes.filter(c =>
     (c.partner||'').toLowerCase().includes(q) ||
     (c.cliente||'').toLowerCase().includes(q) ||
