@@ -21,7 +21,7 @@
   --border:var(--jmrey-ink-200);--border-soft:var(--jmrey-ivory-300);
   --radius-md:6px;--radius-lg:10px;--radius-xl:14px;
   --shadow-sm:0 2px 6px rgba(20,23,28,.05),0 1px 2px rgba(20,23,28,.04);
-  --shadow-md:0 8px 24px -8px rgba(20,23,28,.10),0 2px 6px rgba(20,23,28,.04);
+  --shadow-md:0 8px 24px -8px rgba(20,23,28,.10),0 2px 6px rgba(20,23,28,.04);--shadow-lg:0 24px 48px -16px rgba(14,31,61,.14),0 4px 12px rgba(20,23,28,.04);
   --font-serif:'Cormorant Garamond',Georgia,serif;
   --font-sans:'Manrope',system-ui,sans-serif;
   --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;--space-7:48px;--space-8:64px;
@@ -67,6 +67,39 @@ footer{background:var(--bg-dark);padding:var(--space-5) 0;margin-top:var(--space
 footer .wrap{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(180,136,74,.3);padding-top:var(--space-4);}
 footer .brand{color:var(--fg-on-dark);font-family:var(--font-serif);font-size:18px;}
 footer .fnote{font-size:12px;color:var(--fg-on-dark-2);}
+
+/* ── MODAL EDICIÓN ───────────────────────────── */
+.mod-bg{display:none;position:fixed;inset:0;background:rgba(14,31,61,.4);z-index:200;align-items:center;justify-content:center;}
+.mod-bg.open{display:flex;}
+.mod-box{background:var(--bg-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:460px;width:94vw;box-shadow:0 24px 48px -16px rgba(14,31,61,.25);}
+.mod-box h3{font-family:var(--font-serif);font-size:22px;color:var(--fg-1);margin-bottom:var(--space-5);}
+.mod-fi{display:flex;flex-direction:column;gap:5px;margin-bottom:var(--space-4);}
+.mod-fi label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-3);}
+.mod-fi input{padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-md);font-family:var(--font-sans);font-size:14px;color:var(--fg-2);background:var(--bg-card);outline:none;transition:border-color 160ms;}
+.mod-fi input:focus{border-color:var(--accent);}
+.mod-fi-row{display:flex;gap:var(--space-3);}
+.mod-fi-row .mod-fi{flex:1;}
+.mod-footer{display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5);}
+.btn-cancel{background:none;border:1px solid var(--border);border-radius:var(--radius-md);padding:9px 18px;font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;color:var(--fg-2);transition:border-color 160ms;}
+.btn-cancel:hover{border-color:var(--accent);}
+.btn-save{background:var(--jmrey-navy-900);color:var(--fg-on-dark);border:none;border-radius:var(--radius-md);padding:9px 18px;font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;transition:background 160ms;}
+.btn-save:hover{background:var(--jmrey-navy-700);}
+/* Modal — igual que clientes.html */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(14,31,61,.35);z-index:200;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--bg-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:480px;width:94vw;box-shadow:0 24px 48px -16px rgba(14,31,61,.25);}
+.modal h3{font-family:var(--font-serif);font-size:22px;margin-bottom:var(--space-4);}
+.efi{display:flex;flex-direction:column;gap:6px;margin-bottom:var(--space-4);}
+.efi label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-3);}
+.efi input{padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-md);font-family:var(--font-sans);font-size:14px;color:var(--fg-2);background:var(--bg-card);outline:none;transition:border-color 160ms;width:100%;}
+.efi input:focus{border-color:var(--accent);}
+.efi-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.modal-footer{display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5);}
+.ebtn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:var(--radius-md);padding:9px 18px;font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;transition:background 160ms;}
+.ebtn-primary{background:var(--jmrey-navy-900);color:var(--fg-on-dark);}
+.ebtn-primary:hover{background:var(--jmrey-navy-700);}
+.ebtn-ghost{background:none;border:1px solid var(--border);color:var(--fg-2);}
+.ebtn-ghost:hover{border-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -153,35 +186,21 @@ footer .fnote{font-size:12px;color:var(--fg-on-dark-2);}
   <iframe id="preview-frame" style="width:100%;height:80vh;border:none;"></iframe>
 </div>
 
-<!-- Modal edición -->
-<div id="edit-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(14,31,61,.4);z-index:200;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:14px;padding:32px;max-width:440px;width:94vw;box-shadow:0 24px 48px -16px rgba(14,31,61,.25);">
-    <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;margin-bottom:20px;color:#0E1F3D;">Editar cliente</h3>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
-      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#7A7669;">Partner</label>
-      <input id="e-partner" style="padding:9px 12px;border:1px solid #D9D2C2;border-radius:6px;font-size:14px;outline:none;" placeholder="JMREY">
+
+<!-- Modal edición cliente -->
+<div class="modal-bg" id="edit-modal-bg">
+  <div class="modal">
+    <h3>Editar cliente</h3>
+    <div class="efi"><label>Partner</label><input id="e-partner" placeholder="JMREY"></div>
+    <div class="efi"><label>Cliente</label><input id="e-cliente" placeholder="GRUPO SICORE"></div>
+    <div class="efi"><label>Técnico director (email)</label><input id="e-tecnico" type="email" placeholder="bg@jmrey.com"></div>
+    <div class="efi-row">
+      <div class="efi" style="margin-bottom:0;"><label>€ / hora</label><input id="e-precio" type="number" step="0.5" min="0"></div>
+      <div class="efi" style="margin-bottom:0;"><label>% Margen</label><input id="e-margen" type="number" step="1" min="0"></div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
-      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#7A7669;">Cliente</label>
-      <input id="e-cliente" style="padding:9px 12px;border:1px solid #D9D2C2;border-radius:6px;font-size:14px;outline:none;" placeholder="GRUPO SICORE">
-    </div>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
-      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#7A7669;">Técnico director (email)</label>
-      <input id="e-tecnico" type="email" style="padding:9px 12px;border:1px solid #D9D2C2;border-radius:6px;font-size:14px;outline:none;" placeholder="bg@jmrey.com">
-    </div>
-    <div style="display:flex;gap:12px;margin-bottom:20px;">
-      <div style="display:flex;flex-direction:column;gap:6px;flex:1;">
-        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#7A7669;">€ / hora</label>
-        <input id="e-precio" type="number" step="0.5" style="padding:9px 12px;border:1px solid #D9D2C2;border-radius:6px;font-size:14px;outline:none;">
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px;flex:1;">
-        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#7A7669;">% Margen</label>
-        <input id="e-margen" type="number" step="1" style="padding:9px 12px;border:1px solid #D9D2C2;border-radius:6px;font-size:14px;outline:none;">
-      </div>
-    </div>
-    <div style="display:flex;gap:12px;justify-content:flex-end;">
-      <button onclick="closeEditModal()" style="background:none;border:1px solid #D9D2C2;border-radius:6px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">Cancelar</button>
-      <button onclick="saveEdit()" style="background:#0E1F3D;color:#F4ECE0;border:none;border-radius:6px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">Guardar</button>
+    <div class="modal-footer">
+      <button class="ebtn ebtn-ghost" onclick="closeEditModal()">Cancelar</button>
+      <button class="ebtn ebtn-primary" onclick="saveEdit()">Guardar</button>
     </div>
   </div>
 </div>
@@ -225,12 +244,12 @@ function openEditModal(){
   document.getElementById('e-precio').value   = r.precio   ?? '';
   document.getElementById('e-margen').value   = r.margen   ?? '';
   const bg = document.getElementById('edit-modal-bg');
-  bg.style.display = 'flex';
+  bg.classList.add('open');
   bg.onclick = e => { if(e.target === bg) closeEditModal(); };
 }
 
 function closeEditModal(){
-  document.getElementById('edit-modal-bg').style.display = 'none';
+  document.getElementById('edit-modal-bg').classList.remove('open');
 }
 
 async function saveEdit(){
@@ -526,7 +545,7 @@ function buildHTML(bolsas, consumos, fileName){
   --accent:var(--jmrey-gold-600);--accent-strong:var(--jmrey-gold-700);--accent-soft:var(--jmrey-gold-300);
   --border:var(--jmrey-ink-200);--border-soft:var(--jmrey-ivory-300);
   --radius-sm:4px;--radius-md:6px;--radius-lg:10px;--radius-xl:14px;
-  --shadow-xs:0 1px 2px rgba(20,23,28,.04);--shadow-sm:0 2px 6px rgba(20,23,28,.05),0 1px 2px rgba(20,23,28,.04);--shadow-md:0 8px 24px -8px rgba(20,23,28,.10),0 2px 6px rgba(20,23,28,.04);--shadow-lg:0 24px 48px -16px rgba(14,31,61,.14),0 4px 12px rgba(20,23,28,.04);
+  --shadow-xs:0 1px 2px rgba(20,23,28,.04);--shadow-sm:0 2px 6px rgba(20,23,28,.05),0 1px 2px rgba(20,23,28,.04);--shadow-md:0 8px 24px -8px rgba(20,23,28,.10),0 2px 6px rgba(20,23,28,.04);--shadow-lg:0 24px 48px -16px rgba(14,31,61,.14),0 4px 12px rgba(20,23,28,.04);--shadow-lg:0 24px 48px -16px rgba(14,31,61,.14),0 4px 12px rgba(20,23,28,.04);
   --font-serif:'Cormorant Garamond',Georgia,serif;--font-sans:'Manrope',system-ui,sans-serif;
   --fz-display:clamp(40px,5.5vw,72px);--fz-h1:clamp(34px,4vw,52px);--fz-h2:clamp(26px,2.8vw,36px);
   --fz-h3:22px;--fz-h4:19px;--fz-body-lg:18px;--fz-body:16px;--fz-body-sm:14px;--fz-caption:13px;--fz-eyebrow:12px;
@@ -647,38 +666,6 @@ footer .fnote{font-size:var(--fz-caption);}
   </div>
 </section>
 
-<!-- Modal edición -->
-<div id="edit-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(14,31,61,.4);z-index:200;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:14px;padding:32px;max-width:440px;width:94vw;box-shadow:0 24px 48px -16px rgba(14,31,61,.25);">
-    <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;margin-bottom:20px;color:#0E1F3D;">Editar cliente</h3>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
-      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#7A7669;">Partner</label>
-      <input id="e-partner" style="padding:9px 12px;border:1px solid #D9D2C2;border-radius:6px;font-size:14px;outline:none;" placeholder="JMREY">
-    </div>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
-      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#7A7669;">Cliente</label>
-      <input id="e-cliente" style="padding:9px 12px;border:1px solid #D9D2C2;border-radius:6px;font-size:14px;outline:none;" placeholder="GRUPO SICORE">
-    </div>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
-      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#7A7669;">Técnico director (email)</label>
-      <input id="e-tecnico" type="email" style="padding:9px 12px;border:1px solid #D9D2C2;border-radius:6px;font-size:14px;outline:none;" placeholder="bg@jmrey.com">
-    </div>
-    <div style="display:flex;gap:12px;margin-bottom:20px;">
-      <div style="display:flex;flex-direction:column;gap:6px;flex:1;">
-        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#7A7669;">€ / hora</label>
-        <input id="e-precio" type="number" step="0.5" style="padding:9px 12px;border:1px solid #D9D2C2;border-radius:6px;font-size:14px;outline:none;">
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px;flex:1;">
-        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#7A7669;">% Margen</label>
-        <input id="e-margen" type="number" step="1" style="padding:9px 12px;border:1px solid #D9D2C2;border-radius:6px;font-size:14px;outline:none;">
-      </div>
-    </div>
-    <div style="display:flex;gap:12px;justify-content:flex-end;">
-      <button onclick="closeEditModal()" style="background:none;border:1px solid #D9D2C2;border-radius:6px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">Cancelar</button>
-      <button onclick="saveEdit()" style="background:#0E1F3D;color:#F4ECE0;border:none;border-radius:6px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;">Guardar</button>
-    </div>
-  </div>
-</div>
 <footer>
   <div class="wrap">
     <div class="brand">JMREY</div>
