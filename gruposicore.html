@@ -280,6 +280,42 @@ async function saveEdit(){
 loadClienteData();
 
 // ── DRAG & DROP ──────────────────────────────────────────────
+
+function setStatus(msg, type){
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = type==='ok' ? 'rgba(14,31,61,.06)' : type==='err' ? 'rgba(180,0,0,.07)' : 'var(--jmrey-ivory-200)';
+  el.style.color = type==='err' ? '#a00' : 'var(--fg-2)';
+  el.style.border = '1px solid ' + (type==='ok' ? 'var(--border-soft)' : type==='err' ? 'rgba(180,0,0,.2)' : 'var(--border-soft)');
+}
+
+function resetGenerator(){
+  generatedHTML = null;
+  document.getElementById('status').style.display = 'none';
+  document.getElementById('actions').style.display = 'none';
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+function downloadHTML(){
+  if(!generatedHTML) return;
+  const blob = new Blob([generatedHTML], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'GRUPO_SICORE_Desglose_Bolsas_Horas.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function previewHTML(){
+  if(!generatedHTML) return;
+  const frame = document.getElementById('preview-frame');
+  frame.srcdoc = generatedHTML;
+  document.getElementById('preview-section').style.display = 'block';
+  document.getElementById('preview-section').scrollIntoView({behavior:'smooth'});
+}
+
 function onDragOver(e){
   e.preventDefault();
   document.getElementById('drop-zone').style.borderColor = 'var(--accent)';
@@ -298,13 +334,6 @@ function onDrop(e){
 function onFileSelect(e){
   const file = e.target.files[0];
   if(file) processFile(file);
-}
-function resetGenerator(){
-  generatedHTML = null;
-  document.getElementById('status').style.display = 'none';
-  document.getElementById('actions').style.display = 'none';
-  document.getElementById('preview-section').style.display = 'none';
-  document.getElementById('file-input').value = '';
 }
 
 // ── EXCEL PARSING ────────────────────────────────────────────
@@ -657,23 +686,6 @@ function toggleConsumo(r){
 
 function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function downloadHTML(){
-  if(!generatedHTML) return;
-  const blob = new Blob([generatedHTML], {type:'text/html;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'GRUPO_SICORE_Desglose_Bolsas_Horas.html';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-function previewHTML(){
-  if(!generatedHTML) return;
-  const frame = document.getElementById('preview-frame');
-  frame.srcdoc = generatedHTML;
-  document.getElementById('preview-section').style.display = 'block';
-  document.getElementById('preview-section').scrollIntoView({behavior:'smooth'});
-}
 </script>
 </body>
 </html>
