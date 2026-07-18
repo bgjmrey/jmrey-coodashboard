@@ -458,6 +458,203 @@ function parseBolsas(wb, consumos){
   return bolsas;
 }
 
+
+// ── BUILD HTML ───────────────────────────────────────────────
+function buildHTML(bolsas, consumos, fileName){
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2,'0');
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const yyyy = now.getFullYear();
+  const fechaInforme = `${dd}/${mm}/${yyyy}`;
+  const mesesES = ['Ene.','Feb.','Mar.','Abr.','May.','Jun.','Jul.','Ago.','Sep.','Oct.','Nov.','Dic.'];
+  const mesActual = mesesES[now.getMonth()];
+  const inicio = 'Sep. 2025';
+  const fin = `${mesActual} ${yyyy}`;
+  const nMeses = (yyyy - 2025)*12 + now.getMonth() - 8;
+
+  let totalHoras = 0, totalConsumosH = 0, totalProyectosH = 0;
+  bolsas.forEach(b=>{
+    totalHoras += b.horas_total;
+    b.tareas.forEach(t=>{
+      if(t.tipo==='consumo') totalConsumosH += t.horas;
+      else totalProyectosH += t.horas;
+    });
+  });
+
+  const CHEVRON = `<svg viewBox="0 0 8 12" fill="none" width="10" height="10"><path d="M1 1L7 6L1 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  function fmt(n){ return (n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+  function buildTbody(bolsa, idx){
+    const isClosed = idx < bolsas.length - 1;
+    const pillClass = isClosed ? 'pill-done' : 'pill-progress';
+    const pillText  = isClosed ? 'Cerrada' : 'Abierta';
+    const tareasConsumo  = bolsa.tareas.filter(t=>t.tipo==='consumo');
+    const tareasProyecto = bolsa.tareas.filter(t=>t.tipo==='proyecto');
+    const hConsumos  = tareasConsumo.reduce((a,t)=>a+t.horas,0);
+    const hProyectos = tareasProyecto.reduce((a,t)=>a+t.horas,0);
+    const pct = bolsa.horas_total > 0 ? Math.round((hConsumos+hProyectos)/bolsa.horas_total*100) : 0;
+
+    // Subdetail rows for each consumo task
+    let consumoRows = '';
+    tareasConsumo.forEach(t=>{
+      const lineas = consumos[t.id] || [];
+      const totalH = lineas.reduce((a,l)=>a+l.horas,0);
+      let subRows = lineas.map(l=>`
+        <tr class="subdetail-row" style="display:none;">
+          <td class="subdetail-name">${escH(l.tarea)}<span class="subdetail-work"> — ${escH(l.trabajo)}</span></td>
+          <td class="subdetail-id">${escH(l.fecha)}</td>
+          <td class="num"></td><td class="num subdetail-hrs">${fmt(l.horas)}</td>
+          <td class="num"></td><td class="num"></td><td></td>
+        </tr>`).join('');
+
+      consumoRows += `
+        <tr class="detail-row row-consumos" onclick="toggleConsumo(this)">
+          <td class="detail-name">
+            <span class="consumo-chevron">${CHEVRON}</span>
+            ${escH(t.nombre||'Consumos')} <span class="detail-tag">${escH(t.descripcion||'')}</span>
+            <span class="consumo-count">(${lineas.length} líneas)</span>
+          </td>
+          <td class="detail-id">${escH(t.id)}</td>
+          <td class="num"></td><td class="num">${fmt(hConsumos)}</td>
+          <td class="num"></td><td class="num"></td><td></td>
+        </tr>
+        ${subRows}`;
+    });
+
+    const proyRows = tareasProyecto.map(t=>`
+        <tr class="detail-row">
+          <td class="detail-name">${escH(t.nombre)}</td>
+          <td class="detail-id">${escH(t.id)}</td>
+          <td class="num"></td><td class="num"></td>
+          <td class="num">${fmt(t.horas)}</td>
+          <td class="num"></td><td></td>
+        </tr>`).join('');
+
+    return `
+      <tbody class="bolsa-group">
+        <tr class="bolsa-row" onclick="toggleBolsa(this)">
+          <td><span class="bolsa-name"><span class="chevron">${CHEVRON}</span>${escH(bolsa.nombre)}</span></td>
+          <td>${escH(bolsa.id)}</td>
+          <td class="num">${fmt(bolsa.horas_total)}</td>
+          <td class="num">${fmt(hConsumos)}</td>
+          <td class="num">${fmt(hProyectos)}</td>
+          <td class="num">${pct} %</td>
+          <td><span class="pill ${pillClass}">${pillText}</span></td>
+        </tr>
+        ${consumoRows}
+        ${proyRows}
+      </tbody>`;
+  }
+
+  const tbodies = bolsas.map((b,i)=>buildTbody(b,i)).join('\n');
+  const totalEntregado = totalHoras > 0 ? (totalConsumosH+totalProyectosH)/totalHoras*100 : 0;
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRUPO SICORE · Desglose bolsas de horas</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0E1F3D;--gold:#B6884A;--ivory:#F3F0EA;--ivory2:#ECE7DD;--ink:#14171C;--ink3:#5A5A5A;--ink4:#7A7669;--ink2:#D9D2C2;--paper:#fff;--serif:'Cormorant Garamond',serif;--sans:'Manrope',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--ivory);color:var(--ink);line-height:1.6;}
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(20px,4vw,56px);}
+h1{font-family:var(--serif);font-weight:500;color:#fff;font-size:clamp(32px,4vw,52px);margin-top:12px;}
+.cover{background:var(--navy);padding:64px 0 48px;}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);}
+.rule{width:48px;height:2px;background:var(--gold);border:none;margin:20px 0;}
+.lead{color:#F4ECE0;font-size:16px;opacity:.9;max-width:580px;}
+.meta{display:grid;grid-template-columns:repeat(2,1fr);gap:16px 48px;max-width:680px;margin-top:32px;}
+.meta .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:2px;}
+.meta .val{font-size:14px;color:#F4ECE0;font-weight:500;}
+section{padding:48px 0;}
+table{width:100%;border-collapse:collapse;background:var(--paper);border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(20,23,28,.05);}
+thead th{background:var(--navy);color:#F4ECE0;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;text-align:left;padding:10px 14px;}
+td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--ivory2);color:var(--ink);}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;}
+.pill-done{background:rgba(14,31,61,.08);color:var(--navy);}
+.pill-progress{background:rgba(182,136,74,.16);color:#A47535;}
+tr.bolsa-row{cursor:pointer;user-select:none;}
+tr.bolsa-row td{font-weight:600;background:var(--ivory);border-top:1px solid var(--ink2);}
+tr.bolsa-row:hover td{background:var(--ivory2);}
+.bolsa-name{display:flex;align-items:center;gap:8px;}
+.chevron{display:inline-flex;color:#A47535;transition:transform 200ms;}
+tbody.bolsa-group.is-open tr.bolsa-row .chevron{transform:rotate(90deg);}
+tr.detail-row td{font-size:12px;color:var(--ink3);padding:6px 14px;}
+tr.detail-row .detail-name{padding-left:32px;position:relative;}
+tr.detail-row .detail-name::before{content:"—";position:absolute;left:16px;color:var(--gold);}
+tr.detail-row .detail-tag{color:var(--ink4);font-style:italic;}
+tr.detail-row .detail-id{color:var(--ink4);font-size:11px;}
+tr.detail-row.row-consumos{cursor:pointer;}
+tr.detail-row.row-consumos:hover td{background:var(--ivory);}
+tr.detail-row.row-consumos .detail-name::before{display:none;}
+.consumo-chevron{display:inline-flex;color:#A47535;transition:transform 200ms;margin-right:4px;}
+tr.detail-row.row-consumos.is-open .consumo-chevron{transform:rotate(90deg);}
+.consumo-count{color:var(--ink4);font-size:11px;margin-left:6px;}
+tr.subdetail-row td{background:var(--ivory);font-size:11px;color:var(--ink4);padding:3px 14px;border-bottom:1px dashed var(--ivory2);}
+tr.subdetail-row .subdetail-name{padding-left:56px;position:relative;}
+tr.subdetail-row .subdetail-name::before{content:"·";position:absolute;left:40px;color:var(--ink2);}
+tr.subdetail-row .subdetail-work{color:var(--ink4);}
+tr.subdetail-row .subdetail-id{font-size:11px;}
+tr.subdetail-row .subdetail-hrs{color:var(--ink3);}
+tbody.bolsa-group:not(.is-open) tr.detail-row{display:none;}
+footer{background:var(--navy);color:rgba(244,236,224,.6);padding:24px 0;margin-top:48px;}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(182,136,74,.3);padding-top:20px;}
+footer .brand{color:#F4ECE0;font-family:var(--serif);font-size:18px;}
+</style>
+</head>
+<body>
+<div class="cover"><div class="wrap">
+  <div class="eyebrow">Informe de seguimiento · Bolsas de horas</div>
+  <h1>Desglose del consumo de las ${bolsas.length} bolsas de horas</h1>
+  <hr class="rule">
+  <p class="lead">Detalle de consumo recurrente frente a desarrollos planificados por bolsa.</p>
+  <div class="meta">
+    <div><div class="lbl">Cliente</div><div class="val">GRUPO SICORE</div></div>
+    <div><div class="lbl">Fecha del informe</div><div class="val">${fechaInforme}</div></div>
+    <div><div class="lbl">Periodo analizado</div><div class="val">${inicio} — ${fin} (${nMeses} meses)</div></div>
+    <div><div class="lbl">Elaborado por</div><div class="val">JMREY · Borja González Santa Cruz</div></div>
+  </div>
+</div></div>
+
+<section><div class="wrap">
+  <table>
+    <thead><tr>
+      <th>Bolsa</th><th>Id.</th><th class="num">Horas</th>
+      <th class="num">Consumos</th><th class="num">Proyectos</th>
+      <th class="num">% entregado</th><th>Estado</th>
+    </tr></thead>
+    ${tbodies}
+    <tfoot><tr style="background:var(--ivory);font-weight:700;">
+      <td colspan="2">Total</td>
+      <td class="num">${fmt(totalHoras)}</td>
+      <td class="num">${fmt(totalConsumosH)}</td>
+      <td class="num">${fmt(totalProyectosH)}</td>
+      <td class="num">${Math.round(totalEntregado*10)/10} %</td>
+      <td></td>
+    </tr></tfoot>
+  </table>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="brand">JMREY</div>
+  <div>Generado desde "${escH(fileName)}" · ${fechaInforme}</div>
+</div></footer>
+<script>
+function toggleBolsa(r){r.closest('.bolsa-group').classList.toggle('is-open');}
+function toggleConsumo(r){
+  event.stopPropagation();
+  r.classList.toggle('is-open');
+  const open=r.classList.contains('is-open');
+  let s=r.nextElementSibling;
+  while(s&&s.classList.contains('subdetail-row')){s.style.display=open?'table-row':'none';s=s.nextElementSibling;}
+}
+<\/script>
+</body></html>`;
+}
+
 function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function downloadHTML(){
