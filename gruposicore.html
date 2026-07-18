@@ -314,10 +314,14 @@ function processFile(file){
   reader.onload = function(e){
     try {
       const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
-      const bolsas = parseBolsas(wb);
+      // Log sheet names for debugging
+      console.log('Hojas:', wb.SheetNames);
       const consumos = parseConsumos(wb);
+      console.log('Consumos cargados:', Object.keys(consumos).length, 'tareas');
+      const bolsas = parseBolsas(wb, consumos);
+      console.log('Bolsas:', bolsas.map(b=>b.nombre+'('+b.tareas.length+' tareas)'));
       generatedHTML = buildHTML(bolsas, consumos, file.name);
-      setStatus('✅ Informe generado correctamente — ' + bolsas.length + ' bolsas procesadas', 'ok');
+      setStatus('✅ Informe generado — ' + bolsas.length + ' bolsas, ' + Object.keys(consumos).length + ' tareas con consumos', 'ok');
       document.getElementById('actions').style.display = 'flex';
     } catch(err) {
       setStatus('❌ Error: ' + err.message, 'err');
@@ -327,20 +331,89 @@ function processFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-function setStatus(msg, type){
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.style.display = 'block';
-  el.style.background = type==='ok' ? 'rgba(14,31,61,.06)' : type==='err' ? 'rgba(180,0,0,.07)' : 'var(--jmrey-ivory-200)';
-  el.style.color = type==='err' ? '#a00' : 'var(--fg-2)';
-  el.style.border = '1px solid ' + (type==='ok' ? 'var(--border-soft)' : type==='err' ? 'rgba(180,0,0,.2)' : 'var(--border-soft)');
+// ── PARSE DETALLE CONSUMOS (primero, para luego enlazar con bolsas) ──
+// Pestaña: "Detalle consumos"
+// Cabecera en la fila que contenga "Fecha" — buscar dinámicamente
+// Cols: Fecha, Cliente, Id_tarea, Tipo_tarea, Subtipo_tarea, Descripcion_tarea, Descripcion_trabajo, Horas
+function parseConsumos(wb){
+  const sheetName = wb.SheetNames.find(n =>
+    n.toLowerCase().includes('detalle') ||
+    n.toLowerCase().includes('consumo')
+  );
+  if(!sheetName){
+    console.warn('No se encontró la pestaña Detalle consumos. Hojas:', wb.SheetNames);
+    return {};
+  }
+  console.log('Pestaña consumos:', sheetName);
+  const ws = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+
+  // Buscar fila de cabecera (la que tiene "Fecha" o "Id_tarea")
+  let headerIdx = -1;
+  for(let i = 0; i < Math.min(20, rows.length); i++){
+    const r = rows[i];
+    if(!r) continue;
+    const hasDate = r.some(c => String(c||'').toLowerCase().trim() === 'fecha');
+    const hasId   = r.some(c => String(c||'').toLowerCase().includes('id_tarea') || String(c||'').toLowerCase().includes('id tarea'));
+    if(hasDate || hasId){ headerIdx = i; break; }
+  }
+  if(headerIdx < 0){ headerIdx = 8; } // fallback
+  console.log('Cabecera consumos en fila', headerIdx, ':', rows[headerIdx]);
+
+  // Mapear columnas por nombre de cabecera
+  const headers = (rows[headerIdx]||[]).map(c => String(c||'').toLowerCase().trim());
+  const colFecha  = headers.findIndex(h => h === 'fecha');
+  const colIdTarea= headers.findIndex(h => h.includes('id_tarea') || h.includes('id tarea'));
+  const colDescT  = headers.findIndex(h => h.includes('descripcion_tarea') || h.includes('descripción tarea') || (h.includes('descripci') && h.includes('tarea')));
+  const colDescW  = headers.findIndex(h => h.includes('descripcion_trabajo') || h.includes('descripción trabajo') || (h.includes('descripci') && h.includes('trabajo')));
+  const colHoras  = headers.findIndex(h => h === 'horas');
+  console.log('Cols consumos — fecha:', colFecha, 'id_tarea:', colIdTarea, 'desc_tarea:', colDescT, 'desc_trabajo:', colDescW, 'horas:', colHoras);
+
+  // Fallback a posiciones fijas si no se encuentran por nombre
+  const iF  = colFecha   >= 0 ? colFecha   : 0;
+  const iId = colIdTarea >= 0 ? colIdTarea : 2;
+  const iDT = colDescT   >= 0 ? colDescT   : 5;
+  const iDW = colDescW   >= 0 ? colDescW   : 6;
+  const iH  = colHoras   >= 0 ? colHoras   : 7;
+
+  const consumosPorTarea = {};
+  let totalLineas = 0;
+  for(let i = headerIdx+1; i < rows.length; i++){
+    const row = rows[i];
+    if(!row || row.every(c => c===null||c==='')) continue;
+    const idTarea = String(row[iId]||'').trim();
+    if(!idTarea) continue;
+    const horas = parseFloat(row[iH]) || 0;
+    if(horas === 0) continue;
+
+    const fecha = row[iF];
+    let fechaStr = '';
+    if(fecha instanceof Date){
+      fechaStr = String(fecha.getDate()).padStart(2,'0')+'/'+String(fecha.getMonth()+1).padStart(2,'0')+'/'+String(fecha.getFullYear()).slice(2);
+    } else if(fecha){ fechaStr = String(fecha); }
+
+    if(!consumosPorTarea[idTarea]) consumosPorTarea[idTarea] = [];
+    consumosPorTarea[idTarea].push({
+      fecha: fechaStr,
+      tarea: String(row[iDT]||'').trim(),
+      trabajo: String(row[iDW]||'').trim(),
+      horas
+    });
+    totalLineas++;
+  }
+  console.log('Total líneas consumo:', totalLineas, '— tareas únicas:', Object.keys(consumosPorTarea).length);
+  return consumosPorTarea;
 }
 
 // ── PARSE BOLSA DE HORAS JMREY ───────────────────────────────
-// Cabecera fila 0, datos desde fila 7
-// col1=id_bolsa, col2=nombre, col3=descripcion, col8=horas
-function parseBolsas(wb){
-  const sheetName = wb.SheetNames.find(n => n.toLowerCase().includes('bolsa') && n.toLowerCase().includes('jmrey')) || wb.SheetNames[0];
+// Pestaña: "Bolsa de horas JMREY"
+// Cabecera en fila 0, datos desde fila 7
+// col[1]=id, col[2]=nombre_bolsa_o_tarea, col[3]=descripcion, col[8]=horas
+function parseBolsas(wb, consumos){
+  const sheetName = wb.SheetNames.find(n =>
+    n.toLowerCase().includes('bolsa') && (n.toLowerCase().includes('jmrey') || n.toLowerCase().includes('hora'))
+  ) || wb.SheetNames[0];
+  console.log('Pestaña bolsas:', sheetName);
   const ws = wb.Sheets[sheetName];
   const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
 
@@ -351,346 +424,38 @@ function parseBolsas(wb){
     const row = rows[i];
     if(!row || row.every(c => c === null || c === '')) continue;
 
-    const col1 = String(row[1]||'').trim(); // id
-    const col2 = String(row[2]||'').trim(); // nombre
+    const col1 = String(row[1]||'').trim(); // id / código
+    const col2 = String(row[2]||'').trim(); // nombre bolsa o tarea
     const col3 = String(row[3]||'').trim(); // descripcion
-    const col8 = parseFloat(row[8]) || 0;   // horas
+    const col8 = parseFloat(row[8]) || 0;   // horas totales o de tarea
 
-    if(!col1) continue;
+    if(!col1 && !col2) continue;
 
-    // Es cabecera de bolsa si col1 contiene un id largo (ej. 250929155001)
-    // o si col2 contiene "Bolsa de proyectos" 
-    const isBolsaHeader = col2.toLowerCase().includes('bolsa') || 
-                          (!isNaN(col1) && col1.length >= 10);
+    // Detectar si es cabecera de bolsa:
+    // — col2 contiene "Bolsa" o "bolsa"
+    // — col1 es un id largo (≥10 dígitos) y col3 está vacío y hay horas
+    const esBolsa = col2.toLowerCase().includes('bolsa') ||
+                    (col1.length >= 8 && !col3 && col8 > 0 && !consumos[col1]);
 
-    if(isBolsaHeader && col8 > 0 && !col3){
-      // Es la fila de bolsa
-      currentBolsa = {
-        id: col1,
-        nombre: col2,
-        horas_total: col8,
-        tareas: []
-      };
+    if(esBolsa){
+      currentBolsa = { id:col1, nombre:col2||col3||'Bolsa '+(bolsas.length+1), horas_total:col8, tareas:[] };
       bolsas.push(currentBolsa);
-    } else if(currentBolsa && col2 && col8 > 0){
-      // Es una tarea dentro de la bolsa actual
+      console.log('Bolsa detectada:', currentBolsa.nombre, '— horas:', col8);
+    } else if(currentBolsa && (col1 || col2) && col8 > 0){
+      // Es una tarea/fila dentro de la bolsa actual
+      // Determinar tipo: si consumos tiene entradas para col1 → es tarea de consumo
+      const hasConsumos = consumos[col1] && consumos[col1].length > 0;
       currentBolsa.tareas.push({
         id: col1,
         nombre: col2,
         descripcion: col3,
         horas: col8,
-        tipo: col3 ? 'proyecto' : 'consumo'
+        tipo: hasConsumos ? 'consumo' : 'proyecto'
       });
     }
   }
+  console.log('Total bolsas:', bolsas.length);
   return bolsas;
-}
-
-// ── PARSE DETALLE CONSUMOS ───────────────────────────────────
-// Cabecera en fila 8 (idx 0), datos desde fila 9 (idx 1)
-// Cols: Fecha, Cliente, Id_tarea, Tipo_tarea, Subtipo_tarea, Descripcion_tarea, Descripcion_trabajo, Horas
-function parseConsumos(wb){
-  const sheetName = wb.SheetNames.find(n => n.toLowerCase().includes('detalle') || n.toLowerCase().includes('consumo')) || wb.SheetNames[1];
-  if(!sheetName) return {};
-  const ws = wb.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
-
-  // Find header row
-  let headerIdx = 8;
-  for(let i = 0; i < Math.min(15, rows.length); i++){
-    const r = rows[i];
-    if(r && r.some(c => String(c||'').toLowerCase().includes('fecha'))) { headerIdx = i; break; }
-  }
-
-  const consumosPorTarea = {};
-  for(let i = headerIdx+1; i < rows.length; i++){
-    const row = rows[i];
-    if(!row || row.every(c => c===null||c==='')) continue;
-    const fecha    = row[0];
-    const idTarea  = String(row[2]||'').trim();
-    const descTarea= String(row[5]||'').trim();
-    const descTrab = String(row[6]||'').trim();
-    const horas    = parseFloat(row[7]) || 0;
-    if(!idTarea || horas===0) continue;
-
-    let fechaStr = '';
-    if(fecha instanceof Date){
-      const d=String(fecha.getDate()).padStart(2,'0');
-      const m=String(fecha.getMonth()+1).padStart(2,'0');
-      const y=String(fecha.getFullYear()).slice(2);
-      fechaStr = `${d}/${m}/${y}`;
-    } else if(fecha){
-      fechaStr = String(fecha);
-    }
-
-    if(!consumosPorTarea[idTarea]) consumosPorTarea[idTarea] = [];
-    consumosPorTarea[idTarea].push({fecha:fechaStr, tarea:descTarea, trabajo:descTrab, horas});
-  }
-  return consumosPorTarea;
-}
-
-// ── BUILD HTML ───────────────────────────────────────────────
-function buildHTML(bolsas, consumos, fileName){
-  const now = new Date();
-  const dd = String(now.getDate()).padStart(2,'0');
-  const mm = String(now.getMonth()+1).padStart(2,'0');
-  const yyyy = now.getFullYear();
-  const fechaInforme = `${dd}/${mm}/${yyyy}`;
-
-  // Periodo: Sep. 2025 — mes actual
-  const mesesES = ['Ene.','Feb.','Mar.','Abr.','May.','Jun.','Jul.','Ago.','Sep.','Oct.','Nov.','Dic.'];
-  const mesActual = mesesES[now.getMonth()];
-  const inicio = 'Sep. 2025';
-  const fin = `${mesActual} ${yyyy}`;
-  const startDate = new Date(2025, 8, 1);
-  const nMeses = (yyyy - 2025)*12 + now.getMonth() - 8;
-
-  // Totals
-  const totalHoras = bolsas.reduce((a,b)=>a+b.horas_total,0);
-  let totalConsumosH = 0, totalProyectosH = 0;
-
-  bolsas.forEach(b=>{
-    b.tareas.forEach(t=>{
-      if(t.tipo==='consumo') totalConsumosH += t.horas;
-      else totalProyectosH += t.horas;
-    });
-  });
-
-  // Build tbody per bolsa
-  const CHEVRON = `<svg viewBox="0 0 8 12" fill="none"><path d="M1 1L7 6L1 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-
-  function fmt(n){ return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-
-  function buildTbody(bolsa, idx){
-    const isClosed = idx < bolsas.length - 1;
-    const pillClass = isClosed ? 'pill-done' : 'pill-progress';
-    const pillText  = isClosed ? 'Cerrada' : 'Abierta';
-
-    // Separate consumo tasks from proyecto tasks
-    const tareasConsumo  = bolsa.tareas.filter(t=>t.tipo==='consumo');
-    const tareasProyecto = bolsa.tareas.filter(t=>t.tipo==='proyecto');
-
-    const hConsumos  = tareasConsumo.reduce((a,t)=>a+t.horas,0);
-    const hProyectos = tareasProyecto.reduce((a,t)=>a+t.horas,0);
-    const pct = bolsa.horas_total > 0 ? Math.round((hConsumos+hProyectos)/bolsa.horas_total*100) : 0;
-
-    // Build consumo subdetail rows from consumos sheet
-    // Find consumo task id (first consumo task's id or bolsa id)
-    const idConsumo = tareasConsumo[0]?.id || bolsa.id;
-    const lineasConsumo = consumos[idConsumo] || consumos[bolsa.id] || [];
-
-    let subdetailRows = '';
-    lineasConsumo.forEach(l=>{
-      subdetailRows += `
-        <tr class="subdetail-row" style="display:none;">
-          <td class="subdetail-name">${escH(l.tarea)}<span class="subdetail-work"> — ${escH(l.trabajo)}</span></td>
-          <td class="subdetail-id">${escH(l.fecha)}</td>
-          <td class="num"></td><td class="num subdetail-hrs">${fmt(l.horas)}</td>
-          <td class="num"></td><td class="num"></td><td></td>
-        </tr>`;
-    });
-
-    const consumoRow = hConsumos > 0 ? `
-        <tr class="detail-row row-consumos" onclick="toggleConsumo(this)">
-          <td class="detail-name">
-            <span class="consumo-chevron">${CHEVRON}</span>
-            Consumos <span class="detail-tag">soporte, incidencias y peticiones puntuales</span>
-            <span class="consumo-count">(${lineasConsumo.length} líneas)</span>
-          </td>
-          <td class="detail-id">${escH(bolsa.id)}</td>
-          <td class="num"></td><td class="num">${fmt(hConsumos)}</td>
-          <td class="num"></td><td class="num"></td><td></td>
-        </tr>
-        ${subdetailRows}` : '';
-
-    const proyRows = tareasProyecto.map(t=>`
-        <tr class="detail-row">
-          <td class="detail-name">${escH(t.nombre)}</td>
-          <td class="detail-id">${escH(t.id)}</td>
-          <td class="num"></td><td class="num"></td>
-          <td class="num">${fmt(t.horas)}</td>
-          <td class="num"></td><td></td>
-        </tr>`).join('');
-
-    return `
-      <tbody class="bolsa-group">
-        <tr class="bolsa-row" onclick="toggleBolsa(this)">
-          <td><span class="bolsa-name"><span class="chevron">${CHEVRON}</span>${escH(bolsa.nombre)}<span class="mobile-pill" style="display:none;"><span class="pill ${pillClass}">${pillText}</span></span></span></td>
-          <td>${escH(bolsa.id)}</td>
-          <td class="num">${fmt(bolsa.horas_total)}</td>
-          <td class="num">${fmt(hConsumos)}</td>
-          <td class="num">${fmt(hProyectos)}</td>
-          <td class="num">${pct} %</td>
-          <td><span class="pill ${pillClass}">${pillText}</span></td>
-        </tr>
-        ${consumoRow}
-        ${proyRows}
-      </tbody>`;
-  }
-
-  const tbodies = bolsas.map((b,i)=>buildTbody(b,i)).join('\n');
-  const totalEntregado = totalHoras > 0 ? (totalConsumosH+totalProyectosH)/totalHoras*100 : 0;
-
-  return `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GRUPO SICORE · Desglose de consumo de bolsas de horas</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --jmrey-navy-900:#0E1F3D;--jmrey-navy-800:#14274A;--jmrey-navy-700:#1E3157;--jmrey-navy-600:#2A3F66;
-  --jmrey-gold-700:#A47535;--jmrey-gold-600:#B6884A;--jmrey-gold-500:#C39247;--jmrey-gold-300:#D7B27A;
-  --jmrey-ivory-50:#FAF7F2;--jmrey-ivory-100:#F3F0EA;--jmrey-ivory-200:#ECE7DD;--jmrey-ivory-300:#E2D9C6;
-  --jmrey-ink-900:#14171C;--jmrey-ink-500:#5A5A5A;--jmrey-ink-400:#7A7669;--jmrey-ink-300:#B4AFA2;--jmrey-ink-200:#D9D2C2;--jmrey-paper:#FFFFFF;
-  --bg:var(--jmrey-ivory-100);--bg-elevated:var(--jmrey-ivory-50);--bg-card:var(--jmrey-paper);--bg-dark:var(--jmrey-navy-900);
-  --fg-1:var(--jmrey-navy-900);--fg-2:var(--jmrey-ink-900);--fg-3:var(--jmrey-ink-500);--fg-4:var(--jmrey-ink-400);
-  --fg-on-dark:#F4ECE0;--fg-on-dark-2:#B6884A;
-  --accent:var(--jmrey-gold-600);--accent-strong:var(--jmrey-gold-700);--accent-soft:var(--jmrey-gold-300);
-  --border:var(--jmrey-ink-200);--border-soft:var(--jmrey-ivory-300);
-  --radius-sm:4px;--radius-md:6px;--radius-lg:10px;--radius-xl:14px;
-  --shadow-xs:0 1px 2px rgba(20,23,28,.04);--shadow-sm:0 2px 6px rgba(20,23,28,.05),0 1px 2px rgba(20,23,28,.04);--shadow-md:0 8px 24px -8px rgba(20,23,28,.10),0 2px 6px rgba(20,23,28,.04);--shadow-lg:0 24px 48px -16px rgba(14,31,61,.14),0 4px 12px rgba(20,23,28,.04);--shadow-lg:0 24px 48px -16px rgba(14,31,61,.14),0 4px 12px rgba(20,23,28,.04);
-  --font-serif:'Cormorant Garamond',Georgia,serif;--font-sans:'Manrope',system-ui,sans-serif;
-  --fz-display:clamp(40px,5.5vw,72px);--fz-h1:clamp(34px,4vw,52px);--fz-h2:clamp(26px,2.8vw,36px);
-  --fz-h3:22px;--fz-h4:19px;--fz-body-lg:18px;--fz-body:16px;--fz-body-sm:14px;--fz-caption:13px;--fz-eyebrow:12px;
-  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;--space-7:48px;--space-8:64px;--space-9:96px;--space-10:128px;
-  --container-narrow:980px;--container:1240px;--container-wide:1440px;--gutter:clamp(20px,4vw,56px);
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--font-sans);background:var(--bg);color:var(--fg-2);line-height:1.6;font-weight:400;}
-h1,h2,h3,h4,.display{font-family:var(--font-serif);font-weight:500;letter-spacing:-0.01em;line-height:1.08;color:var(--fg-1);}
-.wrap{max-width:var(--container-narrow);margin:0 auto;padding:0 var(--gutter);}
-.wrap-wide{max-width:var(--container-wide);margin:0 auto;padding:0 var(--gutter);}
-.eyebrow{font-family:var(--font-sans);font-size:var(--fz-eyebrow);font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);}
-.cover{background:var(--bg-dark);color:var(--fg-on-dark);padding:var(--space-10) 0 var(--space-9);}
-.cover .eyebrow{color:var(--accent);}
-.cover h1{color:var(--fg-on-dark);font-size:var(--fz-display);margin-top:var(--space-3);max-width:880px;}
-.cover .rule{width:48px;height:2px;background:var(--accent);border:none;margin:var(--space-5) 0;}
-.cover p.lead{color:var(--fg-on-dark);font-size:var(--fz-body-lg);max-width:640px;opacity:.92;}
-.meta-table{margin-top:var(--space-7);display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:var(--space-4) var(--space-7);max-width:680px;}
-.meta-row .label{font-size:var(--fz-caption);letter-spacing:.06em;text-transform:uppercase;color:var(--fg-on-dark-2);margin-bottom:2px;}
-.meta-row .value{font-size:var(--fz-body);color:var(--fg-on-dark);font-weight:500;}
-section{padding:var(--space-8) 0;}
-.section-header-dark{background:var(--bg-dark);padding:var(--space-6) 0;margin-bottom:var(--space-7);}
-.section-header-dark .wrap-wide{display:flex;align-items:baseline;gap:var(--space-4);}
-.section-header-dark .num{font-family:var(--font-serif);font-size:var(--fz-h3);color:var(--accent);}
-.section-header-dark h2{color:var(--fg-on-dark);font-size:var(--fz-h2);}
-table{width:100%;border-collapse:collapse;background:var(--bg-card);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);}
-thead th{background:var(--bg-dark);color:var(--fg-on-dark);font-size:var(--fz-caption);font-weight:600;letter-spacing:.04em;text-transform:uppercase;text-align:left;padding:var(--space-3) var(--space-4);}
-tbody td{padding:var(--space-3) var(--space-4);font-size:var(--fz-body-sm);border-bottom:1px solid var(--border-soft);color:var(--fg-2);}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
-.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:var(--fz-caption);font-weight:600;}
-.pill-done{background:rgba(14,31,61,.08);color:var(--jmrey-navy-700);}
-.pill-progress{background:rgba(180,136,74,.16);color:var(--accent-strong);}
-tr.bolsa-row{cursor:pointer;user-select:none;}
-tr.bolsa-row td{font-weight:600;color:var(--fg-1);background:var(--bg-elevated);border-top:1px solid var(--border);transition:background 160ms ease;}
-tbody.bolsa-group:first-of-type tr.bolsa-row td{border-top:none;}
-tr.bolsa-row:hover td{background:var(--jmrey-ivory-200);}
-.bolsa-name{display:flex;align-items:center;gap:var(--space-2);}
-.chevron{display:inline-flex;width:16px;height:16px;align-items:center;justify-content:center;color:var(--accent-strong);transition:transform 200ms ease;flex-shrink:0;}
-.chevron svg{width:10px;height:10px;}
-tbody.bolsa-group.is-open tr.bolsa-row .chevron{transform:rotate(90deg);}
-tr.detail-row{background:var(--bg-card);}
-tr.detail-row td{font-size:var(--fz-caption);color:var(--fg-3);padding-top:6px;padding-bottom:6px;}
-tr.detail-row .detail-name{padding-left:var(--space-6);position:relative;}
-tr.detail-row .detail-name::before{content:"—";position:absolute;left:var(--space-4);color:var(--accent-soft);}
-tr.detail-row .detail-tag{color:var(--fg-4);font-style:italic;}
-tr.detail-row .detail-id{color:var(--fg-4);font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:11px;}
-tr.detail-row.row-consumos{cursor:pointer;}
-tr.detail-row.row-consumos:hover td{background:var(--bg-elevated);}
-tr.detail-row.row-consumos .detail-name::before{content:"";display:none;}
-.consumo-chevron{display:inline-flex;width:14px;height:14px;align-items:center;justify-content:center;color:var(--accent-strong);transition:transform 200ms ease;margin-right:var(--space-1);}
-.consumo-chevron svg{width:9px;height:9px;}
-tr.detail-row.row-consumos.is-open .consumo-chevron{transform:rotate(90deg);}
-.consumo-count{color:var(--fg-4);font-size:11px;font-weight:400;margin-left:var(--space-2);}
-tr.subdetail-row td{background:var(--jmrey-ivory-50);font-size:12px;color:var(--fg-4);padding-top:4px;padding-bottom:4px;border-bottom:1px dashed var(--border-soft);}
-tr.subdetail-row .subdetail-name{padding-left:var(--space-9);position:relative;}
-tr.subdetail-row .subdetail-name::before{content:"·";position:absolute;left:var(--space-7);color:var(--jmrey-ink-300);}
-tr.subdetail-row .subdetail-work{color:var(--fg-4);}
-tr.subdetail-row .subdetail-id{color:var(--fg-4);font-size:11px;white-space:nowrap;}
-tr.subdetail-row .subdetail-hrs{color:var(--fg-3);}
-tbody.bolsa-group:not(.is-open) tr.detail-row{display:none;}
-footer{background:var(--bg-dark);color:var(--fg-on-dark-2);padding:var(--space-6) 0;margin-top:var(--space-8);}
-footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--space-3);border-top:1px solid rgba(180,136,74,.3);padding-top:var(--space-5);}
-footer .brand{color:var(--fg-on-dark);font-family:var(--font-serif);font-size:var(--fz-h4);}
-footer .fnote{font-size:var(--fz-caption);}
-@media(max-width:640px){
-  .meta-table{grid-template-columns:1fr;}
-  .cover{padding:var(--space-7) 0 var(--space-6);}
-  .cover h1{font-size:clamp(28px,8vw,40px);}
-  section{padding:var(--space-6) 0;}
-  .section-header-dark{padding:var(--space-4) 0;margin-bottom:var(--space-5);}
-  thead th:nth-child(2),thead th:nth-child(6),thead th:nth-child(7){display:none;}
-  tr.bolsa-row td:nth-child(2),tr.bolsa-row td:nth-child(6),tr.bolsa-row td:nth-child(7){display:none;}
-  tr.detail-row td:nth-child(2){display:none;}
-  tr.subdetail-row td:nth-child(2){display:none;}
-  .mobile-pill{display:inline-flex !important;}
-}
-</style>
-</head>
-<body>
-<section class="cover">
-  <div class="wrap">
-    <div class="eyebrow">Informe de seguimiento · Bolsas de horas</div>
-    <h1>Desglose del consumo de las ${bolsas.length} bolsas de horas contratadas</h1>
-    <hr class="rule">
-    <p class="lead">Detalle pormenorizado de en qué se han empleado las horas entregadas en cada bolsa: trabajo de consumo recurrente (soporte, mantenimiento, ajustes puntuales) frente a desarrollos planificados como proyecto.</p>
-    <div class="meta-table">
-      <div class="meta-row"><div class="label">Cliente</div><div class="value">GRUPO SICORE</div></div>
-      <div class="meta-row"><div class="label">Fecha del informe</div><div class="value">${fechaInforme}</div></div>
-      <div class="meta-row"><div class="label">Periodo analizado</div><div class="value">${inicio} — ${fin} (${nMeses} meses)</div></div>
-      <div class="meta-row"><div class="label">Elaborado por</div><div class="value">JMREY · Borja González Santa Cruz</div></div>
-    </div>
-  </div>
-</section>
-
-<div class="section-header-dark">
-  <div class="wrap-wide"><span class="num">01</span><h2>Resumen por bolsa</h2></div>
-</div>
-<section style="padding-top:0;">
-  <div class="wrap-wide">
-    <table>
-      <thead>
-        <tr>
-          <th>Bolsa</th><th>Id.</th><th class="num">Horas</th><th class="num">Consumos</th><th class="num">Proyectos</th><th class="num">% entregado</th><th>Estado</th>
-        </tr>
-      </thead>
-      ${tbodies}
-      <tfoot>
-        <tr style="background:var(--bg-elevated);font-weight:700;">
-          <td colspan="2">Total</td>
-          <td class="num">${fmt(totalHoras)}</td>
-          <td class="num">${fmt(totalConsumosH)}</td>
-          <td class="num">${fmt(totalProyectosH)}</td>
-          <td class="num">${Math.round(totalEntregado*10)/10} %</td>
-          <td></td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-</section>
-
-<footer>
-  <div class="wrap">
-    <div class="brand">JMREY</div>
-    <div class="fnote">Informe generado a partir de "${escH(fileName)}" · ${fechaInforme}</div>
-  </div>
-</footer>
-<script>
-function toggleBolsa(rowEl){rowEl.closest('.bolsa-group').classList.toggle('is-open');}
-function toggleConsumo(rowEl){
-  event.stopPropagation();
-  rowEl.classList.toggle('is-open');
-  var open=rowEl.classList.contains('is-open');
-  var sib=rowEl.nextElementSibling;
-  while(sib&&sib.classList.contains('subdetail-row')){sib.style.display=open?'table-row':'none';sib=sib.nextElementSibling;}
-}
-<\/script>
-</body>
-</html>`;
 }
 
 function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
