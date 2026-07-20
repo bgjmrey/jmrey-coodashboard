@@ -2399,15 +2399,24 @@ function toggleAllTec(tipo){
 }
 
 function toggleTec(tec, tipo){
-  const expSet = (tipo==='ventas') ? _tecExpandedV : (tipo==='planificado') ? (window._tecExpandedP=window._tecExpandedP||new Set()) : _tecExpanded;
+  if(!window._tecExpandedP) window._tecExpandedP = new Set();
+  const expSet = (tipo==='ventas') ? _tecExpandedV : (tipo==='planificado') ? window._tecExpandedP : _tecExpanded;
   if(expSet.has(tec)) expSet.delete(tec);
   else expSet.add(tec);
-  const tp = calcTecPivot(window._lastSvcsC||[]);
-  const tP=tp.reduce((a,r)=>a+r.h_prod,0), tT=tp.reduce((a,r)=>a+r.h_tec,0), tG=tp.reduce((a,r)=>a+r.h_gest,0);
-  renderTecPivot(tp, window._lastSvcsC||[], tP, tT, tG, 'tbody-tec', 'tfoot-tec', 'consumos');
-  const tpV = calcTecPivot(window._lastSvcsV||[]);
-  const vP=tpV.reduce((a,r)=>a+r.h_prod,0), vT=tpV.reduce((a,r)=>a+r.h_tec,0), vG=tpV.reduce((a,r)=>a+r.h_gest,0);
-  renderTecPivot(tpV, window._lastSvcsV||[], vP, vT, vG, 'tbody-tec-v', 'tfoot-tec-v', 'ventas');
+  // Re-render only the affected table
+  if(tipo==='planificado'){
+    const tpP = calcTecPivot(window._lastSvcsP||[]);
+    const pP=tpP.reduce((a,r)=>a+r.h_prod,0), pT=tpP.reduce((a,r)=>a+r.h_tec,0), pG=tpP.reduce((a,r)=>a+r.h_gest,0);
+    renderTecPivot(tpP, window._lastSvcsP||[], pP, pT, pG, 'tbody-tec-p', 'tfoot-tec-p', 'planificado');
+  } else if(tipo==='ventas'){
+    const tpV = calcTecPivot(window._lastSvcsV||[]);
+    const vP=tpV.reduce((a,r)=>a+r.h_prod,0), vT=tpV.reduce((a,r)=>a+r.h_tec,0), vG=tpV.reduce((a,r)=>a+r.h_gest,0);
+    renderTecPivot(tpV, window._lastSvcsV||[], vP, vT, vG, 'tbody-tec-v', 'tfoot-tec-v', 'ventas');
+  } else {
+    const tp = calcTecPivot(window._lastSvcsC||[]);
+    const tP=tp.reduce((a,r)=>a+r.h_prod,0), tT=tp.reduce((a,r)=>a+r.h_tec,0), tG=tp.reduce((a,r)=>a+r.h_gest,0);
+    renderTecPivot(tp, window._lastSvcsC||[], tP, tT, tG, 'tbody-tec', 'tfoot-tec', 'consumos');
+  }
 }
 
 // ── COLUMN RESIZE (mouse + touch) ─────────────────────
