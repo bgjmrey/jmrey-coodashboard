@@ -152,12 +152,15 @@ footer .fnote{font-size:12px;color:var(--fg-on-dark-2);}
     <p style="font-size:14px;color:var(--fg-3);margin-bottom:var(--space-5);">Sube el Excel con las hojas <strong>Bolsa de horas JMREY</strong> y <strong>Detalle consumos</strong>.</p>
 
     <!-- DROP ZONE -->
-    <div id="drop-zone" style="border:2px dashed var(--border);border-radius:var(--radius-xl);padding:var(--space-7) var(--space-5);text-align:center;cursor:pointer;transition:border-color 200ms,background 200ms;background:var(--bg-card);"
-         onclick="document.getElementById('file-input').click()"
+    <div id="drop-zone"
+         style="border:2px dashed var(--border);border-radius:var(--radius-xl);padding:var(--space-7) var(--space-5);text-align:center;background:var(--bg-card);position:relative;"
          ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
       <div style="font-size:36px;margin-bottom:var(--space-3);">📂</div>
       <div style="font-family:var(--font-serif);font-size:20px;color:var(--fg-1);margin-bottom:var(--space-2);">Arrastra el Excel aquí</div>
-      <div style="font-size:13px;color:var(--fg-4);">o haz clic para seleccionar · .xlsx</div>
+      <div style="font-size:13px;color:var(--fg-4);margin-bottom:var(--space-4);">o selecciona el fichero · .xlsx</div>
+      <label for="file-input" style="display:inline-flex;align-items:center;gap:8px;background:var(--jmrey-navy-900);color:var(--fg-on-dark);border-radius:var(--radius-md);padding:10px 20px;font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;">
+        📁 Seleccionar fichero Excel
+      </label>
       <input type="file" id="file-input" accept=".xlsx" style="display:none;" onchange="onFileSelect(event)">
     </div>
 
@@ -391,6 +394,7 @@ function parseConsumos(wb){
 
   // Mapear columnas por nombre de cabecera
   const headers = (rows[headerIdx]||[]).map(c => String(c||'').toLowerCase().trim());
+  const colCliente= headers.findIndex(h => h === 'cliente');
   const colFecha  = headers.findIndex(h => h === 'fecha');
   const colIdTarea= headers.findIndex(h => h.includes('id_tarea') || h.includes('id tarea'));
   const colDescT  = headers.findIndex(h => h.includes('descripcion_tarea') || h.includes('descripción tarea') || (h.includes('descripci') && h.includes('tarea')));
@@ -399,6 +403,7 @@ function parseConsumos(wb){
   console.log('Cols consumos — fecha:', colFecha, 'id_tarea:', colIdTarea, 'desc_tarea:', colDescT, 'desc_trabajo:', colDescW, 'horas:', colHoras);
 
   // Fallback a posiciones fijas si no se encuentran por nombre
+  const iCl = colCliente >= 0 ? colCliente : 1;
   const iF  = colFecha   >= 0 ? colFecha   : 0;
   const iId = colIdTarea >= 0 ? colIdTarea : 2;
   const iDT = colDescT   >= 0 ? colDescT   : 5;
@@ -424,6 +429,7 @@ function parseConsumos(wb){
     if(!consumosPorTarea[idTarea]) consumosPorTarea[idTarea] = [];
     consumosPorTarea[idTarea].push({
       fecha: fechaStr,
+      cliente: String(row[iCl]||'').trim(),
       tarea: String(row[iDT]||'').trim(),
       trabajo: String(row[iDW]||'').trim(),
       horas
@@ -453,37 +459,41 @@ function parseBolsas(wb, consumos){
     const row = rows[i];
     if(!row || row.every(c => c === null || c === '')) continue;
 
-    const col1 = String(row[1]||'').trim(); // id / código
-    const col2 = String(row[2]||'').trim(); // nombre bolsa o tarea
-    const col3 = String(row[3]||'').trim(); // descripcion
-    const col8 = parseFloat(row[8]) || 0;   // horas totales o de tarea
+    const col1 = row[1]; // id bolsa (siempre)
+    const col2 = row[2]; // id tarea O nombre bolsa (texto)
+    const col3 = String(row[3]||'').trim(); // nombre tarea en mayúsculas
+    const col8 = parseFloat(row[8]) || 0;
 
-    if(!col1 && !col2) continue;
+    const col1Str = String(col1||'').trim();
+    const col2Str = String(col2||'').trim();
 
-    // Detectar si es cabecera de bolsa:
-    // — col2 contiene "Bolsa" o "bolsa"
-    // — col1 es un id largo (≥10 dígitos) y col3 está vacío y hay horas
-    const esBolsa = col2.toLowerCase().includes('bolsa') ||
-                    (col1.length >= 8 && !col3 && col8 > 0 && !consumos[col1]);
+    if(!col1Str && !col2Str) continue;
+
+    // Es cabecera de bolsa: col2 contiene "Bolsa de proyectos" (texto, no número)
+    const esBolsa = isNaN(col2) && col2Str.toLowerCase().includes('bolsa');
 
     if(esBolsa){
-      currentBolsa = { id:col1, nombre:col2||col3||'Bolsa '+(bolsas.length+1), horas_total:col8, tareas:[] };
+      currentBolsa = {
+        id: col1Str,
+        nombre: col2Str,
+        horas_total: col8,
+        tareas: []
+      };
       bolsas.push(currentBolsa);
-      console.log('Bolsa detectada:', currentBolsa.nombre, '— horas:', col8);
-    } else if(currentBolsa && (col1 || col2) && col8 > 0){
-      // Es una tarea/fila dentro de la bolsa actual
-      // Determinar tipo: si consumos tiene entradas para col1 → es tarea de consumo
-      const hasConsumos = consumos[col1] && consumos[col1].length > 0;
+      console.log('Bolsa:', currentBolsa.nombre, 'horas:', col8);
+    } else if(currentBolsa && col3 && col8 > 0){
+      // Es una tarea: col3 tiene el nombre
+      // CONSUMOS: col2 === col1 (mismo id que la bolsa)
+      const esConsumo = col2Str === currentBolsa.id || col3.toUpperCase() === 'CONSUMOS';
       currentBolsa.tareas.push({
-        id: col1,
-        nombre: col2,
-        descripcion: col3,
+        id: col2Str,    // id de la tarea (para enlazar con Detalle consumos)
+        nombre: col3,   // nombre legible
         horas: col8,
-        tipo: hasConsumos ? 'consumo' : 'proyecto'
+        tipo: esConsumo ? 'consumo' : 'proyecto'
       });
     }
   }
-  console.log('Total bolsas:', bolsas.length);
+  console.log('Total bolsas:', bolsas.length, bolsas.map(b=>b.nombre+'('+b.tareas.length+' tareas)'));
   return bolsas;
 }
 
@@ -513,48 +523,73 @@ function buildHTML(bolsas, consumos, fileName){
   const CHEVRON = `<svg viewBox="0 0 8 12" fill="none" width="10" height="10"><path d="M1 1L7 6L1 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   function fmt(n){ return (n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
-  function buildTbody(bolsa, idx){
+    function buildTbody(bolsa, idx){
     const isClosed = idx < bolsas.length - 1;
     const pillClass = isClosed ? 'pill-done' : 'pill-progress';
     const pillText  = isClosed ? 'Cerrada' : 'Abierta';
-    const tareasConsumo  = bolsa.tareas.filter(t=>t.tipo==='consumo');
-    const tareasProyecto = bolsa.tareas.filter(t=>t.tipo==='proyecto');
-    const hConsumos  = tareasConsumo.reduce((a,t)=>a+t.horas,0);
-    const hProyectos = tareasProyecto.reduce((a,t)=>a+t.horas,0);
-    const pct = bolsa.horas_total > 0 ? Math.round((hConsumos+hProyectos)/bolsa.horas_total*100) : 0;
 
-    // Subdetail rows for each consumo task
-    let consumoRows = '';
-    tareasConsumo.forEach(t=>{
-      const lineas = consumos[t.id] || [];
-      const totalH = lineas.reduce((a,l)=>a+l.horas,0);
-      let subRows = lineas.map(l=>`
+    // Separate consumo tasks from proyecto tasks
+    const tareasConsumo  = bolsa.tareas.filter(t => t.tipo === 'consumo');
+    const tareasProyecto = bolsa.tareas.filter(t => t.tipo !== 'consumo');
+
+    const hConsumos  = tareasConsumo.reduce((a,t) => a + t.horas, 0);
+    const hProyectos = tareasProyecto.reduce((a,t) => a + t.horas, 0);
+    const pct = bolsa.horas_total > 0 ? Math.round((hConsumos + hProyectos) / bolsa.horas_total * 100) : 0;
+
+    // Build ONE consumos row (merging all consumo tasks) with subdetail lines
+    let consumoRow = '';
+    if(hConsumos > 0){
+      // Gather all subdetail lines from all consumo tasks
+      let allLineas = [];
+      tareasConsumo.forEach(t => {
+        // Try task id first, then bolsa id as fallback
+        const lineas = (consumos[t.id] && consumos[t.id].length > 0)
+          ? consumos[t.id]
+          : (consumos[bolsa.id] || []);
+        allLineas = allLineas.concat(lineas);
+      });
+      // Deduplicate by fecha+horas+trabajo (in case bolsa.id fallback duplicates)
+      const seen = new Set();
+      allLineas = allLineas.filter(l => {
+        const k = l.fecha + '|' + l.horas + '|' + l.trabajo;
+        if(seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+
+      const subRows = allLineas.map(l => `
         <tr class="subdetail-row" style="display:none;">
           <td class="subdetail-name">${escH(l.tarea)}<span class="subdetail-work"> — ${escH(l.trabajo)}</span></td>
           <td class="subdetail-id">${escH(l.fecha)}</td>
-          <td class="num"></td><td class="num subdetail-hrs">${fmt(l.horas)}</td>
+          <td class="subdetail-id" style="color:var(--accent-strong);font-weight:500;">${escH(l.cliente||'GRUPO SICORE')}</td>
+          <td class="num subdetail-hrs">${fmt(l.horas)}</td>
           <td class="num"></td><td class="num"></td><td></td>
         </tr>`).join('');
 
-      consumoRows += `
+      consumoRow = `
         <tr class="detail-row row-consumos" onclick="toggleConsumo(this)">
           <td class="detail-name">
-            <span class="consumo-chevron">${CHEVRON}</span>
-            ${escH(t.nombre||'Consumos')} <span class="detail-tag">${escH(t.descripcion||'')}</span>
-            <span class="consumo-count">(${lineas.length} líneas)</span>
+            <span class="consumo-chevron"><svg viewBox="0 0 8 12" fill="none"><path d="M1 1L7 6L1 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            Consumos <span class="detail-tag">soporte, incidencias y peticiones puntuales</span>
+            <span class="consumo-count">(${allLineas.length} líneas)</span>
           </td>
-          <td class="detail-id">${escH(t.id)}</td>
-          <td class="num"></td><td class="num">${fmt(hConsumos)}</td>
+          <td class="detail-id">${escH(bolsa.id)}</td>
+          <td></td>
+          <td class="num"></td>
+          <td class="num">${fmt(hConsumos)}</td>
           <td class="num"></td><td class="num"></td><td></td>
         </tr>
         ${subRows}`;
-    });
+    }
 
-    const proyRows = tareasProyecto.map(t=>`
+    // Proyecto rows — each as a non-clickable detail row, horas in col Proyectos (5th td)
+    const proyRows = tareasProyecto.map(t => `
         <tr class="detail-row">
           <td class="detail-name">${escH(t.nombre)}</td>
           <td class="detail-id">${escH(t.id)}</td>
-          <td class="num"></td><td class="num"></td>
+          <td></td>
+          <td class="num"></td>
+          <td class="num"></td>
           <td class="num">${fmt(t.horas)}</td>
           <td class="num"></td><td></td>
         </tr>`).join('');
@@ -562,15 +597,20 @@ function buildHTML(bolsas, consumos, fileName){
     return `
       <tbody class="bolsa-group">
         <tr class="bolsa-row" onclick="toggleBolsa(this)">
-          <td><span class="bolsa-name"><span class="chevron">${CHEVRON}</span>${escH(bolsa.nombre)}</span></td>
+          <td><span class="bolsa-name">
+            <span class="chevron"><svg viewBox="0 0 8 12" fill="none"><path d="M1 1L7 6L1 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            ${escH(bolsa.nombre)}
+            <span class="mobile-pill" style="display:none;"><span class="pill ${pillClass}">${pillText}</span></span>
+          </span></td>
           <td>${escH(bolsa.id)}</td>
+          <td></td>
           <td class="num">${fmt(bolsa.horas_total)}</td>
           <td class="num">${fmt(hConsumos)}</td>
           <td class="num">${fmt(hProyectos)}</td>
           <td class="num">${pct} %</td>
           <td><span class="pill ${pillClass}">${pillText}</span></td>
         </tr>
-        ${consumoRows}
+        ${consumoRow}
         ${proyRows}
       </tbody>`;
   }
@@ -651,13 +691,14 @@ footer .brand{color:#F4ECE0;font-family:var(--serif);font-size:18px;}
 <section><div class="wrap">
   <table>
     <thead><tr>
-      <th>Bolsa</th><th>Id.</th><th class="num">Horas</th>
+      <th>Bolsa</th><th>Id.</th><th>Cliente</th><th class="num">Horas</th>
       <th class="num">Consumos</th><th class="num">Proyectos</th>
       <th class="num">% entregado</th><th>Estado</th>
     </tr></thead>
     ${tbodies}
     <tfoot><tr style="background:var(--ivory);font-weight:700;">
       <td colspan="2">Total</td>
+      <td></td>
       <td class="num">${fmt(totalHoras)}</td>
       <td class="num">${fmt(totalConsumosH)}</td>
       <td class="num">${fmt(totalProyectosH)}</td>
@@ -672,7 +713,19 @@ footer .brand{color:#F4ECE0;font-family:var(--serif);font-size:18px;}
   <div>Generado desde "${escH(fileName)}" · ${fechaInforme}</div>
 </div></footer>
 <script>
-function toggleBolsa(r){r.closest('.bolsa-group').classList.toggle('is-open');}
+function toggleBolsa(r){
+  const group = r.closest('.bolsa-group');
+  const wasOpen = group.classList.contains('is-open');
+  group.classList.toggle('is-open');
+  if(wasOpen){
+    // Collapse any open consumo rows and hide subdetails
+    group.querySelectorAll('.row-consumos.is-open').forEach(cr => {
+      cr.classList.remove('is-open');
+      let s = cr.nextElementSibling;
+      while(s && s.classList.contains('subdetail-row')){ s.style.display='none'; s=s.nextElementSibling; }
+    });
+  }
+}
 function toggleConsumo(r){
   event.stopPropagation();
   r.classList.toggle('is-open');
