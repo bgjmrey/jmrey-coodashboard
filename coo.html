@@ -2351,7 +2351,7 @@ function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId, tipo){
   let html = '';
   tecPivot.forEach(row=>{
     const tec = row.tecnico_asignado;
-    const expSet = (tipo==='ventas') ? _tecExpandedV : _tecExpanded;
+    const expSet = (tipo==='ventas') ? _tecExpandedV : (tipo==='planificado') ? (window._tecExpandedP||new Set()) : _tecExpanded;
     const isExp = expSet.has(tec);
     // Group header row
     html += `<tr class="tp-hdr${isExp?'':' collapsed'}" data-tec="${tec.replace(/"/g,'&quot;')}" data-tipo="${tipo||'consumos'}" onclick="toggleTec(this.dataset.tec,this.dataset.tipo)">
@@ -2378,8 +2378,8 @@ function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId, tipo){
 }
 
 function toggleAllTec(tipo){
-  const expSet = tipo==='ventas' ? _tecExpandedV : tipo==='planificado' ? (_tecExpandedP||new Set()) : _tecExpanded;
-  if(tipo==='planificado' && !window._tecExpandedP) window._tecExpandedP = new Set();
+  if(!window._tecExpandedP) window._tecExpandedP = new Set();
+  const expSet = tipo==='ventas' ? _tecExpandedV : tipo==='planificado' ? window._tecExpandedP : _tecExpanded;
   const svcs = tipo==='ventas' ? (window._lastSvcsV||[]) : tipo==='planificado' ? (window._lastSvcsP||[]) : (window._lastSvcsC||[]);
   const allTecs = [...new Set(svcs.map(s=>s.tecnico).filter(Boolean))];
   const anyExp = allTecs.some(t=>expSet.has(t));
@@ -2399,7 +2399,7 @@ function toggleAllTec(tipo){
 }
 
 function toggleTec(tec, tipo){
-  const expSet = (tipo==='ventas') ? _tecExpandedV : _tecExpanded;
+  const expSet = (tipo==='ventas') ? _tecExpandedV : (tipo==='planificado') ? (window._tecExpandedP=window._tecExpandedP||new Set()) : _tecExpanded;
   if(expSet.has(tec)) expSet.delete(tec);
   else expSet.add(tec);
   const tp = calcTecPivot(window._lastSvcsC||[]);
