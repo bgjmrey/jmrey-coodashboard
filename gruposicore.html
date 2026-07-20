@@ -306,7 +306,9 @@ function downloadHTML(){
   const blob = new Blob([generatedHTML], {type:'text/html;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'GRUPO_SICORE_Desglose_Bolsas_Horas.html';
+  const now = new Date();
+  const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+  a.download = 'GRUPO_SICORE_Desglose_Bolsas_Horas_' + ts + '.html';
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -345,7 +347,7 @@ function processFile(file){
   const reader = new FileReader();
   reader.onload = function(e){
     try {
-      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true, sheetStubs:true, bookVBA:false});
       // Log sheet names for debugging
       console.log('Hojas:', wb.SheetNames);
       const consumos = parseConsumos(wb);
@@ -368,8 +370,10 @@ function processFile(file){
 // Cabecera en la fila que contenga "Fecha" — buscar dinámicamente
 // Cols: Fecha, Cliente, Id_tarea, Tipo_tarea, Subtipo_tarea, Descripcion_tarea, Descripcion_trabajo, Horas
 function parseConsumos(wb){
+  // Always use "Detalle Consumos" sheet
   const sheetName = wb.SheetNames.find(n =>
-    n.toLowerCase().includes('detalle') ||
+    n.toLowerCase().includes('detalle')
+  ) || wb.SheetNames.find(n =>
     n.toLowerCase().includes('consumo')
   );
   if(!sheetName){
@@ -378,7 +382,8 @@ function parseConsumos(wb){
   }
   console.log('Pestaña consumos:', sheetName);
   const ws = wb.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, cellDates:true});
+  console.log('Detalle Consumos — hoja:', sheetName, '| filas:', rows.length);
 
   // Buscar fila de cabecera (la que tiene "Fecha" o "Id_tarea")
   let headerIdx = -1;
@@ -396,19 +401,77 @@ function parseConsumos(wb){
   const headers = (rows[headerIdx]||[]).map(c => String(c||'').toLowerCase().trim());
   const colCliente= headers.findIndex(h => h === 'cliente');
   const colFecha  = headers.findIndex(h => h === 'fecha');
-  const colIdTarea= headers.findIndex(h => h.includes('id_tarea') || h.includes('id tarea'));
+  const colIdTarea= headers.findIndex(h => h.includes('id_tarea') || h.includes('id tarea') || h.includes('id. tarea') || (h.startsWith('id') && h.includes('tarea')));
   const colDescT  = headers.findIndex(h => h.includes('descripcion_tarea') || h.includes('descripción tarea') || (h.includes('descripci') && h.includes('tarea')));
   const colDescW  = headers.findIndex(h => h.includes('descripcion_trabajo') || h.includes('descripción trabajo') || (h.includes('descripci') && h.includes('trabajo')));
   const colHoras  = headers.findIndex(h => h === 'horas');
   console.log('Cols consumos — fecha:', colFecha, 'id_tarea:', colIdTarea, 'desc_tarea:', colDescT, 'desc_trabajo:', colDescW, 'horas:', colHoras);
 
   // Fallback a posiciones fijas si no se encuentran por nombre
+  // Log first few rows to see raw data
+  console.log('=== PRIMERAS 5 FILAS DE DATOS ===');
+  for(let d = headerIdx+1; d < Math.min(headerIdx+6, rows.length); d++){
+    console.log('row'+d+':', JSON.stringify(rows[d]));
+  }
+  // Count rows where col iId = '260515125901' vs total non-empty
+  let countTarget = 0, countTotal = 0, countSkipped0 = 0, countSkippedNoId = 0;
+  for(let d = headerIdx+1; d < rows.length; d++){
+    const r = rows[d];
+    if(!r || r.every(c=>c===null||c==='')) continue;
+    countTotal++;
+    const id = String(r[2]||'').trim();
+    const h = parseFloat(r[8]) || 0;
+    if(id === '260515125901') countTarget++;
+    if(h === 0) countSkipped0++;
+    if(!id) countSkippedNoId++;
+  }
+  console.log('Total filas no vacías:', countTotal, '| Con ID 260515125901:', countTarget, '| h=0:', countSkipped0, '| sin ID:', countSkippedNoId);
+  // Show all unique ID values that contain '260515' to spot variants
+  const variants = {};
+  for(let d = headerIdx+1; d < rows.length; d++){
+    const r = rows[d];
+    if(!r || r.every(c=>c===null||c==='')) continue;
+    const rawId = r[2];
+    const idStr = String(rawId||'').trim();
+    if(idStr.includes('260515') || (typeof rawId === 'number' && String(Math.round(rawId)).includes('260515'))){
+      const key = JSON.stringify(rawId) + ' (type:'+typeof rawId+')';
+      variants[key] = (variants[key]||0) + 1;
+    }
+  }
+  console.log('Variantes del ID 260515...:', JSON.stringify(variants));
+  // Show rows where col[2] is NOT 260515125901 but other cols contain it
+  let otherCols = {};
+  for(let d = headerIdx+1; d < rows.length; d++){
+    const r = rows[d];
+    if(!r || r.every(c=>c===null||c==='')) continue;
+    const col2 = String(r[2]||'').trim();
+    if(col2.includes('260515') || Number(r[2])===260515125901) continue; // already counted
+    // Check if any other column contains 260515125901
+    for(let c = 0; c < r.length; c++){
+      if(c===2) continue;
+      const v = String(r[c]||'').trim();
+      if(v.includes('260515')){
+        const key = 'col'+c+'='+JSON.stringify(r[c]);
+        otherCols[key] = (otherCols[key]||0)+1;
+      }
+    }
+  }
+  console.log('260515 en otras columnas:', JSON.stringify(otherCols));
+  // Also: what are ALL the unique IDs across all 288 rows?
+  const allIds = {};
+  for(let d = headerIdx+1; d < rows.length; d++){
+    const r = rows[d];
+    if(!r || r.every(c=>c===null||c==='')) continue;
+    const id = String(r[2]||'').trim();
+    if(id) allIds[id] = (allIds[id]||0)+1;
+  }
+  console.log('Todos los IDs únicos (col2):', JSON.stringify(allIds));
   const iCl = colCliente >= 0 ? colCliente : 1;
   const iF  = colFecha   >= 0 ? colFecha   : 0;
   const iId = colIdTarea >= 0 ? colIdTarea : 2;
   const iDT = colDescT   >= 0 ? colDescT   : 5;
   const iDW = colDescW   >= 0 ? colDescW   : 6;
-  const iH  = colHoras   >= 0 ? colHoras   : 7;
+  const iH  = colHoras >= 0 ? colHoras : 7;
 
   const consumosPorTarea = {};
   let totalLineas = 0;
@@ -437,6 +500,7 @@ function parseConsumos(wb){
     totalLineas++;
   }
   console.log('Total líneas consumo:', totalLineas, '— tareas únicas:', Object.keys(consumosPorTarea).length);
+
   return consumosPorTarea;
 }
 
@@ -450,7 +514,8 @@ function parseBolsas(wb, consumos){
   ) || wb.SheetNames[0];
   console.log('Pestaña bolsas:', sheetName);
   const ws = wb.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, cellDates:true});
+  console.log('Detalle Consumos — hoja:', sheetName, '| filas:', rows.length);
 
   const bolsas = [];
   let currentBolsa = null;
@@ -493,7 +558,11 @@ function parseBolsas(wb, consumos){
       });
     }
   }
-  console.log('Total bolsas:', bolsas.length, bolsas.map(b=>b.nombre+'('+b.tareas.length+' tareas)'));
+  console.log('Total bolsas:', bolsas.length);
+  bolsas.forEach((b,i) => {
+    console.log('Bolsa', i+1, b.nombre, '— tareas:', b.tareas.map(t=>t.id+'='+t.tipo+'('+t.horas+'h)'));
+  });
+  console.log('Consumos keys:', Object.keys(consumos));
   return bolsas;
 }
 
@@ -548,14 +617,7 @@ function buildHTML(bolsas, consumos, fileName){
           : (consumos[bolsa.id] || []);
         allLineas = allLineas.concat(lineas);
       });
-      // Deduplicate by fecha+horas+trabajo (in case bolsa.id fallback duplicates)
-      const seen = new Set();
-      allLineas = allLineas.filter(l => {
-        const k = l.fecha + '|' + l.horas + '|' + l.trabajo;
-        if(seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      });
+
 
       const subRows = allLineas.map(l => `
         <tr class="subdetail-row" style="display:none;">
