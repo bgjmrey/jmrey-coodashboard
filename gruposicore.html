@@ -620,10 +620,10 @@ function buildHTML(bolsas, consumos, fileName){
 
 
       const subRows = allLineas.map(l => `
-        <tr class="subdetail-row" style="display:none;">
+        <tr class="subdetail-row${l.horas < 0 ? ' row-neg' : ''}" style="display:none;">
           <td class="subdetail-name">${escH(l.tarea)}<span class="subdetail-work"> — ${escH(l.trabajo)}</span></td>
           <td class="subdetail-id">${escH(l.fecha)}</td>
-          <td class="subdetail-id" style="color:var(--accent-strong);font-weight:500;">${escH(l.cliente||'GRUPO SICORE')}</td>
+          <td class="subdetail-id">${escH(l.cliente||'GRUPO SICORE')}</td>
           <td class="num subdetail-hrs">${fmt(l.horas)}</td>
           <td class="num"></td><td class="num"></td><td></td>
         </tr>`).join('');
@@ -730,6 +730,8 @@ tr.subdetail-row .subdetail-name::before{content:"·";position:absolute;left:40p
 tr.subdetail-row .subdetail-work{color:var(--ink4);}
 tr.subdetail-row .subdetail-id{font-size:11px;}
 tr.subdetail-row .subdetail-hrs{color:var(--ink3);}
+tr.subdetail-row.row-neg td{background:rgba(180,0,0,.09)!important;color:#c0392b!important;}
+tr.subdetail-row.row-neg td{background:rgba(180,0,0,.08)!important;color:#c0392b!important;font-weight:600;}
 tbody.bolsa-group:not(.is-open) tr.detail-row{display:none;}
 footer{background:var(--navy);color:rgba(244,236,224,.6);padding:24px 0;margin-top:48px;}
 footer .wrap{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(182,136,74,.3);padding-top:20px;}
