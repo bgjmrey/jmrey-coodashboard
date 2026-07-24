@@ -2071,7 +2071,9 @@ function autoCalcValHoras(){
 }
 
 function populateValSelects(){
-  document.getElementById('v-tec').innerHTML='<option value="">— seleccionar —</option>'+DB.tecnicos.filter(t=>t.activo).map(t=>`<option value="${t.email}">${t.nombre}</option>`).join('');
+  // Same options as s-tec (including Nuevo técnico)
+  const vTec = document.getElementById('v-tec');
+  if(vTec){ const cur=vTec.value; _refreshTecSel(); vTec.innerHTML = document.getElementById('s-tec').innerHTML; vTec.value=cur; }
 }
 
 // Al cambiar id tarea en valoración, rellenar título y cliente desde Servicios
