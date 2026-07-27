@@ -342,6 +342,7 @@ async function saveCliente(){
   if(error){ alert('Error: '+error.message); return; }
   closeModal();
   await loadClientes();
+}
 
 async function deleteCard(idx){
   const r = clientes[idx];
@@ -349,7 +350,6 @@ async function deleteCard(idx){
   const {error} = await sb.from('clientes').delete().eq('partner', r.partner).eq('cliente', r.cliente);
   if(error){ alert('Error: '+error.message); return; }
   await loadClientes();
-}
 }
 
 async function deleteClienteModal(){
