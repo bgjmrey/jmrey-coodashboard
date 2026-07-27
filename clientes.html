@@ -334,9 +334,10 @@ async function saveCliente(){
   let error;
   if(editIdx !== null){
     const r = clientes[editIdx];
-    ({error} = await sb.from('clientes').update(o).eq('id', r.id));
+    ({error} = await sb.from('clientes').update(o).eq('partner', r.partner).eq('cliente', r.cliente));
   } else {
-    ({error} = await sb.from('clientes').insert(o));
+    const oInsert = Object.assign({}, o); delete oInsert.id;
+    ({error} = await sb.from('clientes').insert(oInsert));
   }
   if(error){ alert('Error: '+error.message); return; }
   closeModal();
@@ -345,7 +346,7 @@ async function saveCliente(){
 async function deleteCard(idx){
   const r = clientes[idx];
   if(!confirm(`¿Eliminar ${r.partner} / ${r.cliente}?`)) return;
-  const {error} = await sb.from('clientes').delete().eq('id', r.id);
+  const {error} = await sb.from('clientes').delete().eq('partner', r.partner).eq('cliente', r.cliente);
   if(error){ alert('Error: '+error.message); return; }
   await loadClientes();
 }
@@ -355,7 +356,7 @@ async function deleteClienteModal(){
   if(editIdx === null) return;
   const r = clientes[editIdx];
   if(!confirm(`¿Eliminar el cliente ${r.partner} / ${r.cliente}?`)) return;
-  const {error} = await sb.from('clientes').delete().eq('id', r.id);
+  const {error} = await sb.from('clientes').delete().eq('partner', r.partner).eq('cliente', r.cliente);
   if(error){ alert('Error: '+error.message); return; }
   closeModal();
   await loadClientes();
