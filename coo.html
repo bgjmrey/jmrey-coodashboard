@@ -986,7 +986,7 @@ function ssLocal(k,v){try{localStorage.setItem('jmr_'+k,JSON.stringify(v));}catc
 // ── INDIVIDUAL ROW OPS ──────────────────────────────────
 async function sbInsert(table, row){
   const sb=getSB(); if(!sb) return;
-  const r=Object.assign({},row); delete r.row_id;
+  const r=Object.assign({},row); delete r.row_id; delete r.id; // remove auto-generated PK
   const TABLES_WITH_ROWID = ['servicios'];
   if(TABLES_WITH_ROWID.includes(table)){
     const {error,data}=await sb.from(table).insert(r).select('row_id').single();
@@ -2264,7 +2264,7 @@ function saveCli(){
   if(!o.partner||!o.cliente){toast('Partner y Cliente son obligatorios','err');return;}
   const _newCli=editCli===null;
   if(!_newCli) DB.clientes[editCli]=o; else DB.clientes.push(o);
-  ss('cli',DB.clientes,o,_newCli?'insert':'update'); closeMod('cli'); renderCli();
+  ss('cli',DB.clientes,o,_newCli?'insert':'update', _newCli?null:window._origCliKey); closeMod('cli'); renderCli();
   toast(editCli!==null?'Cliente actualizado':'Cliente creado');
   editCli=null;
 }
