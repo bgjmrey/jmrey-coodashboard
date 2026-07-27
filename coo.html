@@ -2263,8 +2263,25 @@ function saveCli(){
   };
   if(!o.partner||!o.cliente){toast('Partner y Cliente son obligatorios','err');return;}
   const _newCli=editCli===null;
+  const origKey = _newCli ? null : window._origCliKey;
   if(!_newCli) DB.clientes[editCli]=o; else DB.clientes.push(o);
-  ss('cli',DB.clientes,o,_newCli?'insert':'update', _newCli?null:window._origCliKey); closeMod('cli'); renderCli();
+  // Direct Supabase call with only valid columns
+  const sb=getSB();
+  if(sb){
+    if(_newCli){
+      sb.from('clientes').upsert(o,{onConflict:'partner,cliente'}).then(({error})=>{
+        if(error) toast('Error: '+error.message,'err');
+      });
+    } else {
+      sb.from('clientes').update(o)
+        .eq('partner', origKey.partner).eq('cliente', origKey.cliente)
+        .then(({error})=>{
+          if(error) toast('Error: '+error.message,'err');
+        });
+    }
+  }
+  ssLocal('cli', DB.clientes);
+  closeMod('cli'); renderCli();
   toast(editCli!==null?'Cliente actualizado':'Cliente creado');
   editCli=null;
 }
