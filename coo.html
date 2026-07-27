@@ -1007,7 +1007,7 @@ async function sbInsert(table, row){
 async function sbUpdate(table, row, origKeys){
   // origKeys: optional object with original PK values before edit (for PK changes)
   const sb=getSB(); if(!sb) return;
-  const r=Object.assign({},row); delete r.row_id;
+  const r=Object.assign({},row); delete r.row_id; delete r.id; delete r.created_at; delete r.updated_at;
 
   if(row.row_id){
     // Best case: have row_id, always accurate
