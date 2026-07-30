@@ -308,7 +308,7 @@ function downloadHTML(){
   a.href = URL.createObjectURL(blob);
   const now = new Date();
   const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
-  a.download = 'GRUPO_SICORE_Desglose_Bolsas_Horas_' + ts + '.html';
+  a.download = 'GRUPO SICORE · Línea 2 · Sistema de ejecución guiada ' + ts + '.html';
   a.click();
   URL.revokeObjectURL(a.href);
 }
@@ -781,7 +781,7 @@ function exportToExcel(){
   ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}}];
   var wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Bolsas de horas');
-  XLSX.writeFile(wb,'GRUPO_SICORE_Bolsas_'+ts+'.xlsx');
+  XLSX.writeFile(wb,'GRUPO SICORE · Línea 2 · Sistema de ejecución guiada '+ts+'.xlsx');
 }
 function toggleConsumo(r){
   event.stopPropagation();
