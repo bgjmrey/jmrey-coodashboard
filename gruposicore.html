@@ -355,6 +355,8 @@ function processFile(file){
       const bolsas = parseBolsas(wb, consumos);
       console.log('Bolsas:', bolsas.map(b=>b.nombre+'('+b.tareas.length+' tareas)'));
       generatedHTML = buildHTML(bolsas, consumos, file.name);
+      window._lastBolsas = bolsas;
+      window._lastConsumos = consumos;
       setStatus('✅ Informe generado — ' + bolsas.length + ' bolsas, ' + Object.keys(consumos).length + ' tareas con consumos', 'ok');
       document.getElementById('actions').style.display = 'flex';
     } catch(err) {
@@ -365,142 +367,77 @@ function processFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-// ── PARSE DETALLE CONSUMOS (primero, para luego enlazar con bolsas) ──
-// Pestaña: "Detalle consumos"
-// Cabecera en la fila que contenga "Fecha" — buscar dinámicamente
-// Cols: Fecha, Cliente, Id_tarea, Tipo_tarea, Subtipo_tarea, Descripcion_tarea, Descripcion_trabajo, Horas
+// ── PARSE CONSUMOS (todas las hojas consumos*) ──────────────
+// Lee consumosBorja, consumosItalo, consumosGuille, consumosJuanma etc.
+// Cols: Fecha(0), Cliente(1), Id. tarea(2), ..., Descripción tarea(5), Descripción trabajo(6), Horas(7)
 function parseConsumos(wb){
-  // Always use "Detalle Consumos" sheet
-  const sheetName = wb.SheetNames.find(n =>
-    n.toLowerCase().includes('detalle')
-  ) || wb.SheetNames.find(n =>
-    n.toLowerCase().includes('consumo')
-  );
-  if(!sheetName){
-    console.warn('No se encontró la pestaña Detalle consumos. Hojas:', wb.SheetNames);
-    return {};
+  // Find all sheets starting with "consumos"
+  const consumosSheets = wb.SheetNames.filter(n => n.toLowerCase().startsWith('consumos'));
+  if(consumosSheets.length === 0){
+    const det = wb.SheetNames.find(n => n.toLowerCase().includes('detalle'));
+    if(det) consumosSheets.push(det);
   }
-  console.log('Pestaña consumos:', sheetName);
-  const ws = wb.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, cellDates:true});
-  console.log('Detalle Consumos — hoja:', sheetName, '| filas:', rows.length);
-
-  // Buscar fila de cabecera (la que tiene "Fecha" o "Id_tarea")
-  let headerIdx = -1;
-  for(let i = 0; i < Math.min(20, rows.length); i++){
-    const r = rows[i];
-    if(!r) continue;
-    const hasDate = r.some(c => String(c||'').toLowerCase().trim() === 'fecha');
-    const hasId   = r.some(c => String(c||'').toLowerCase().includes('id_tarea') || String(c||'').toLowerCase().includes('id tarea'));
-    if(hasDate || hasId){ headerIdx = i; break; }
-  }
-  if(headerIdx < 0){ headerIdx = 8; } // fallback
-  console.log('Cabecera consumos en fila', headerIdx, ':', rows[headerIdx]);
-
-  // Mapear columnas por nombre de cabecera
-  const headers = (rows[headerIdx]||[]).map(c => String(c||'').toLowerCase().trim());
-  const colCliente= headers.findIndex(h => h === 'cliente');
-  const colFecha  = headers.findIndex(h => h === 'fecha');
-  const colIdTarea= headers.findIndex(h => h.includes('id_tarea') || h.includes('id tarea') || h.includes('id. tarea') || (h.startsWith('id') && h.includes('tarea')));
-  const colDescT  = headers.findIndex(h => h.includes('descripcion_tarea') || h.includes('descripción tarea') || (h.includes('descripci') && h.includes('tarea')));
-  const colDescW  = headers.findIndex(h => h.includes('descripcion_trabajo') || h.includes('descripción trabajo') || (h.includes('descripci') && h.includes('trabajo')));
-  const colHoras  = headers.findIndex(h => h === 'horas');
-  console.log('Cols consumos — fecha:', colFecha, 'id_tarea:', colIdTarea, 'desc_tarea:', colDescT, 'desc_trabajo:', colDescW, 'horas:', colHoras);
-
-  // Fallback a posiciones fijas si no se encuentran por nombre
-  // Log first few rows to see raw data
-  console.log('=== PRIMERAS 5 FILAS DE DATOS ===');
-  for(let d = headerIdx+1; d < Math.min(headerIdx+6, rows.length); d++){
-    console.log('row'+d+':', JSON.stringify(rows[d]));
-  }
-  // Count rows where col iId = '260515125901' vs total non-empty
-  let countTarget = 0, countTotal = 0, countSkipped0 = 0, countSkippedNoId = 0;
-  for(let d = headerIdx+1; d < rows.length; d++){
-    const r = rows[d];
-    if(!r || r.every(c=>c===null||c==='')) continue;
-    countTotal++;
-    const id = String(r[2]||'').trim();
-    const h = parseFloat(r[8]) || 0;
-    if(id === '260515125901') countTarget++;
-    if(h === 0) countSkipped0++;
-    if(!id) countSkippedNoId++;
-  }
-  console.log('Total filas no vacías:', countTotal, '| Con ID 260515125901:', countTarget, '| h=0:', countSkipped0, '| sin ID:', countSkippedNoId);
-  // Show all unique ID values that contain '260515' to spot variants
-  const variants = {};
-  for(let d = headerIdx+1; d < rows.length; d++){
-    const r = rows[d];
-    if(!r || r.every(c=>c===null||c==='')) continue;
-    const rawId = r[2];
-    const idStr = String(rawId||'').trim();
-    if(idStr.includes('260515') || (typeof rawId === 'number' && String(Math.round(rawId)).includes('260515'))){
-      const key = JSON.stringify(rawId) + ' (type:'+typeof rawId+')';
-      variants[key] = (variants[key]||0) + 1;
-    }
-  }
-  console.log('Variantes del ID 260515...:', JSON.stringify(variants));
-  // Show rows where col[2] is NOT 260515125901 but other cols contain it
-  let otherCols = {};
-  for(let d = headerIdx+1; d < rows.length; d++){
-    const r = rows[d];
-    if(!r || r.every(c=>c===null||c==='')) continue;
-    const col2 = String(r[2]||'').trim();
-    if(col2.includes('260515') || Number(r[2])===260515125901) continue; // already counted
-    // Check if any other column contains 260515125901
-    for(let c = 0; c < r.length; c++){
-      if(c===2) continue;
-      const v = String(r[c]||'').trim();
-      if(v.includes('260515')){
-        const key = 'col'+c+'='+JSON.stringify(r[c]);
-        otherCols[key] = (otherCols[key]||0)+1;
-      }
-    }
-  }
-  console.log('260515 en otras columnas:', JSON.stringify(otherCols));
-  // Also: what are ALL the unique IDs across all 288 rows?
-  const allIds = {};
-  for(let d = headerIdx+1; d < rows.length; d++){
-    const r = rows[d];
-    if(!r || r.every(c=>c===null||c==='')) continue;
-    const id = String(r[2]||'').trim();
-    if(id) allIds[id] = (allIds[id]||0)+1;
-  }
-  console.log('Todos los IDs únicos (col2):', JSON.stringify(allIds));
-  const iCl = colCliente >= 0 ? colCliente : 1;
-  const iF  = colFecha   >= 0 ? colFecha   : 0;
-  const iId = colIdTarea >= 0 ? colIdTarea : 2;
-  const iDT = colDescT   >= 0 ? colDescT   : 5;
-  const iDW = colDescW   >= 0 ? colDescW   : 6;
-  const iH  = colHoras >= 0 ? colHoras : 7;
+  console.log('Hojas de consumos:', consumosSheets);
+  if(consumosSheets.length === 0){ console.warn('No hay hojas de consumos'); return {}; }
 
   const consumosPorTarea = {};
   let totalLineas = 0;
-  for(let i = headerIdx+1; i < rows.length; i++){
-    const row = rows[i];
-    if(!row || row.every(c => c===null||c==='')) continue;
-    const idTarea = String(row[iId]||'').trim();
-    if(!idTarea) continue;
-    const horas = parseFloat(row[iH]) || 0;
-    if(horas === 0) continue;
 
-    const fecha = row[iF];
-    let fechaStr = '';
-    if(fecha instanceof Date){
-      fechaStr = String(fecha.getDate()).padStart(2,'0')+'/'+String(fecha.getMonth()+1).padStart(2,'0')+'/'+String(fecha.getFullYear()).slice(2);
-    } else if(fecha){ fechaStr = String(fecha); }
+  for(const sheetName of consumosSheets){
+    const ws = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, cellDates:true});
 
-    if(!consumosPorTarea[idTarea]) consumosPorTarea[idTarea] = [];
-    consumosPorTarea[idTarea].push({
-      fecha: fechaStr,
-      cliente: String(row[iCl]||'').trim(),
-      tarea: String(row[iDT]||'').trim(),
-      trabajo: String(row[iDW]||'').trim(),
-      horas
-    });
-    totalLineas++;
+    // Find header row
+    let hi = -1;
+    for(let i = 0; i < Math.min(20, rows.length); i++){
+      if(rows[i] && rows[i].some(c => String(c||'').toLowerCase().trim() === 'fecha')){ hi = i; break; }
+    }
+    if(hi < 0) hi = 1;
+
+    // Map columns by header name
+    const hdrs = (rows[hi]||[]).map(c => String(c||'').toLowerCase().trim());
+    const iF   = hdrs.findIndex(h => h === 'fecha');
+    const iCl  = hdrs.findIndex(h => h === 'cliente');
+    const iId  = hdrs.findIndex(h => h.startsWith('id') && h.includes('tarea'));
+    const iDT  = hdrs.findIndex(h => h.includes('descripci') && h.includes('tarea'));
+    const iDW  = hdrs.findIndex(h => h.includes('descripci') && h.includes('trabajo'));
+    const iH   = hdrs.findIndex(h => h === 'horas');
+    console.log(sheetName, '— cols: fecha='+iF+' cliente='+iCl+' id='+iId+' horas='+iH);
+
+    const cF  = iF  >= 0 ? iF  : 0;
+    const cCl = iCl >= 0 ? iCl : 1;
+    const cId = iId >= 0 ? iId : 2;
+    const cDT = iDT >= 0 ? iDT : 5;
+    const cDW = iDW >= 0 ? iDW : 6;
+    const cH  = iH  >= 0 ? iH  : 7;
+
+    for(let i = hi+1; i < rows.length; i++){
+      const row = rows[i];
+      if(!row || row.every(c => c===null||c==='')) continue;
+      const idTarea = String(row[cId]||'').trim();
+      if(!idTarea) continue;
+      const horas = parseFloat(row[cH]) || 0;
+
+      const fecha = row[cF];
+      let fechaStr = '';
+      if(fecha instanceof Date){
+        fechaStr = String(fecha.getDate()).padStart(2,'0')+'/'+String(fecha.getMonth()+1).padStart(2,'0')+'/'+String(fecha.getFullYear()).slice(2);
+      } else if(fecha){ fechaStr = String(fecha); }
+
+      if(!consumosPorTarea[idTarea]) consumosPorTarea[idTarea] = [];
+      consumosPorTarea[idTarea].push({
+        fecha: fechaStr,
+        cliente: String(row[cCl]||'').trim(),
+        tarea: String(row[cDT]||'').trim(),
+        trabajo: String(row[cDW]||'').trim(),
+        horas
+      });
+      totalLineas++;
+    }
+    console.log(sheetName, '— filas leídas:', rows.length - hi - 1);
   }
-  console.log('Total líneas consumo:', totalLineas, '— tareas únicas:', Object.keys(consumosPorTarea).length);
 
+  console.log('Total líneas consumo:', totalLineas, '— tareas únicas:', Object.keys(consumosPorTarea).length);
   return consumosPorTarea;
 }
 
@@ -686,6 +623,7 @@ function buildHTML(bolsas, consumos, fileName){
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GRUPO SICORE · Desglose bolsas de horas</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>
 <style>
 :root{--navy:#0E1F3D;--gold:#B6884A;--ivory:#F3F0EA;--ivory2:#ECE7DD;--ink:#14171C;--ink3:#5A5A5A;--ink4:#7A7669;--ink2:#D9D2C2;--paper:#fff;--serif:'Cormorant Garamond',serif;--sans:'Manrope',sans-serif;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -741,7 +679,7 @@ footer .brand{color:#F4ECE0;font-family:var(--serif);font-size:18px;}
 <body>
 <div class="cover"><div class="wrap">
   <div class="eyebrow">Informe de seguimiento · Bolsas de horas</div>
-  <h1>Desglose del consumo de las ${bolsas.length} bolsas de horas</h1>
+  <h1>Línea 2: sistema de ejecución guiada</h1>
   <hr class="rule">
   <p class="lead">Detalle de consumo recurrente frente a desarrollos planificados por bolsa.</p>
   <div class="meta">
@@ -753,6 +691,7 @@ footer .brand{color:#F4ECE0;font-family:var(--serif);font-size:18px;}
 </div></div>
 
 <section><div class="wrap">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button onclick="exportToExcel()" style="background:var(--navy);color:#F4ECE0;border:none;border-radius:6px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;">📊 Exportar a Excel</button></div>
   <table>
     <thead><tr>
       <th>Bolsa</th><th>Id.</th><th>Cliente</th><th class="num">Horas</th>
@@ -774,7 +713,7 @@ footer .brand{color:#F4ECE0;font-family:var(--serif);font-size:18px;}
 
 <footer><div class="wrap">
   <div class="brand">JMREY</div>
-  <div>Generado desde "${escH(fileName)}" · ${fechaInforme}</div>
+  
 </div></footer>
 <script>
 function toggleBolsa(r){
@@ -790,6 +729,60 @@ function toggleBolsa(r){
     });
   }
 }
+function exportToExcel(){
+  function toNum(s){
+    if(!s) return '';
+    s=s.trim();
+    var n=parseFloat(s.replace(/\./g,'').replace(',','.'));
+    return isNaN(n)?s:n;
+  }
+
+  var rows=[];
+  rows.push(['GRUPO SICORE \u2014 Desglose de bolsas de horas','','','','','','','']);
+  rows.push(['Bolsa / Tarea','Id.','Cliente','Horas totales','Consumos','Proyectos','% entregado','Tipo']);
+
+  document.querySelectorAll('.bolsa-group').forEach(function(g){
+    var b=g.querySelector('tr.bolsa-row'),c=b?b.cells:[];
+    var nm=c[0]?(c[0].querySelector('.bolsa-name')||c[0]).textContent.replace(/[<>]/g,'').trim():'';
+    rows.push([nm,c[1]?c[1].textContent.trim():'','',toNum(c[3]?c[3].textContent.trim():''),toNum(c[4]?c[4].textContent.trim():''),toNum(c[5]?c[5].textContent.trim():''),toNum(c[6]?c[6].textContent.trim():''),c[7]?c[7].textContent.trim():'']);
+
+    g.querySelectorAll('tr.detail-row').forEach(function(dr){
+      var dc=dr.cells,tipo=dr.classList.contains('row-consumos')?'CONSUMOS':'PROYECTO';
+      rows.push([dc[0]?dc[0].textContent.replace('\u2014','').trim():'',dc[1]?dc[1].textContent.trim():'','','',toNum(dc[3]?dc[3].textContent.trim():''),toNum(dc[4]?dc[4].textContent.trim():''),'',tipo]);
+
+      if(dr.classList.contains('row-consumos')){
+        var s=dr.nextElementSibling;
+        while(s&&s.classList.contains('subdetail-row')){
+          var sc=s.cells;
+          rows.push(['\u00a0\u00a0'+(sc[0]?sc[0].textContent.trim():''),sc[1]?sc[1].textContent.trim():'',sc[2]?sc[2].textContent.trim():'','',toNum(sc[3]?sc[3].textContent.trim():''),'','','']);
+          s=s.nextElementSibling;
+        }
+      }
+    });
+  });
+
+  var now=new Date(),ts=now.getFullYear()+('0'+(now.getMonth()+1)).slice(-2)+('0'+now.getDate()).slice(-2)+'_'+('0'+now.getHours()).slice(-2)+('0'+now.getMinutes()).slice(-2);
+
+  if(typeof XLSX==='undefined'){alert('Sin conexi\u00f3n: SheetJS no disponible');return;}
+
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+
+  // Force numeric type on numeric cells so Excel can sum them
+  var range=XLSX.utils.decode_range(ws['!ref']);
+  for(var R=range.s.r;R<=range.e.r;R++){
+    for(var C=range.s.c;C<=range.e.c;C++){
+      var addr=XLSX.utils.encode_cell({r:R,c:C});
+      var cell=ws[addr];
+      if(cell&&typeof cell.v==='number'){cell.t='n';cell.z='#,##0.00';}
+    }
+  }
+
+  ws['!cols']=[{wch:50},{wch:18},{wch:22},{wch:14},{wch:14},{wch:14},{wch:13},{wch:12}];
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Bolsas de horas');
+  XLSX.writeFile(wb,'GRUPO_SICORE_Bolsas_'+ts+'.xlsx');
+}
 function toggleConsumo(r){
   event.stopPropagation();
   r.classList.toggle('is-open');
@@ -800,6 +793,8 @@ function toggleConsumo(r){
 <\/script>
 </body></html>`;
 }
+
+
 
 function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
