@@ -986,8 +986,10 @@ function ssLocal(k,v){try{localStorage.setItem('jmr_'+k,JSON.stringify(v));}catc
 // ── INDIVIDUAL ROW OPS ──────────────────────────────────
 async function sbInsert(table, row){
   const sb=getSB(); if(!sb) return;
-  const r=Object.assign({},row); delete r.row_id; delete r.id; // remove auto-generated PK
+  const r=Object.assign({},row); delete r.row_id; delete r.created_at; delete r.updated_at;
+  // Only remove id for tables where id is auto-generated (not servicios where id is manual text)
   const TABLES_WITH_ROWID = ['servicios'];
+  if(!TABLES_WITH_ROWID.includes(table)) delete r.id;
   if(TABLES_WITH_ROWID.includes(table)){
     const {error,data}=await sb.from(table).insert(r).select('row_id').single();
     if(error){ console.error('sbInsert',table,JSON.stringify(error)); toast('Error al insertar: '+(error.message||error.code||JSON.stringify(error))); return; }
@@ -1007,7 +1009,10 @@ async function sbInsert(table, row){
 async function sbUpdate(table, row, origKeys){
   // origKeys: optional object with original PK values before edit (for PK changes)
   const sb=getSB(); if(!sb) return;
-  const r=Object.assign({},row); delete r.row_id; delete r.id; delete r.created_at; delete r.updated_at;
+  const r=Object.assign({},row); delete r.row_id; delete r.created_at; delete r.updated_at;
+  // Keep id for servicios (manual text field), remove for tables with auto id
+  const TABLES_WITH_MANUAL_ID = ['servicios','valoraciones'];
+  if(!TABLES_WITH_MANUAL_ID.includes(table)) delete r.id;
 
   if(row.row_id){
     // Best case: have row_id, always accurate
