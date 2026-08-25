@@ -2386,20 +2386,58 @@ function renderTecPivot(tecPivot, svcsC, tTotP, tTotT, tTotG, tbId, tfId, tipo){
       <td class="num"><span class="drill" onclick="event.stopPropagation();drillKPIExactTec('${tec.replace(/'/g,"\'")}','h_gest','${tipo||'consumos'}')" title="Ver servicios">${fmt(row.h_gest)}</span></td>
     </tr>`;
     if(isExp){
-      // Child rows: services assigned to this technician in current period
+      // Group tasks by cliente
       const tasks = svcsC.filter(s=>s.tecnico===tec);
+      const byClient = {};
       tasks.forEach(s=>{
-        html += `<tr class="tp-child">
-          <td title="${s.titulo||''}">${s.id||'—'} · ${(s.titulo||'').substring(0,50)}${(s.titulo||'').length>50?'…':''}</td>
-          <td class="num">${fmt(s.h_prod)}</td>
-          <td class="num">${fmt(s.h_tec)}</td>
-          <td class="num">${fmt(s.h_gest)}</td>
+        const cli = s.cliente2||'—';
+        if(!byClient[cli]) byClient[cli]={h_prod:0,h_tec:0,h_gest:0,tasks:[]};
+        byClient[cli].h_prod += s.h_prod||0;
+        byClient[cli].h_tec  += s.h_tec||0;
+        byClient[cli].h_gest += s.h_gest||0;
+        byClient[cli].tasks.push(s);
+      });
+      const cliExpKey = `${tipo}|${tec}`;
+      if(!window._tecCliExpanded) window._tecCliExpanded = {};
+      Object.entries(byClient).forEach(([cli, cdata])=>{
+        const cliExp = window._tecCliExpanded[cliExpKey+cli] !== false; // expanded by default
+        html += `<tr class="tp-cli" onclick="event.stopPropagation();toggleTecCli(${JSON.stringify(cliExpKey+cli)},this)">
+          <td style="padding-left:20px;font-weight:600;color:var(--accent-strong);cursor:pointer;">
+            <span style="font-size:10px;margin-right:4px;">${cliExp?'▾':'▸'}</span>${cli}
+          </td>
+          <td class="num" style="font-weight:600;">${fmt(cdata.h_prod)}</td>
+          <td class="num" style="font-weight:600;">${fmt(cdata.h_tec)}</td>
+          <td class="num" style="font-weight:600;">${fmt(cdata.h_gest)}</td>
         </tr>`;
+        if(cliExp){
+          cdata.tasks.forEach(s=>{
+            html += `<tr class="tp-child">
+              <td style="padding-left:36px;" title="${s.titulo||''}">${s.id||'—'} · ${(s.titulo||'').substring(0,45)}${(s.titulo||'').length>45?'…':''}</td>
+              <td class="num">${fmt(s.h_prod)}</td>
+              <td class="num">${fmt(s.h_tec)}</td>
+              <td class="num">${fmt(s.h_gest)}</td>
+            </tr>`;
+          });
+        }
       });
     }
   });
   tb.innerHTML = html;
   tf.innerHTML = `<tr><td>Total</td><td class="num">${fmt(tTotP)}</td><td class="num">${fmt(tTotT)}</td><td class="num">${fmt(tTotG)}</td></tr>`;
+}
+
+function toggleTecCli(key, tr){
+  if(!window._tecCliExpanded) window._tecCliExpanded = {};
+  const cur = window._tecCliExpanded[key] !== false;
+  window._tecCliExpanded[key] = !cur;
+  // Re-render the affected pivot
+  const tbId = tr.closest('tbody').id;
+  const tipo = tbId.includes('-v') ? 'ventas' : tbId.includes('-p') ? 'planificado' : 'consumos';
+  const svcs = tipo==='ventas' ? (window._lastSvcsV||[]) : tipo==='planificado' ? (window._lastSvcsP||[]) : (window._lastSvcsC||[]);
+  const tp = calcTecPivot(svcs);
+  const totP=tp.reduce((a,r)=>a+r.h_prod,0), totT=tp.reduce((a,r)=>a+r.h_tec,0), totG=tp.reduce((a,r)=>a+r.h_gest,0);
+  const tfId = tbId.replace('tbody','tfoot');
+  renderTecPivot(tp, svcs, totP, totT, totG, tbId, tfId, tipo);
 }
 
 function toggleAllTec(tipo){
