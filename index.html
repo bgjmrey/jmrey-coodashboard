@@ -191,25 +191,18 @@ footer{
     <h1 class="portal-title">Cuadros de Mando</h1>
     <div class="portal-rule"></div>
     <div class="dashboards">
-      <a class="dash-card" href="coo.html">
+      <a class="dash-card" id="card-coo" href="coo.html">
         <div class="dash-card-icon">📊</div>
         <div class="dash-card-eyebrow">Departamento BC</div>
         <div class="dash-card-title">Cuadro de Mando COO</div>
         <div class="dash-card-desc">KPIs, servicios, valoraciones y clientes del departamento de Business Central.</div>
         <div class="dash-card-arrow">→</div>
       </a>
-      <a class="dash-card" href="licencias.html">
+      <a class="dash-card" id="card-licencias" href="licencias.html">
         <div class="dash-card-icon">🔑</div>
         <div class="dash-card-eyebrow">Departamento Licencias</div>
         <div class="dash-card-title">Cuadro de Mando Licencias</div>
         <div class="dash-card-desc">Gestión y seguimiento de licencias Microsoft y software.</div>
-        <div class="dash-card-arrow">→</div>
-      </a>
-      <a class="dash-card" href="clientes.html">
-        <div class="dash-card-icon">🏢</div>
-        <div class="dash-card-eyebrow">JMREY GROUP</div>
-        <div class="dash-card-title">Clientes</div>
-        <div class="dash-card-desc">Gestión de clientes, partners, tarifas y márgenes por proyecto.</div>
         <div class="dash-card-arrow">→</div>
       </a>
     </div>
@@ -250,7 +243,7 @@ function showApp(account){
     return;
   }
 
-  sb.from('users').select('email').ilike('email', email)
+  sb.from('users').select('email,acceso_coo,acceso_licencias,acceso_clientes').ilike('email', email)
     .then(function(res){
       console.log('[auth] users query result:', JSON.stringify(res));
       if(res.error){
@@ -261,7 +254,7 @@ function showApp(account){
         _denyAccess(account, email, 'El usuario ' + email + ' no tiene permiso para acceder a esta aplicación.');
         return;
       }
-      _grantAccess(account);
+      _grantAccess(account, res.data[0]);
     })
     .catch(function(e){
       console.error('[auth] catch:', e);
@@ -355,7 +348,7 @@ function showApp(account){
     return;
   }
 
-  sb.from('users').select('email').ilike('email', email)
+  sb.from('users').select('email,acceso_coo,acceso_licencias,acceso_clientes').ilike('email', email)
     .then(function(res){
       console.log('[auth] users query result:', JSON.stringify(res));
       if(res.error){
@@ -366,7 +359,7 @@ function showApp(account){
         _denyAccess(account, email, 'El usuario ' + email + ' no tiene permiso para acceder a esta aplicación.');
         return;
       }
-      _grantAccess(account);
+      _grantAccess(account, res.data[0]);
     })
     .catch(function(e){
       console.error('[auth] catch:', e);
@@ -397,12 +390,24 @@ function showLoginError(msg){
   el.style.display = 'block';
 }
 
-function _grantAccess(account){
+function _grantAccess(account, userData){
   document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('portal').style.display = 'flex';
   document.getElementById('hdr-name').textContent  = account.name || account.username;
   document.getElementById('hdr-email').textContent = account.username;
   document.getElementById('ft-user').textContent   = account.username;
+
+  // Apply access permissions
+  var u = userData || {};
+  // Default: show all if fields are null (backwards compat)
+  var allNull = u.acceso_coo===null && u.acceso_licencias===null && u.acceso_clientes===null;
+  function showCard(id, allowed){
+    var el = document.getElementById(id);
+    if(el) el.style.display = (allNull || allowed) ? '' : 'none';
+  }
+  showCard('card-coo',       u.acceso_coo);
+  showCard('card-licencias', u.acceso_licencias);
+  showCard('card-clientes',  u.acceso_clientes);
 }
 
 // Pre-load Supabase allowed users check early
