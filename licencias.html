@@ -930,6 +930,7 @@ function _grantAccess(account){
   document.getElementById('app-content').style.display = 'block';
   document.querySelector('.hdr-meta strong').textContent = account.name || account.username;
   document.querySelector('.hdr-meta span').textContent   = account.username;
+  window._currentUser = (account.username || '').toLowerCase().trim();
 }
 
 function showLoginError(msg){
@@ -994,6 +995,7 @@ function _grantAccess(account){
   document.getElementById('app-content').style.display = 'block';
   document.querySelector('.hdr-meta strong').textContent = account.name || account.username;
   document.querySelector('.hdr-meta span').textContent   = account.username;
+  window._currentUser = (account.username || '').toLowerCase().trim();
 }
 
 
@@ -1207,7 +1209,8 @@ async function cerrarPeriodo(){
   // Insert en lotes de 50
   let errores=0;
   for(let i=0;i<rows.length;i+=50){
-    const {error:e2}=await sb.from('licencia_periodo_cerrado').insert(rows.slice(i,i+50));
+    const chunk=rows.slice(i,i+50).map(r=>({...r,created_by:window._currentUser||'',updated_by:window._currentUser||''}));
+    const {error:e2}=await sb.from('licencia_periodo_cerrado').insert(chunk);
     if(e2){ errores++; console.error('cerrar error:',e2); }
   }
 
