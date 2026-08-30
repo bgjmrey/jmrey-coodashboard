@@ -271,13 +271,6 @@ function _denyAccess(account, email, msg){
   }
 }
 
-function _grantAccess(account){
-  document.getElementById('login-overlay').style.display = 'none';
-  document.getElementById('app-content').style.display = 'block';
-  document.querySelector('.hdr-meta strong').textContent = account.name || account.username;
-  document.querySelector('.hdr-meta span').textContent   = account.username;
-}
-
 function showLoginError(msg){
   var el = document.getElementById('login-error');
   el.textContent = msg;
@@ -374,13 +367,6 @@ function _denyAccess(account, email, msg){
   if(_msalApp){
     _msalApp.logoutPopup({account: account, postLogoutRedirectUri: 'https://bgjmrey.github.io/jmrey-coodashboard/'}).catch(function(){});
   }
-}
-
-function _grantAccess(account){
-  document.getElementById('login-overlay').style.display = 'none';
-  document.getElementById('app-content').style.display = 'block';
-  document.querySelector('.hdr-meta strong').textContent = account.name || account.username;
-  document.querySelector('.hdr-meta span').textContent   = account.username;
 }
 
 
