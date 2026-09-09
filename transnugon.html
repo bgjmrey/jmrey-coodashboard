@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JMREY · Transnugon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --jmrey-navy-900:#0E1F3D;--jmrey-navy-800:#14274A;--jmrey-navy-700:#1E3157;--jmrey-navy-600:#2A3F66;
+  --jmrey-gold-700:#A47535;--jmrey-gold-600:#B6884A;--jmrey-gold-500:#C39247;--jmrey-gold-300:#D7B27A;
+  --jmrey-ivory-50:#FAF7F2;--jmrey-ivory-100:#F3F0EA;--jmrey-ivory-200:#ECE7DD;--jmrey-ivory-300:#E2D9C6;
+  --jmrey-ink-900:#14171C;--jmrey-ink-700:#2E2F33;--jmrey-ink-500:#5A5A5A;--jmrey-ink-400:#7A7669;
+  --jmrey-ink-300:#B4AFA2;--jmrey-ink-200:#D9D2C2;--jmrey-paper:#FFFFFF;
+  --bg:var(--jmrey-ivory-100);--bg-elevated:var(--jmrey-ivory-50);--bg-card:var(--jmrey-paper);--bg-dark:var(--jmrey-navy-900);
+  --fg-1:var(--jmrey-navy-900);--fg-2:var(--jmrey-ink-900);--fg-3:var(--jmrey-ink-500);--fg-4:var(--jmrey-ink-400);
+  --fg-on-dark:#F4ECE0;--fg-on-dark-2:#B6884A;
+  --accent:var(--jmrey-gold-600);--accent-strong:var(--jmrey-gold-700);--accent-soft:var(--jmrey-gold-300);
+  --border:var(--jmrey-ink-200);--border-soft:var(--jmrey-ivory-300);
+  --radius-md:6px;--radius-lg:10px;--radius-xl:14px;
+  --shadow-sm:0 2px 6px rgba(20,23,28,.05),0 1px 2px rgba(20,23,28,.04);
+  --shadow-md:0 8px 24px -8px rgba(20,23,28,.10),0 2px 6px rgba(20,23,28,.04);--shadow-lg:0 24px 48px -16px rgba(14,31,61,.14),0 4px 12px rgba(20,23,28,.04);
+  --font-serif:'Cormorant Garamond',Georgia,serif;
+  --font-sans:'Manrope',system-ui,sans-serif;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;--space-7:48px;--space-8:64px;
+  --container:1240px;--gutter:clamp(20px,4vw,56px);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--fg-2);line-height:1.6;}
+h1,h2,h3{font-family:var(--font-serif);font-weight:500;letter-spacing:-0.01em;line-height:1.08;color:var(--fg-1);}
+.wrap{max-width:var(--container);margin:0 auto;padding:0 var(--gutter);}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);}
+
+/* TOPBAR */
+.topbar{background:var(--bg-dark);padding:16px 0;}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;}
+.topbar .brand{font-family:var(--font-serif);font-size:22px;color:var(--fg-on-dark);text-decoration:none;}
+.topbar .back{font-size:13px;color:var(--fg-on-dark-2);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color 160ms;}
+.topbar .back:hover{color:var(--fg-on-dark);}
+
+/* COVER */
+.cover{background:var(--bg-dark);padding:var(--space-8) 0 var(--space-7);}
+.cover .eyebrow{color:var(--accent);}
+.cover h1{color:var(--fg-on-dark);font-size:clamp(32px,4vw,52px);margin-top:var(--space-3);}
+.cover .rule{width:48px;height:2px;background:var(--accent);border:none;margin:var(--space-5) 0;}
+.cover .lead{color:var(--fg-on-dark);font-size:16px;opacity:.85;max-width:580px;}
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);margin-top:var(--space-6);max-width:700px;}
+.meta-item .label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-on-dark-2);margin-bottom:2px;}
+.meta-item .value{font-size:14px;color:var(--fg-on-dark);font-weight:500;}
+
+/* TOOLS SECTION */
+.tools-section{padding:var(--space-7) 0;}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--space-4);margin-top:var(--space-5);}
+.tool-card{background:var(--bg-card);border:1px solid var(--border-soft);border-radius:var(--radius-xl);padding:var(--space-5);box-shadow:var(--shadow-sm);}
+.tool-card .tool-icon{font-size:28px;margin-bottom:var(--space-3);}
+.tool-card .tool-name{font-family:var(--font-serif);font-size:20px;color:var(--fg-1);margin-bottom:var(--space-2);}
+.tool-card .tool-desc{font-size:13px;color:var(--fg-3);line-height:1.5;margin-bottom:var(--space-4);}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--jmrey-navy-900);color:var(--fg-on-dark);border:none;border-radius:var(--radius-md);padding:10px 20px;font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;transition:background 160ms;}
+.btn-primary:hover{background:var(--jmrey-navy-700);}
+.btn-secondary{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--fg-1);border:1px solid var(--border);border-radius:var(--radius-md);padding:9px 18px;font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;transition:border-color 160ms,background 160ms;}
+.btn-secondary:hover{border-color:var(--accent);background:var(--bg-elevated);}
+
+/* FOOTER */
+footer{background:var(--bg-dark);padding:var(--space-5) 0;margin-top:var(--space-7);}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(180,136,74,.3);padding-top:var(--space-4);}
+footer .brand{color:var(--fg-on-dark);font-family:var(--font-serif);font-size:18px;}
+footer .fnote{font-size:12px;color:var(--fg-on-dark-2);}
+
+/* ── MODAL EDICIÓN ───────────────────────────── */
+.mod-bg{display:none;position:fixed;inset:0;background:rgba(14,31,61,.4);z-index:200;align-items:center;justify-content:center;}
+.mod-bg.open{display:flex;}
+.mod-box{background:var(--bg-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:460px;width:94vw;box-shadow:0 24px 48px -16px rgba(14,31,61,.25);}
+.mod-box h3{font-family:var(--font-serif);font-size:22px;color:var(--fg-1);margin-bottom:var(--space-5);}
+.mod-fi{display:flex;flex-direction:column;gap:5px;margin-bottom:var(--space-4);}
+.mod-fi label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-3);}
+.mod-fi input{padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-md);font-family:var(--font-sans);font-size:14px;color:var(--fg-2);background:var(--bg-card);outline:none;transition:border-color 160ms;}
+.mod-fi input:focus{border-color:var(--accent);}
+.mod-fi-row{display:flex;gap:var(--space-3);}
+.mod-fi-row .mod-fi{flex:1;}
+.mod-footer{display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5);}
+.btn-cancel{background:none;border:1px solid var(--border);border-radius:var(--radius-md);padding:9px 18px;font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;color:var(--fg-2);transition:border-color 160ms;}
+.btn-cancel:hover{border-color:var(--accent);}
+.btn-save{background:var(--jmrey-navy-900);color:var(--fg-on-dark);border:none;border-radius:var(--radius-md);padding:9px 18px;font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;transition:background 160ms;}
+.btn-save:hover{background:var(--jmrey-navy-700);}
+/* Modal — igual que clientes.html */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(14,31,61,.35);z-index:200;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--bg-card);border-radius:var(--radius-xl);padding:var(--space-6);max-width:480px;width:94vw;box-shadow:0 24px 48px -16px rgba(14,31,61,.25);}
+.modal h3{font-family:var(--font-serif);font-size:22px;margin-bottom:var(--space-4);}
+.efi{display:flex;flex-direction:column;gap:6px;margin-bottom:var(--space-4);}
+.efi label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-3);}
+.efi input{padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-md);font-family:var(--font-sans);font-size:14px;color:var(--fg-2);background:var(--bg-card);outline:none;transition:border-color 160ms;width:100%;}
+.efi input:focus{border-color:var(--accent);}
+.modal-footer{display:flex;gap:var(--space-3);justify-content:flex-end;margin-top:var(--space-5);}
+.ebtn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:var(--radius-md);padding:9px 18px;font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;transition:background 160ms;}
+.ebtn-primary{background:var(--jmrey-navy-900);color:var(--fg-on-dark);}
+.ebtn-primary:hover{background:var(--jmrey-navy-700);}
+.ebtn-ghost{background:none;border:1px solid var(--border);color:var(--fg-2);}
+.ebtn-ghost:hover{border-color:var(--accent);}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">JMREY</a>
+    <a class="back" href="clientes.html">← Clientes</a>
+  </div>
+</nav>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="eyebrow">JMREY · Business Central</div>
+    <h1>Transnugon</h1>
+    <hr class="rule">
+    <p class="lead">Ficha del cliente y herramientas de gestión de informes y documentación.</p>
+    <div class="meta-grid">
+      <div class="meta-item"><div class="label">Partner</div><div class="value" id="meta-partner">—</div></div>
+      <div class="meta-item"><div class="label">Técnico director</div><div class="value" id="meta-tecnico">—</div></div>
+      <div class="meta-item"><div class="label">Tarifa</div><div class="value" id="meta-precio">—</div></div>
+    </div>
+    <button class="btn-edit-meta" onclick="openEditModal()" style="margin-top:var(--space-4);display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:7px 14px;color:var(--fg-on-dark);font-family:var(--font-sans);font-size:12px;font-weight:600;cursor:pointer;transition:background 160ms;">✏️ Editar datos del cliente</button>
+  </div>
+</div>
+
+<div class="tools-section">
+  <div class="wrap">
+    <div class="eyebrow">Herramientas</div>
+    <h2 style="margin-top:var(--space-3);font-size:clamp(24px,3vw,36px);">Generadores de informes</h2>
+    <div class="tools-grid">
+
+      <div class="tool-card">
+        <div class="tool-icon">📊</div>
+        <div class="tool-name">Informe de bolsas de horas</div>
+        <div class="tool-desc">Sube el Excel de la bolsa de horas y genera automáticamente el informe HTML con el desglose por bolsa, tareas y consumos en formato JMREY.</div>
+        <button class="btn-primary" onclick="document.getElementById('bolsa-section').scrollIntoView({behavior:'smooth'})">
+          Generar informe →
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- BOLSA DE HORAS GENERATOR -->
+<div id="bolsa-section" style="padding:var(--space-7) 0;background:var(--bg-elevated);border-top:1px solid var(--border-soft);">
+  <div class="wrap">
+    <div class="eyebrow">Generador</div>
+    <h2 style="margin-top:var(--space-3);font-size:clamp(22px,2.8vw,32px);margin-bottom:var(--space-2);">Informe de bolsas de horas</h2>
+    <p style="font-size:14px;color:var(--fg-3);margin-bottom:var(--space-5);">Sube el Excel con las hojas <strong>Bolsa de horas JMREY</strong> y <strong>Detalle consumos</strong>.</p>
+
+    <!-- DROP ZONE -->
+    <div id="drop-zone"
+         style="border:2px dashed var(--border);border-radius:var(--radius-xl);padding:var(--space-7) var(--space-5);text-align:center;background:var(--bg-card);position:relative;"
+         ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <div style="font-size:36px;margin-bottom:var(--space-3);">📂</div>
+      <div style="font-family:var(--font-serif);font-size:20px;color:var(--fg-1);margin-bottom:var(--space-2);">Arrastra el Excel aquí</div>
+      <div style="font-size:13px;color:var(--fg-4);margin-bottom:var(--space-4);">o selecciona el fichero · .xlsx</div>
+      <label for="file-input" style="display:inline-flex;align-items:center;gap:8px;background:var(--jmrey-navy-900);color:var(--fg-on-dark);border-radius:var(--radius-md);padding:10px 20px;font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;">
+        📁 Seleccionar fichero Excel
+      </label>
+      <input type="file" id="file-input" accept=".xlsx" style="display:none;" onchange="onFileSelect(event)">
+    </div>
+
+    <!-- STATUS -->
+    <div id="status" style="display:none;margin-top:var(--space-4);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);font-size:13px;"></div>
+
+    <!-- ACTIONS -->
+    <div id="actions" style="display:none;margin-top:var(--space-4);display:none;gap:var(--space-3);">
+      <button class="btn-primary" onclick="downloadHTML()">⬇ Descargar HTML</button>
+      <button class="btn-secondary" onclick="previewHTML()">👁 Vista previa</button>
+      <button class="btn-secondary" onclick="resetGenerator()">✕ Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW -->
+<div id="preview-section" style="display:none;">
+  <div style="background:var(--bg-dark);padding:12px var(--gutter);display:flex;align-items:center;justify-content:space-between;gap:16px;">
+    <span style="color:var(--fg-on-dark);font-size:13px;font-weight:600;">Vista previa del informe generado</span>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-primary" onclick="downloadHTML()" style="padding:7px 14px;font-size:12px;">⬇ Descargar</button>
+      <button onclick="document.getElementById('preview-section').style.display='none'" style="background:none;border:none;color:var(--fg-on-dark-2);cursor:pointer;font-size:13px;">Cerrar ✕</button>
+    </div>
+  </div>
+  <iframe id="preview-frame" style="width:100%;height:80vh;border:none;"></iframe>
+</div>
+
+
+<!-- Modal edición cliente -->
+<div class="modal-bg" id="edit-modal-bg">
+  <div class="modal">
+    <h3>Editar cliente</h3>
+    <div class="efi"><label>Partner (código proyecto)</label><input id="e-partner" placeholder="Ej. JMREY, EQM…"></div>
+    <div class="efi"><label>Cliente</label><input id="e-cliente" placeholder="Nombre del cliente"></div>
+    <div class="efi"><label>Técnico director (email)</label><input id="e-tecnico" type="email" placeholder="bg@jmrey.com"></div>
+    <div class="efi"><label>€ / hora</label><input id="e-precio" type="number" step="0.5" min="0" placeholder="30"></div>
+    <div class="efi"><label>% Margen</label><input id="e-margen" type="number" step="1" min="0" placeholder="0"></div>
+    <div class="modal-footer">
+      <button class="ebtn ebtn-ghost" onclick="closeEditModal()">Cancelar</button>
+      <button class="ebtn" style="background:#c0392b;color:#fff;" onclick="deleteClienteFromModal()">🗑 Eliminar</button>
+      <button class="ebtn ebtn-primary" onclick="saveEdit()">Guardar</button>
+    </div>
+  </div>
+</div>
+<footer>
+  <div class="wrap">
+    <div class="brand">JMREY</div>
+    <div class="fnote">Transnugon · Herramientas de gestión</div>
+  </div>
+</footer>
+
+<!-- SheetJS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+const SB_URL = 'https://bpxeyugyadcgyewrpcde.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweGV5dWd5YWRjZ3lld3JwY2RlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxMjUwOTgsImV4cCI6MjA5NTcwMTA5OH0.0KtvmfGD3BgJLY9INw0fikxFLJ-7BWAGowC7m3eBMac';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+let clienteData = null;
+let generatedHTML = null;
+
+async function loadClienteData(){
+  const {data, error} = await sb.from('clientes')
+    .select('*')
+    .eq('partner', 'JMREY')
+    .eq('cliente', 'TRANSNUGON')
+    .single();
+  if(!error && data){
+    clienteData = data;
+    document.getElementById('meta-partner').textContent = data.partner || '—';
+    document.getElementById('meta-tecnico').textContent = data.tecnico || '—';
+    document.getElementById('meta-precio').textContent  = data.precio ? data.precio + ' €/h' : '—';
+  }
+}
+
+function openEditModal(){
+  const r = clienteData || {};
+  document.getElementById('e-partner').value = r.partner || 'JMREY';
+  document.getElementById('e-cliente').value  = r.cliente  || 'TRANSNUGON';
+  document.getElementById('e-tecnico').value  = r.tecnico  || '';
+  document.getElementById('e-precio').value   = r.precio   ?? '';
+  document.getElementById('e-margen').value   = r.margen   ?? '';
+  const bg = document.getElementById('edit-modal-bg');
+  bg.classList.add('open');
+  bg.onclick = e => { if(e.target === bg) closeEditModal(); };
+}
+
+function closeEditModal(){
+  document.getElementById('edit-modal-bg').classList.remove('open');
+}
+
+async function deleteClienteFromModal(){
+  if(!clienteData?.id){ alert('No se encontró el cliente'); return; }
+  if(!confirm(`¿Eliminar el cliente ${clienteData.partner} / ${clienteData.cliente}?`)) return;
+  const {error} = await sb.from('clientes').delete().eq('id', clienteData.id);
+  if(error){ alert('Error: ' + error.message); return; }
+  closeEditModal();
+  window.location.href = 'clientes.html';
+}
+
+async function saveEdit(){
+  const o = {
+    partner: document.getElementById('e-partner').value.trim().toUpperCase(),
+    cliente: document.getElementById('e-cliente').value.trim().toUpperCase(),
+    tecnico: document.getElementById('e-tecnico').value.trim(),
+    precio:  parseFloat(document.getElementById('e-precio').value) || 0,
+    margen:  parseFloat(document.getElementById('e-margen').value) || 0,
+  };
+  if(!clienteData?.id){ alert('No se encontró el cliente en Supabase'); return; }
+  const {error} = await sb.from('clientes').update(o).eq('id', clienteData.id);
+  if(error){ alert('Error: ' + error.message); return; }
+  clienteData = {...clienteData, ...o};
+  document.getElementById('meta-partner').textContent = o.partner;
+  document.getElementById('meta-tecnico').textContent = o.tecnico || '—';
+  document.getElementById('meta-precio').textContent  = o.precio ? o.precio + ' €/h' : '—';
+  closeEditModal();
+}
+
+loadClienteData();
+
+// ── DRAG & DROP ──────────────────────────────────────────────
+
+function setStatus(msg, type){
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = type==='ok' ? 'rgba(14,31,61,.06)' : type==='err' ? 'rgba(180,0,0,.07)' : 'var(--jmrey-ivory-200)';
+  el.style.color = type==='err' ? '#a00' : 'var(--fg-2)';
+  el.style.border = '1px solid ' + (type==='ok' ? 'var(--border-soft)' : type==='err' ? 'rgba(180,0,0,.2)' : 'var(--border-soft)');
+}
+
+function resetGenerator(){
+  generatedHTML = null;
+  document.getElementById('status').style.display = 'none';
+  document.getElementById('actions').style.display = 'none';
+  document.getElementById('preview-section').style.display = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+function downloadHTML(){
+  if(!generatedHTML) return;
+  const blob = new Blob([generatedHTML], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const now = new Date();
+  const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+  a.download = 'TRANSNUGON · Línea 2 · Sistema de ejecución guiada ' + ts + '.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function previewHTML(){
+  if(!generatedHTML) return;
+  const frame = document.getElementById('preview-frame');
+  frame.srcdoc = generatedHTML;
+  document.getElementById('preview-section').style.display = 'block';
+  document.getElementById('preview-section').scrollIntoView({behavior:'smooth'});
+}
+
+function onDragOver(e){
+  e.preventDefault();
+  document.getElementById('drop-zone').style.borderColor = 'var(--accent)';
+  document.getElementById('drop-zone').style.background = 'var(--jmrey-ivory-200)';
+}
+function onDragLeave(e){
+  document.getElementById('drop-zone').style.borderColor = 'var(--border)';
+  document.getElementById('drop-zone').style.background = 'var(--bg-card)';
+}
+function onDrop(e){
+  e.preventDefault();
+  onDragLeave(e);
+  const file = e.dataTransfer.files[0];
+  if(file) processFile(file);
+}
+function onFileSelect(e){
+  const file = e.target.files[0];
+  if(file) processFile(file);
+}
+
+// ── EXCEL PARSING ────────────────────────────────────────────
+function processFile(file){
+  setStatus('⏳ Leyendo Excel…', 'info');
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true, sheetStubs:true, bookVBA:false});
+      // Log sheet names for debugging
+      console.log('Hojas:', wb.SheetNames);
+      const consumos = parseConsumos(wb);
+      console.log('Consumos cargados:', Object.keys(consumos).length, 'tareas');
+      const bolsas = parseBolsas(wb, consumos);
+      console.log('Bolsas:', bolsas.map(b=>b.nombre+'('+b.tareas.length+' tareas)'));
+      generatedHTML = buildHTML(bolsas, consumos, file.name);
+      window._lastBolsas = bolsas;
+      window._lastConsumos = consumos;
+      setStatus('✅ Informe generado — ' + bolsas.length + ' bolsas, ' + Object.keys(consumos).length + ' tareas con consumos', 'ok');
+      document.getElementById('actions').style.display = 'flex';
+    } catch(err) {
+      setStatus('❌ Error: ' + err.message, 'err');
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── PARSE CONSUMOS (todas las hojas consumos*) ──────────────
+// Lee consumosBorja, consumosItalo, consumosGuille, consumosJuanma etc.
+// Cols: Fecha(0), Cliente(1), Id. tarea(2), ..., Descripción tarea(5), Descripción trabajo(6), Horas(7)
+function parseConsumos(wb){
+  // Find all sheets starting with "consumos"
+  const consumosSheets = wb.SheetNames.filter(n => n.toLowerCase().startsWith('consumos'));
+  if(consumosSheets.length === 0){
+    const det = wb.SheetNames.find(n => n.toLowerCase().includes('detalle'));
+    if(det) consumosSheets.push(det);
+  }
+  console.log('Hojas de consumos:', consumosSheets);
+  if(consumosSheets.length === 0){ console.warn('No hay hojas de consumos'); return {}; }
+
+  const consumosPorTarea = {};
+  let totalLineas = 0;
+
+  for(const sheetName of consumosSheets){
+    const ws = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, cellDates:true});
+
+    // Find header row
+    let hi = -1;
+    for(let i = 0; i < Math.min(20, rows.length); i++){
+      if(rows[i] && rows[i].some(c => String(c||'').toLowerCase().trim() === 'fecha')){ hi = i; break; }
+    }
+    if(hi < 0) hi = 1;
+
+    // Map columns by header name
+    const hdrs = (rows[hi]||[]).map(c => String(c||'').toLowerCase().trim());
+    const iF   = hdrs.findIndex(h => h === 'fecha');
+    const iCl  = hdrs.findIndex(h => h === 'cliente');
+    const iId  = hdrs.findIndex(h => h.startsWith('id') && h.includes('tarea'));
+    const iDT  = hdrs.findIndex(h => h.includes('descripci') && h.includes('tarea'));
+    const iDW  = hdrs.findIndex(h => h.includes('descripci') && h.includes('trabajo'));
+    const iH   = hdrs.findIndex(h => h === 'horas');
+    console.log(sheetName, '— cols: fecha='+iF+' cliente='+iCl+' id='+iId+' horas='+iH);
+
+    const cF  = iF  >= 0 ? iF  : 0;
+    const cCl = iCl >= 0 ? iCl : 1;
+    const cId = iId >= 0 ? iId : 2;
+    const cDT = iDT >= 0 ? iDT : 5;
+    const cDW = iDW >= 0 ? iDW : 6;
+    const cH  = iH  >= 0 ? iH  : 7;
+
+    for(let i = hi+1; i < rows.length; i++){
+      const row = rows[i];
+      if(!row || row.every(c => c===null||c==='')) continue;
+      const idTarea = String(row[cId]||'').trim();
+      if(!idTarea) continue;
+      const horas = parseFloat(row[cH]) || 0;
+
+      const fecha = row[cF];
+      let fechaStr = '';
+      if(fecha instanceof Date){
+        fechaStr = String(fecha.getDate()).padStart(2,'0')+'/'+String(fecha.getMonth()+1).padStart(2,'0')+'/'+String(fecha.getFullYear()).slice(2);
+      } else if(fecha){ fechaStr = String(fecha); }
+
+      if(!consumosPorTarea[idTarea]) consumosPorTarea[idTarea] = [];
+      consumosPorTarea[idTarea].push({
+        fecha: fechaStr,
+        cliente: String(row[cCl]||'').trim(),
+        tarea: String(row[cDT]||'').trim(),
+        trabajo: String(row[cDW]||'').trim(),
+        horas
+      });
+      totalLineas++;
+    }
+    console.log(sheetName, '— filas leídas:', rows.length - hi - 1);
+  }
+
+  console.log('Total líneas consumo:', totalLineas, '— tareas únicas:', Object.keys(consumosPorTarea).length);
+  return consumosPorTarea;
+}
+
+// ── PARSE BOLSA DE HORAS JMREY ───────────────────────────────
+// Pestaña: "Bolsa de horas JMREY"
+// Cabecera en fila 0, datos desde fila 7
+// col[1]=id, col[2]=nombre_bolsa_o_tarea, col[3]=descripcion, col[8]=horas
+function parseBolsas(wb, consumos){
+  const sheetName = wb.SheetNames.find(n =>
+    n.toLowerCase().includes('bolsa') && (n.toLowerCase().includes('jmrey') || n.toLowerCase().includes('hora'))
+  ) || wb.SheetNames[0];
+  console.log('Pestaña bolsas:', sheetName);
+  const ws = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, cellDates:true});
+  console.log('Detalle Consumos — hoja:', sheetName, '| filas:', rows.length);
+
+  const bolsas = [];
+  let currentBolsa = null;
+
+  for(let i = 7; i < rows.length; i++){
+    const row = rows[i];
+    if(!row || row.every(c => c === null || c === '')) continue;
+
+    const col1 = row[1]; // id bolsa (siempre)
+    const col2 = row[2]; // id tarea O nombre bolsa (texto)
+    const col3 = String(row[3]||'').trim(); // nombre tarea en mayúsculas
+    const col8 = parseFloat(row[8]) || 0;
+
+    const col1Str = String(col1||'').trim();
+    const col2Str = String(col2||'').trim();
+
+    if(!col1Str && !col2Str) continue;
+
+    // Es cabecera de bolsa: col2 contiene "Bolsa de proyectos" (texto, no número)
+    const esBolsa = isNaN(col2) && col2Str.toLowerCase().includes('bolsa');
+
+    if(esBolsa){
+      currentBolsa = {
+        id: col1Str,
+        nombre: col2Str,
+        horas_total: col8,
+        tareas: []
+      };
+      bolsas.push(currentBolsa);
+      console.log('Bolsa:', currentBolsa.nombre, 'horas:', col8);
+    } else if(currentBolsa && col3 && col8 > 0){
+      // Es una tarea: col3 tiene el nombre
+      // CONSUMOS: col2 === col1 (mismo id que la bolsa)
+      const esConsumo = col2Str === currentBolsa.id || col3.toUpperCase() === 'CONSUMOS';
+      currentBolsa.tareas.push({
+        id: col2Str,    // id de la tarea (para enlazar con Detalle consumos)
+        nombre: col3,   // nombre legible
+        horas: col8,
+        tipo: esConsumo ? 'consumo' : 'proyecto'
+      });
+    }
+  }
+  console.log('Total bolsas:', bolsas.length);
+  bolsas.forEach((b,i) => {
+    console.log('Bolsa', i+1, b.nombre, '— tareas:', b.tareas.map(t=>t.id+'='+t.tipo+'('+t.horas+'h)'));
+  });
+  console.log('Consumos keys:', Object.keys(consumos));
+  return bolsas;
+}
+
+
+// ── BUILD HTML ───────────────────────────────────────────────
+function buildHTML(bolsas, consumos, fileName){
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2,'0');
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const yyyy = now.getFullYear();
+  const fechaInforme = `${dd}/${mm}/${yyyy}`;
+  const mesesES = ['Ene.','Feb.','Mar.','Abr.','May.','Jun.','Jul.','Ago.','Sep.','Oct.','Nov.','Dic.'];
+  const mesActual = mesesES[now.getMonth()];
+  const inicio = 'Sep. 2025';
+  const fin = `${mesActual} ${yyyy}`;
+  const nMeses = (yyyy - 2025)*12 + now.getMonth() - 8;
+
+  let totalHoras = 0, totalConsumosH = 0, totalProyectosH = 0;
+  bolsas.forEach(b=>{
+    totalHoras += b.horas_total;
+    b.tareas.forEach(t=>{
+      if(t.tipo==='consumo') totalConsumosH += t.horas;
+      else totalProyectosH += t.horas;
+    });
+  });
+
+  const CHEVRON = `<svg viewBox="0 0 8 12" fill="none" width="10" height="10"><path d="M1 1L7 6L1 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  function fmt(n){ return (n||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+    function buildTbody(bolsa, idx){
+    const isClosed = idx < bolsas.length - 1;
+    const pillClass = isClosed ? 'pill-done' : 'pill-progress';
+    const pillText  = isClosed ? 'Cerrada' : 'Abierta';
+
+    // Separate consumo tasks from proyecto tasks
+    const tareasConsumo  = bolsa.tareas.filter(t => t.tipo === 'consumo');
+    const tareasProyecto = bolsa.tareas.filter(t => t.tipo !== 'consumo');
+
+    const hConsumos  = tareasConsumo.reduce((a,t) => a + t.horas, 0);
+    const hProyectos = tareasProyecto.reduce((a,t) => a + t.horas, 0);
+    const pct = bolsa.horas_total > 0 ? Math.round((hConsumos + hProyectos) / bolsa.horas_total * 100) : 0;
+
+    // Build ONE consumos row (merging all consumo tasks) with subdetail lines
+    let consumoRow = '';
+    if(hConsumos > 0){
+      // Gather all subdetail lines from all consumo tasks
+      let allLineas = [];
+      tareasConsumo.forEach(t => {
+        // Try task id first, then bolsa id as fallback
+        const lineas = (consumos[t.id] && consumos[t.id].length > 0)
+          ? consumos[t.id]
+          : (consumos[bolsa.id] || []);
+        allLineas = allLineas.concat(lineas);
+      });
+
+
+      const subRows = allLineas.map(l => `
+        <tr class="subdetail-row${l.horas < 0 ? ' row-neg' : ''}" style="display:none;">
+          <td class="subdetail-name">${escH(l.tarea)}<span class="subdetail-work"> — ${escH(l.trabajo)}</span></td>
+          <td class="subdetail-id">${escH(l.fecha)}</td>
+          <td class="subdetail-id">${escH(l.cliente||'TRANSNUGON')}</td>
+          <td class="num subdetail-hrs">${fmt(l.horas)}</td>
+          <td class="num"></td><td class="num"></td><td></td>
+        </tr>`).join('');
+
+      consumoRow = `
+        <tr class="detail-row row-consumos" onclick="toggleConsumo(this)">
+          <td class="detail-name">
+            <span class="consumo-chevron"><svg viewBox="0 0 8 12" fill="none"><path d="M1 1L7 6L1 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            Consumos <span class="detail-tag">soporte, incidencias y peticiones puntuales</span>
+            <span class="consumo-count">(${allLineas.length} líneas)</span>
+          </td>
+          <td class="detail-id">${escH(bolsa.id)}</td>
+          <td></td>
+          <td class="num"></td>
+          <td class="num">${fmt(hConsumos)}</td>
+          <td class="num"></td><td class="num"></td><td></td>
+        </tr>
+        ${subRows}`;
+    }
+
+    // Proyecto rows — each as a non-clickable detail row, horas in col Proyectos (5th td)
+    const proyRows = tareasProyecto.map(t => `
+        <tr class="detail-row">
+          <td class="detail-name">${escH(t.nombre)}</td>
+          <td class="detail-id">${escH(t.id)}</td>
+          <td></td>
+          <td class="num"></td>
+          <td class="num"></td>
+          <td class="num">${fmt(t.horas)}</td>
+          <td class="num"></td><td></td>
+        </tr>`).join('');
+
+    return `
+      <tbody class="bolsa-group">
+        <tr class="bolsa-row" onclick="toggleBolsa(this)">
+          <td><span class="bolsa-name">
+            <span class="chevron"><svg viewBox="0 0 8 12" fill="none"><path d="M1 1L7 6L1 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            ${escH(bolsa.nombre)}
+            <span class="mobile-pill" style="display:none;"><span class="pill ${pillClass}">${pillText}</span></span>
+          </span></td>
+          <td>${escH(bolsa.id)}</td>
+          <td></td>
+          <td class="num">${fmt(bolsa.horas_total)}</td>
+          <td class="num">${fmt(hConsumos)}</td>
+          <td class="num">${fmt(hProyectos)}</td>
+          <td class="num">${pct} %</td>
+          <td><span class="pill ${pillClass}">${pillText}</span></td>
+        </tr>
+        ${consumoRow}
+        ${proyRows}
+      </tbody>`;
+  }
+
+  const tbodies = bolsas.map((b,i)=>buildTbody(b,i)).join('\n');
+  const totalEntregado = totalHoras > 0 ? (totalConsumosH+totalProyectosH)/totalHoras*100 : 0;
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRANSNUGON · Desglose bolsas de horas</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>
+<style>
+:root{--navy:#0E1F3D;--gold:#B6884A;--ivory:#F3F0EA;--ivory2:#ECE7DD;--ink:#14171C;--ink3:#5A5A5A;--ink4:#7A7669;--ink2:#D9D2C2;--paper:#fff;--serif:'Cormorant Garamond',serif;--sans:'Manrope',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--ivory);color:var(--ink);line-height:1.6;}
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(20px,4vw,56px);}
+h1{font-family:var(--serif);font-weight:500;color:#fff;font-size:clamp(32px,4vw,52px);margin-top:12px;}
+.cover{background:var(--navy);padding:64px 0 48px;}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);}
+.rule{width:48px;height:2px;background:var(--gold);border:none;margin:20px 0;}
+.lead{color:#F4ECE0;font-size:16px;opacity:.9;max-width:580px;}
+.meta{display:grid;grid-template-columns:repeat(2,1fr);gap:16px 48px;max-width:680px;margin-top:32px;}
+.meta .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:2px;}
+.meta .val{font-size:14px;color:#F4ECE0;font-weight:500;}
+section{padding:48px 0;}
+table{width:100%;border-collapse:collapse;background:var(--paper);border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(20,23,28,.05);}
+thead th{background:var(--navy);color:#F4ECE0;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;text-align:left;padding:10px 14px;}
+td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--ivory2);color:var(--ink);}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;}
+.pill-done{background:rgba(14,31,61,.08);color:var(--navy);}
+.pill-progress{background:rgba(182,136,74,.16);color:#A47535;}
+tr.bolsa-row{cursor:pointer;user-select:none;}
+tr.bolsa-row td{font-weight:600;background:var(--ivory);border-top:1px solid var(--ink2);}
+tr.bolsa-row:hover td{background:var(--ivory2);}
+.bolsa-name{display:flex;align-items:center;gap:8px;}
+.chevron{display:inline-flex;color:#A47535;transition:transform 200ms;}
+tbody.bolsa-group.is-open tr.bolsa-row .chevron{transform:rotate(90deg);}
+tr.detail-row td{font-size:12px;color:var(--ink3);padding:6px 14px;}
+tr.detail-row .detail-name{padding-left:32px;position:relative;}
+tr.detail-row .detail-name::before{content:"—";position:absolute;left:16px;color:var(--gold);}
+tr.detail-row .detail-tag{color:var(--ink4);font-style:italic;}
+tr.detail-row .detail-id{color:var(--ink4);font-size:11px;}
+tr.detail-row.row-consumos{cursor:pointer;}
+tr.detail-row.row-consumos:hover td{background:var(--ivory);}
+tr.detail-row.row-consumos .detail-name::before{display:none;}
+.consumo-chevron{display:inline-flex;color:#A47535;transition:transform 200ms;margin-right:4px;}
+tr.detail-row.row-consumos.is-open .consumo-chevron{transform:rotate(90deg);}
+.consumo-count{color:var(--ink4);font-size:11px;margin-left:6px;}
+tr.subdetail-row td{background:var(--ivory);font-size:11px;color:var(--ink4);padding:3px 14px;border-bottom:1px dashed var(--ivory2);}
+tr.subdetail-row .subdetail-name{padding-left:56px;position:relative;}
+tr.subdetail-row .subdetail-name::before{content:"·";position:absolute;left:40px;color:var(--ink2);}
+tr.subdetail-row .subdetail-work{color:var(--ink4);}
+tr.subdetail-row .subdetail-id{font-size:11px;}
+tr.subdetail-row .subdetail-hrs{color:var(--ink3);}
+tr.subdetail-row.row-neg td{background:rgba(180,0,0,.09)!important;color:#c0392b!important;}
+tr.subdetail-row.row-neg td{background:rgba(180,0,0,.08)!important;color:#c0392b!important;font-weight:600;}
+tbody.bolsa-group:not(.is-open) tr.detail-row{display:none;}
+footer{background:var(--navy);color:rgba(244,236,224,.6);padding:24px 0;margin-top:48px;}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(182,136,74,.3);padding-top:20px;}
+footer .brand{color:#F4ECE0;font-family:var(--serif);font-size:18px;}
+</style>
+</head>
+<body>
+<div class="cover"><div class="wrap">
+  <div class="eyebrow">Informe de seguimiento · Bolsas de horas</div>
+  <h1>Desglose de bolsas de horas</h1>
+  <hr class="rule">
+  <p class="lead">Detalle de consumo recurrente frente a desarrollos planificados por bolsa.</p>
+  <div class="meta">
+    <div><div class="lbl">Cliente</div><div class="val">TRANSNUGON</div></div>
+    <div><div class="lbl">Fecha del informe</div><div class="val">${fechaInforme}</div></div>
+    <div><div class="lbl">Periodo analizado</div><div class="val">${inicio} — ${fin} (${nMeses} meses)</div></div>
+    <div><div class="lbl">Elaborado por</div><div class="val">JMREY · Borja González Santa Cruz</div></div>
+  </div>
+</div></div>
+
+<section><div class="wrap">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><button onclick="exportToExcel()" style="background:var(--navy);color:#F4ECE0;border:none;border-radius:6px;padding:9px 18px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;">📊 Exportar a Excel</button></div>
+  <table>
+    <thead><tr>
+      <th>Bolsa</th><th>Id.</th><th>Cliente</th><th class="num">Horas</th>
+      <th class="num">Consumos</th><th class="num">Proyectos</th>
+      <th class="num">% entregado</th><th>Estado</th>
+    </tr></thead>
+    ${tbodies}
+    <tfoot><tr style="background:var(--ivory);font-weight:700;">
+      <td colspan="2">Total</td>
+      <td></td>
+      <td class="num">${fmt(totalHoras)}</td>
+      <td class="num">${fmt(totalConsumosH)}</td>
+      <td class="num">${fmt(totalProyectosH)}</td>
+      <td class="num">${Math.round(totalEntregado*10)/10} %</td>
+      <td></td>
+    </tr></tfoot>
+  </table>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="brand">JMREY</div>
+  
+</div></footer>
+<script>
+function toggleBolsa(r){
+  const group = r.closest('.bolsa-group');
+  const wasOpen = group.classList.contains('is-open');
+  group.classList.toggle('is-open');
+  if(wasOpen){
+    // Collapse any open consumo rows and hide subdetails
+    group.querySelectorAll('.row-consumos.is-open').forEach(cr => {
+      cr.classList.remove('is-open');
+      let s = cr.nextElementSibling;
+      while(s && s.classList.contains('subdetail-row')){ s.style.display='none'; s=s.nextElementSibling; }
+    });
+  }
+}
+function exportToExcel(){
+  function toNum(s){
+    if(!s) return '';
+    s=s.trim();
+    var n=parseFloat(s.replace(/\./g,'').replace(',','.'));
+    return isNaN(n)?s:n;
+  }
+
+  var rows=[];
+  rows.push(['TRANSNUGON \u2014 Desglose de bolsas de horas','','','','','','','']);
+  rows.push(['Bolsa / Tarea','Id.','Cliente','Horas totales','Consumos','Proyectos','% entregado','Tipo']);
+
+  document.querySelectorAll('.bolsa-group').forEach(function(g){
+    var b=g.querySelector('tr.bolsa-row'),c=b?b.cells:[];
+    var nm=c[0]?(c[0].querySelector('.bolsa-name')||c[0]).textContent.replace(/[<>]/g,'').trim():'';
+    rows.push([nm,c[1]?c[1].textContent.trim():'','',toNum(c[3]?c[3].textContent.trim():''),toNum(c[4]?c[4].textContent.trim():''),toNum(c[5]?c[5].textContent.trim():''),toNum(c[6]?c[6].textContent.trim():''),c[7]?c[7].textContent.trim():'']);
+
+    g.querySelectorAll('tr.detail-row').forEach(function(dr){
+      var dc=dr.cells,tipo=dr.classList.contains('row-consumos')?'CONSUMOS':'PROYECTO';
+      rows.push([dc[0]?dc[0].textContent.replace('\u2014','').trim():'',dc[1]?dc[1].textContent.trim():'','','',toNum(dc[3]?dc[3].textContent.trim():''),toNum(dc[4]?dc[4].textContent.trim():''),'',tipo]);
+
+      if(dr.classList.contains('row-consumos')){
+        var s=dr.nextElementSibling;
+        while(s&&s.classList.contains('subdetail-row')){
+          var sc=s.cells;
+          rows.push(['\u00a0\u00a0'+(sc[0]?sc[0].textContent.trim():''),sc[1]?sc[1].textContent.trim():'',sc[2]?sc[2].textContent.trim():'','',toNum(sc[3]?sc[3].textContent.trim():''),'','','']);
+          s=s.nextElementSibling;
+        }
+      }
+    });
+  });
+
+  var now=new Date(),ts=now.getFullYear()+('0'+(now.getMonth()+1)).slice(-2)+('0'+now.getDate()).slice(-2)+'_'+('0'+now.getHours()).slice(-2)+('0'+now.getMinutes()).slice(-2);
+
+  if(typeof XLSX==='undefined'){alert('Sin conexi\u00f3n: SheetJS no disponible');return;}
+
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+
+  // Force numeric type on numeric cells so Excel can sum them
+  var range=XLSX.utils.decode_range(ws['!ref']);
+  for(var R=range.s.r;R<=range.e.r;R++){
+    for(var C=range.s.c;C<=range.e.c;C++){
+      var addr=XLSX.utils.encode_cell({r:R,c:C});
+      var cell=ws[addr];
+      if(cell&&typeof cell.v==='number'){cell.t='n';cell.z='#,##0.00';}
+    }
+  }
+
+  ws['!cols']=[{wch:50},{wch:18},{wch:22},{wch:14},{wch:14},{wch:14},{wch:13},{wch:12}];
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Bolsas de horas');
+  XLSX.writeFile(wb,'TRANSNUGON · Línea 2 · Sistema de ejecución guiada '+ts+'.xlsx');
+}
+function toggleConsumo(r){
+  event.stopPropagation();
+  r.classList.toggle('is-open');
+  const open=r.classList.contains('is-open');
+  let s=r.nextElementSibling;
+  while(s&&s.classList.contains('subdetail-row')){s.style.display=open?'table-row':'none';s=s.nextElementSibling;}
+}
+<\/script>
+</body></html>`;
+}
+
+
+
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+</script>
+</body>
+</html>
