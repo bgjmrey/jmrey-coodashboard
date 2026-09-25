@@ -1172,8 +1172,7 @@ async function cerrarPeriodo(){
     return fi.length===10 && fi<=acumFin && licActiva(r);
   });
 
-  console.log('licsActivas:', licsActivas.length, 'de', (DB.licencias||[]).length, 'total. acumFin:', acumFin);
-  toast('Licencias activas: '+licsActivas.length+' de '+(DB.licencias||[]).length);
+  alert('Licencias activas: '+licsActivas.length+' de '+(DB.licencias||[]).length+' | acumFin: '+acumFin);
   // Calcular importes con calcLicRowSimple para el período
   const rows=[];
   for(const r of licsActivas){
@@ -1213,7 +1212,7 @@ async function cerrarPeriodo(){
   for(let i=0;i<rows.length;i+=50){
     const chunk=rows.slice(i,i+50).map(r=>({...r,created_by:window._currentUser||'',updated_by:window._currentUser||''}));
     const {error:e2}=await sb.from('licencia_periodo_cerrado').upsert(chunk,{onConflict:'periodo_anio,periodo_mes,licencia_id'});
-    if(e2){ errores++; console.error('cerrar error:',e2); toast('Error lote '+(i/50+1)+': '+(e2.message||e2.code||JSON.stringify(e2)),'err'); }
+    if(e2){ errores++; console.error('cerrar error:',e2); alert('Error lote '+(Math.floor(i/50)+1)+': '+(e2.message||e2.code||JSON.stringify(e2))); }
   }
 
   if(errores>0){ toast('Cerrado con '+errores+' errores'); return; }
