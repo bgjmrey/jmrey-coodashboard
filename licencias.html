@@ -1157,7 +1157,7 @@ async function cerrarPeriodo(){
   toast('Cerrando período...');
 
   // 1. Insert en periodo_cerrado
-  const {error:e1}=await sb.from('periodo_cerrado').insert({anio:year, mes:month});
+  const {error:e1}=await sb.from('periodo_cerrado').upsert({anio:year, mes:month},{onConflict:'anio,mes'});
   if(e1){ toast('Error al cerrar: '+e1.message); return; }
 
   // 2. Calcular y guardar registros en licencia_periodo_cerrado
@@ -1172,6 +1172,8 @@ async function cerrarPeriodo(){
     return fi.length===10 && fi<=acumFin && licActiva(r);
   });
 
+  console.log('licsActivas:', licsActivas.length, 'de', (DB.licencias||[]).length, 'total. acumFin:', acumFin);
+  toast('Licencias activas: '+licsActivas.length+' de '+(DB.licencias||[]).length);
   // Calcular importes con calcLicRowSimple para el período
   const rows=[];
   for(const r of licsActivas){
@@ -1210,8 +1212,8 @@ async function cerrarPeriodo(){
   let errores=0;
   for(let i=0;i<rows.length;i+=50){
     const chunk=rows.slice(i,i+50).map(r=>({...r,created_by:window._currentUser||'',updated_by:window._currentUser||''}));
-    const {error:e2}=await sb.from('licencia_periodo_cerrado').insert(chunk);
-    if(e2){ errores++; console.error('cerrar error:',e2); }
+    const {error:e2}=await sb.from('licencia_periodo_cerrado').upsert(chunk,{onConflict:'periodo_anio,periodo_mes,licencia_id'});
+    if(e2){ errores++; console.error('cerrar error:',e2); toast('Error lote '+(i/50+1)+': '+(e2.message||e2.code||JSON.stringify(e2)),'err'); }
   }
 
   if(errores>0){ toast('Cerrado con '+errores+' errores'); return; }
