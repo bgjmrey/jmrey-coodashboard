@@ -1172,7 +1172,10 @@ async function cerrarPeriodo(){
     return fi.length===10 && fi<=acumFin && licActiva(r);
   });
 
-  console.log('licsActivas:', licsActivas.length, 'de', (DB.licencias||[]).length, 'acumFin:', acumFin);
+  // Diagnóstico detallado
+  const totalLic = (DB.licencias||[]).length;
+  const sample = (DB.licencias||[]).slice(0,3).map(r=>r.fecha_inicio?.substring(0,10)+'|'+r.anio_mes_fin).join(', ');
+  alert('Total licencias: '+totalLic+' | Activas: '+licsActivas.length+' | acumFin: '+acumFin+' | Muestra: '+sample);
   // Calcular importes con calcLicRowSimple para el período
   const rows=[];
   for(const r of licsActivas){
