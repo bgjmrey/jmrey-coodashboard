@@ -1210,6 +1210,7 @@ async function cerrarPeriodo(){
     });
   }
 
+  alert('Rows a insertar: '+rows.length+(rows.length>0?' | Primer row: '+JSON.stringify(Object.keys(rows[0])):''));
   // Insert en lotes de 50
   let errores=0;
   for(let i=0;i<rows.length;i+=50){
