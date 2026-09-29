@@ -149,6 +149,10 @@ footer .fnote{font-size:12px;color:var(--fg-on-dark-2);}
     <div class="fi"><label>Técnico director (email)</label><input id="m-tecnico" type="email" placeholder="bg@jmrey.com"></div>
     <div class="fi"><label>€ / hora</label><input id="m-precio" type="number" step="0.01" placeholder="30"></div>
     <div class="fi"><label>% Margen</label><input id="m-margen" type="number" step="0.01" placeholder="0"></div>
+    <div class="fi" style="grid-column:1/-1"><label style="font-weight:700;color:var(--gold,#B6884A);font-size:11px;letter-spacing:.08em;">── VENTA ──────────────────────────</label></div>
+    <div class="fi"><label>P. Venta Hora €</label><input id="m-pventa" type="number" step="0.01" placeholder="0"></div>
+    <div class="fi"><label>% Ventas</label><input id="m-pctvta" type="number" step="0.01" placeholder="0"></div>
+    <div class="fi"><label>% Socio</label><input id="m-pctsoc" type="number" step="0.01" placeholder="0"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       <button id="btn-del-modal" class="btn" style="background:#c0392b;color:#fff;display:none;" onclick="deleteClienteModal()">🗑 Eliminar</button>
@@ -247,6 +251,9 @@ function renderList(){
             <td>${esc(c.tecnico||'—')}</td>
             <td class="r">${c.precio ? c.precio+' €' : '—'}</td>
             <td class="r">${c.margen ? c.margen+'%' : '—'}</td>
+            <td class="r">${c.precio_venta ? c.precio_venta+' €' : '—'}</td>
+            <td class="r">${c.pct_ventas ? c.pct_ventas+'%' : '—'}</td>
+            <td class="r">${c.pct_socio ? c.pct_socio+'%' : '—'}</td>
             <td class="link-cell">${page ? `<a href="${page}" onclick="event.stopPropagation()">Ver ficha →</a>` : '—'}</td>
             <td style="white-space:nowrap;">
               <button class="bi" onclick="event.stopPropagation();openModal(${fi})" title="Editar">✏️</button>
@@ -314,8 +321,11 @@ function openModal(idx){
   document.getElementById('m-partner').value = r.partner||'';
   document.getElementById('m-cliente').value = r.cliente||'';
   document.getElementById('m-tecnico').value = r.tecnico||'';
-  document.getElementById('m-precio').value  = r.precio??'';
-  document.getElementById('m-margen').value  = r.margen??'';
+  document.getElementById('m-precio').value   = r.precio??'';
+  document.getElementById('m-margen').value   = r.margen??'';
+  document.getElementById('m-pventa').value   = r.precio_venta??'';
+  document.getElementById('m-pctvta').value   = r.pct_ventas??'';
+  document.getElementById('m-pctsoc').value   = r.pct_socio??'';
   document.getElementById('btn-del-modal').style.display = editIdx !== null ? 'inline-flex' : 'none';
   document.getElementById('modal-bg').classList.add('open');
   document.getElementById('m-partner').focus();
@@ -328,8 +338,11 @@ async function saveCliente(){
     partner: document.getElementById('m-partner').value.trim().toUpperCase(),
     cliente: document.getElementById('m-cliente').value.trim().toUpperCase(),
     tecnico: document.getElementById('m-tecnico').value.trim(),
-    precio:  parseFloat(document.getElementById('m-precio').value)||0,
-    margen:  parseFloat(document.getElementById('m-margen').value)||0,
+    precio:       parseFloat(document.getElementById('m-precio').value)||0,
+    margen:       parseFloat(document.getElementById('m-margen').value)||0,
+    precio_venta: parseFloat(document.getElementById('m-pventa').value)||0,
+    pct_ventas:   parseFloat(document.getElementById('m-pctvta').value)||0,
+    pct_socio:    parseFloat(document.getElementById('m-pctsoc').value)||0,
   };
   if(!o.partner||!o.cliente){ alert('Partner y Cliente son obligatorios'); return; }
   let error;

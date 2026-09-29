@@ -2262,7 +2262,7 @@ function buildCliFilterRow(){
 function renderCli(){
   buildCliFilterRow();
   const tb=document.getElementById('tbody-cli');
-  if(!DB.clientes.length){tb.innerHTML=`<tr><td colspan="6" class="ec">Sin clientes.</td></tr>`;return;}
+  if(!DB.clientes.length){tb.innerHTML=`<tr><td colspan="9" class="ec">Sin clientes.</td></tr>`;return;}
   let cliData=DB.clientes;
   Object.entries(cliFilters).forEach(([col,val])=>{
     if(val===''||val===null||val===undefined) return;
@@ -2299,6 +2299,9 @@ function editCliFn(i){
   document.getElementById('c-tec').value=r.tecnico||'';
   document.getElementById('c-pre').value=r.precio??'';
   document.getElementById('c-mar').value=r.margen??'';
+  document.getElementById('c-pventa').value=r.precio_venta??'';
+  document.getElementById('c-pctvta').value=r.pct_ventas??'';
+  document.getElementById('c-pctsoc').value=r.pct_socio??'';
   openMod('cli');
 }
 
