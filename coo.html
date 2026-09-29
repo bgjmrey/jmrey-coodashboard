@@ -1904,6 +1904,13 @@ function saveSvc(){
   const r0 = editSvc!==null ? DB.servicios[editSvc] : null;
   const tecEmail = getTecValue();
   ensureTecnico(tecEmail);
+  const _proy2   = document.getElementById('s-proy').value;
+  const _cli2    = document.getElementById('s-cli').value;
+  const _pventa  = getPrecioVenta(_proy2, _cli2);
+  const _pctVta  = getPctVentas(_proy2, _cli2);
+  const _pctSoc  = getPctSocio(_proy2, _cli2);
+  const _hp2     = parseFloat(document.getElementById('s-hp').value)||0;
+  const _impVenta= _hp2 * _pventa;
   const o={
     id:document.getElementById('s-id').value.trim(),
     titulo:document.getElementById('s-tit').value.trim(),
