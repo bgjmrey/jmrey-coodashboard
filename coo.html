@@ -615,6 +615,10 @@ table.rt tbody td.c{text-align:center;}
           <th data-col="h_gest" class="r">H.Gest<span class="rh"></span></th>
           <th data-col="h_tec" class="r">H.Téc<span class="rh"></span></th>
           <th data-col="imp_tec" class="r">Imp.Téc €<span class="rh"></span></th>
+          <th data-col="imp_dir" class="r">Imp.Dir €<span class="rh"></span></th>
+          <th data-col="imp_venta" class="r">Imp.Venta €<span class="rh"></span></th>
+          <th data-col="imp_dir_ventas" class="r">Imp.Dir.Vta €<span class="rh"></span></th>
+          <th data-col="imp_socio" class="r">Imp.Socio €<span class="rh"></span></th>
           <th data-col="fecha_acept">F.Acept.<span class="rh"></span></th>
           <th data-col="fecha_fprev">F.Prev.<span class="rh"></span></th>
           <th data-col="fecha_entrega">F.Entrega<span class="rh"></span></th>
@@ -672,7 +676,7 @@ table.rt tbody td.c{text-align:center;}
   </div>
   <div class="dtw"><div class="tw"><table class="dt" id="tbl-cli">
     <thead>
-      <tr><th data-col="partner">Partner</th><th data-col="cliente">Cliente</th><th data-col="tecnico">Técnico director</th><th class="r" data-col="precio">€/hora técnico</th><th class="r" data-col="margen">% Margen</th><th class="c"></th></tr>
+      <tr><th data-col="partner">Partner</th><th data-col="cliente">Cliente</th><th data-col="tecnico">Técnico director</th><th class="r" data-col="precio">€/hora téc.</th><th class="r" data-col="margen">% Margen</th><th class="r" data-col="precio_venta">P.Venta €/h</th><th class="r" data-col="pct_ventas">% Ventas</th><th class="r" data-col="pct_socio">% Socio</th><th class="c"></th></tr>
       <tr class="filter-row" id="cli-filter-row"></tr>
     </thead>
     <tbody id="tbody-cli"></tbody>
@@ -752,8 +756,12 @@ table.rt tbody td.c{text-align:center;}
         <div class="fi"><label>H. Gestor</label><input type="number" id="s-hg" min="0" step="0.25"></div>
         <div class="fi"><label>H. Partner</label><input type="number" id="s-hpar" min="0" step="0.25"></div>
         <div class="fi"><label>H. Cliente</label><input type="number" id="s-hjmrey" min="0" step="0.25"></div>
+        <div class="fi s2"><label style="font-weight:700;color:var(--accent);font-size:11px;letter-spacing:.08em;">── IMPORTES ─────────────────────────────</label></div>
         <div class="fi"><label>Imp. H.Técnicas €</label><input type="number" id="s-it" min="0" step="0.01" placeholder="auto"></div>
         <div class="fi"><label>Imp. H.Director €</label><input type="number" id="s-id2" min="0" step="0.01" placeholder="auto"></div>
+        <div class="fi"><label>Imp. Venta €</label><input type="number" id="s-iventa" min="0" step="0.01" placeholder="auto"></div>
+        <div class="fi"><label>Imp. Dir. Ventas €</label><input type="number" id="s-idirvta" min="0" step="0.01" placeholder="auto"></div>
+        <div class="fi"><label>Imp. Socio €</label><input type="number" id="s-isocio" min="0" step="0.01" placeholder="auto"></div>
       </div>
       <div style="margin:var(--sp-4) 0;font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent)">Fechas &amp; enlaces</div>
       <div class="fg2">
@@ -813,6 +821,10 @@ table.rt tbody td.c{text-align:center;}
         <div class="fi"><label>Técnico director</label><select id="c-tec"><option value="">— seleccionar —</option></select></div>
         <div class="fi"><label>€ / hora técnico</label><input type="number" id="c-pre" min="0" step="0.5"></div>
         <div class="fi"><label>% Margen</label><input type="number" id="c-mar" min="0" max="200" step="1" placeholder="ej. 40"></div>
+        <div class="fi s2"><label style="font-weight:700;color:var(--accent);font-size:11px;letter-spacing:.08em;">── VENTA ────────────────────────────────</label></div>
+        <div class="fi"><label>P. Venta Hora €</label><input type="number" id="c-pventa" min="0" step="0.5"></div>
+        <div class="fi"><label>% Ventas</label><input type="number" id="c-pctvta" min="0" max="100" step="1" placeholder="ej. 10"></div>
+        <div class="fi"><label>% Socio</label><input type="number" id="c-pctsoc" min="0" max="100" step="1" placeholder="ej. 5"></div>
       </div>
     </div>
     <div class="mft">
@@ -1404,6 +1416,18 @@ function getMargen(proyecto,cliente){
   const c = DB.clientes.find(x=>x.partner===proyecto && x.cliente===cliente);
   return c ? (c.margen||0) : 0;
 }
+function getPrecioVenta(proyecto,cliente){
+  const c = DB.clientes.find(x=>x.partner===proyecto && x.cliente===cliente);
+  return c ? (c.precio_venta||0) : 0;
+}
+function getPctVentas(proyecto,cliente){
+  const c = DB.clientes.find(x=>x.partner===proyecto && x.cliente===cliente);
+  return c ? (c.pct_ventas||0) : 0;
+}
+function getPctSocio(proyecto,cliente){
+  const c = DB.clientes.find(x=>x.partner===proyecto && x.cliente===cliente);
+  return c ? (c.pct_socio||0) : 0;
+}
 
 function calcKPI(svcs){
   // Por proyecto — ventas agrupa por fecha_acept, consumos por fecha_entrega
@@ -1621,7 +1645,7 @@ let editSvc=null;
 
 // ── SERVICIOS filters state ───────────────────────────
 const SVC_COLS = ['id','titulo','linea','proyecto','cliente2','tecnico','estado','id_val',
-  'h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec','fecha_acept','fecha_fprev','fecha_entrega'];
+  'h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec','imp_dir','imp_venta','imp_dir_ventas','imp_socio','fecha_acept','fecha_fprev','fecha_entrega'];
 let svcFilters = {};
 
 function resetSvcFilterRowDOM(){
@@ -1699,7 +1723,7 @@ function clearSvcFilters(){
 // Also called from drill-bar ✕
 // clearDrillFilter defined below with drillKPIExact
 
-const SVC_NUM_COLS = ['h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec','precio','margen'];
+const SVC_NUM_COLS = ['h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec','imp_dir','imp_venta','imp_dir_ventas','imp_socio','precio','margen'];
 const SVC_DATE_COLS = ['fecha_acept','fecha_fprev','fecha_entrega'];
 
 function svcMatch(r, col, val){
@@ -1829,6 +1853,13 @@ function autoCalc(){
   if(tarifa > 0){
     document.getElementById('s-it').value  = (ht * tarifa).toFixed(2);
     document.getElementById('s-id2').value = (hg * tarifa).toFixed(2);
+    const pventa = getPrecioVenta(proy, cli);
+    const pctVta = getPctVentas(proy, cli);
+    const pctSoc = getPctSocio(proy, cli);
+    const impVenta = hp * pventa;
+    document.getElementById('s-iventa').value     = impVenta.toFixed(2);
+    document.getElementById('s-idirvta').value    = (impVenta * pctVta / 100).toFixed(2);
+    document.getElementById('s-isocio').value     = (impVenta * pctSoc / 100).toFixed(2);
   }
 }
 ['s-proy','s-cli','s-ht','s-hg'].forEach(id=>document.getElementById(id).addEventListener('change',autoCalc));
@@ -1888,6 +1919,9 @@ function saveSvc(){
     h_jmrey:parseFloat(document.getElementById('s-hjmrey').value)||0,
     imp_tec:parseFloat(document.getElementById('s-it').value)||0,
     imp_dir:parseFloat(document.getElementById('s-id2').value)||0,
+    imp_venta:parseFloat(document.getElementById('s-iventa').value)||(_impVenta),
+    imp_dir_ventas:parseFloat(document.getElementById('s-idirvta').value)||(_impVenta*_pctVta/100),
+    imp_socio:parseFloat(document.getElementById('s-isocio').value)||(_impVenta*_pctSoc/100),
     fecha_acept:document.getElementById('s-fa').value,
     fecha_fprev:document.getElementById('s-ffprev').value,
     fecha_entrega:document.getElementById('s-fe').value,
@@ -2241,7 +2275,7 @@ function renderCli(){
     <td style="font-size:var(--fz-xs)">${shortMail(r.tecnico)}</td>
     <td class="r" style="font-weight:600">${r.precio!=null?fmtE(r.precio):'—'}</td>
     <td class="r">${r.margen!=null?fmt(r.margen,0)+' %':'—'}</td>
-    <td class="c" style="white-space:nowrap"><button class="bi" onclick="editCliFn(${DB.clientes.indexOf(r)})">✏️</button><button class="bi" onclick="delCli(${DB.clientes.indexOf(r)})">🗑️</button></td>
+    <td class="r">${fmtN(r.precio_venta)}</td><td class="r">${fmtN(r.pct_ventas)}</td><td class="r">${fmtN(r.pct_socio)}</td><td class="c" style="white-space:nowrap"><button class="bi" onclick="editCliFn(${DB.clientes.indexOf(r)})">✏️</button><button class="bi" onclick="delCli(${DB.clientes.indexOf(r)})">🗑️</button></td>
   </tr>`).join('');
 }
 
@@ -2268,6 +2302,9 @@ function saveCli(){
     tecnico:document.getElementById('c-tec').value,
     precio:parseFloat(document.getElementById('c-pre').value)||0,
     margen:parseFloat(document.getElementById('c-mar').value)||0,
+    precio_venta:parseFloat(document.getElementById('c-pventa').value)||0,
+    pct_ventas:parseFloat(document.getElementById('c-pctvta').value)||0,
+    pct_socio:parseFloat(document.getElementById('c-pctsoc').value)||0,
   };
   if(!o.partner||!o.cliente){toast('Partner y Cliente son obligatorios','err');return;}
   const _newCli=editCli===null;
@@ -2311,6 +2348,7 @@ function openMod(t){
     document.getElementById('s-tec').value='';
     document.getElementById('s-tec-new').value='';
     document.getElementById('s-tec-new').style.display='none';
+    ['s-iventa','s-idirvta','s-isocio'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('svc-mt').textContent='Nuevo servicio';
     document.getElementById('s-cli').innerHTML='<option value="">— seleccionar —</option>';
   }
@@ -3016,6 +3054,12 @@ async function recalcAllImpTec(){
 
     const new_imp_tec = Math.round(((svc.h_tec||0) * tarifa) * 100) / 100;
     const new_imp_dir = Math.round(((svc.h_gest||0) * tarifa) * 100) / 100;
+    const pventa = getPrecioVenta(svc.proyecto||'', svc.cliente2||'');
+    const pctVta = getPctVentas(svc.proyecto||'', svc.cliente2||'');
+    const pctSoc = getPctSocio(svc.proyecto||'', svc.cliente2||'');
+    const new_imp_venta = Math.round(((svc.h_prod||0) * pventa) * 100) / 100;
+    const new_imp_dir_ventas = Math.round((new_imp_venta * pctVta / 100) * 100) / 100;
+    const new_imp_socio = Math.round((new_imp_venta * pctSoc / 100) * 100) / 100;
 
     // Skip if already correct
     if(Math.abs((svc.imp_tec||0) - new_imp_tec) < 0.01 &&
