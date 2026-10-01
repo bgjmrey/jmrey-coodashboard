@@ -1859,8 +1859,9 @@ function autoCalc(){
   const hcoo = hcli * pctCOO / 100;
   document.getElementById('s-hcoo').value = hcoo ? hcoo.toFixed(4).replace(/\.?0+$/, '') : '';
 
-  // H. Técnicas = H. Cliente - H. Gestión
-  const ht = hcli - hg;
+  // H. Técnicas = H. Cliente × (1 - %Margen/100)
+  const margen = getMargen(proy, cli);
+  const ht = hcli * (1 - margen / 100);
   // H. Producción = H. Técnicas + H. Gestión
   const hp = ht + hg;
   // H. Partner = H. Cliente (por ahora)
@@ -1876,9 +1877,12 @@ function autoCalc(){
 
 function autoCalcFromGestion(){
   if(!autoCalcEnabled()) return;
+  const proy = document.getElementById('s-proy').value;
+  const cli  = document.getElementById('s-cli').value;
   const hcli = parseFloat(document.getElementById('s-hjmrey').value) || 0;
   const hg   = parseFloat(document.getElementById('s-hg').value) || 0;
-  const ht   = hcli - hg;
+  const margen = getMargen(proy, cli);
+  const ht   = hcli * (1 - margen / 100);
   const hp   = ht + hg;
   document.getElementById('s-ht').value   = ht   ? ht.toFixed(4).replace(/\.?0+$/, '')   : '';
   document.getElementById('s-hp').value   = hp   ? hp.toFixed(4).replace(/\.?0+$/, '')   : '';
