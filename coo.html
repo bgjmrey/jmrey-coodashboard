@@ -756,13 +756,13 @@ table.rt tbody td.c{text-align:center;}
         <div class="fi s2" style="display:flex;align-items:center;gap:8px;"><label style="font-weight:700;color:var(--accent);font-size:11px;letter-spacing:.08em;">── HORAS ──────────────────────────────</label><label style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;margin-left:auto;"><input type="checkbox" id="s-autocalc" checked style="width:14px;height:14px;"> Cálculo automático</label></div>
         <div class="fi"><label>H. Producción</label><input type="number" id="s-hp" min="0" step="0.25"></div>
         <div class="fi"><label>H. Técnicas</label><input type="number" id="s-ht" min="0" step="0.25" oninput="calcImpTec();calcHProd()" onchange="calcImpTec();calcHProd()"></div>
-        <div class="fi"><label>H. Gestión</label><input type="number" id="s-hg" min="0" step="0.25" oninput="autoCalcFromGestion();calcHProd()" onchange="autoCalcFromGestion();calcHProd()"></div>
-        <div class="fi"><label>H. COO</label><input type="number" id="s-hcoo" min="0" step="0.25"></div>
+        <div class="fi"><label>H. Gestión</label><input type="number" id="s-hg" min="0" step="0.25" oninput="autoCalcFromGestion();calcHProd();calcImpDir()" onchange="autoCalcFromGestion();calcHProd();calcImpDir()"></div>
+        <div class="fi"><label>H. COO</label><input type="number" id="s-hcoo" min="0" step="0.25" oninput="calcImpDir()" onchange="calcImpDir()"></div>
         <div class="fi"><label>H. Partner</label><input type="number" id="s-hpar" min="0" step="0.25"></div>
         <div class="fi"><label>H. Cliente</label><input type="number" id="s-hjmrey" min="0" step="0.25"></div>
         <div class="fi s2"><label style="font-weight:700;color:var(--accent);font-size:11px;letter-spacing:.08em;">── IMPORTES ─────────────────────────────</label></div>
-        <div class="fi"><label>Imp. H.Técnicas €</label><input type="number" id="s-it" min="0" step="0.01" placeholder="auto"></div>
-        <div class="fi"><label>Imp. H.Director €</label><input type="number" id="s-id2" min="0" step="0.01" placeholder="auto"></div>
+        <div class="fi"><label>Imp. H.Técnicas €</label><input type="number" id="s-it" min="0" step="0.01" placeholder="auto" oninput="calcImpTotDir()" onchange="calcImpTotDir()"></div>
+        <div class="fi"><label>Imp. H.Director €</label><input type="number" id="s-id2" min="0" step="0.01" placeholder="auto" oninput="calcImpTotDir()" onchange="calcImpTotDir()"></div>
         <div class="fi"><label>Imp. Venta €</label><input type="number" id="s-iventa" min="0" step="0.01" placeholder="auto"></div>
         <div class="fi"><label>Imp. Dir. Ventas €</label><input type="number" id="s-idirvta" min="0" step="0.01" placeholder="auto"></div>
         <div class="fi"><label>Imp. Socio €</label><input type="number" id="s-isocio" min="0" step="0.01" placeholder="auto"></div>
@@ -1875,6 +1875,26 @@ function autoCalc(){
   autoCalcImportes();
 }
 
+function calcImpDir(){
+  if(!autoCalcEnabled()) return;
+  const proy   = document.getElementById('s-proy').value;
+  const cli    = document.getElementById('s-cli').value;
+  const tarifa = getTarifa(proy, cli);
+  const hg     = parseFloat(document.getElementById('s-hg').value) || 0;
+  document.getElementById('s-id2').value = (hg * tarifa).toFixed(2);
+  calcImpTotDir();
+}
+
+function calcImpTotDir(){
+  if(!autoCalcEnabled()) return;
+  const tecEmail = (document.getElementById('s-tec')?.value||'').toLowerCase().trim();
+  const iDir    = parseFloat(document.getElementById('s-id2').value)||0;
+  const iDirVta = parseFloat(document.getElementById('s-idirvta').value)||0;
+  const iSocio  = parseFloat(document.getElementById('s-isocio').value)||0;
+  const iTec    = tecEmail === 'bg@jmrey.com' ? (parseFloat(document.getElementById('s-it').value)||0) : 0;
+  document.getElementById('s-itodir').value = (iDir + iDirVta + iSocio + iTec).toFixed(2);
+}
+
 function calcHProd(){
   const ht = parseFloat(document.getElementById('s-ht').value) || 0;
   const hg = parseFloat(document.getElementById('s-hg').value) || 0;
@@ -1892,13 +1912,7 @@ function calcImpTec(){
   const hp     = ht + hg;
   document.getElementById('s-hp').value = hp ? hp.toFixed(4).replace(/\.?0+$/, '') : '';
   document.getElementById('s-it').value = (ht * tarifa).toFixed(2);
-  // Recalc total director
-  const tecEmail = (document.getElementById('s-tec')?.value||'').toLowerCase().trim();
-  const iDir = parseFloat(document.getElementById('s-id2').value)||0;
-  const iDirVta = parseFloat(document.getElementById('s-idirvta').value)||0;
-  const iSocio  = parseFloat(document.getElementById('s-isocio').value)||0;
-  const iTec = tecEmail === 'bg@jmrey.com' ? (ht * tarifa) : 0;
-  document.getElementById('s-itodir').value = (iDir + iDirVta + iSocio + iTec).toFixed(2);
+  calcImpTotDir();
 }
 
 function autoCalcFromGestion(){
@@ -1938,12 +1952,7 @@ function autoCalcImportes(){
   document.getElementById('s-iventa').value  = impVenta.toFixed(2);
   document.getElementById('s-idirvta').value = impDirVta.toFixed(2);
   document.getElementById('s-isocio').value  = impSocio.toFixed(2);
-
-  // IMP. TOTAL DIRECTOR = Imp.Dir + Imp.DirVentas + Imp.Socio + Imp.Tec (solo si bg@jmrey.com)
-  const tecEmail = (document.getElementById('s-tec')?.value||'').toLowerCase().trim();
-  const iDir = parseFloat(document.getElementById('s-id2').value)||0;
-  const iTec = tecEmail === 'bg@jmrey.com' ? (parseFloat(document.getElementById('s-it').value)||0) : 0;
-  document.getElementById('s-itodir').value = (iDir + impDirVta + impSocio + iTec).toFixed(2);
+  calcImpTotDir();
 }
 
 ['s-proy','s-cli'].forEach(id=>document.getElementById(id).addEventListener('change',autoCalc));
