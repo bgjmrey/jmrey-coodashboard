@@ -751,9 +751,9 @@ table.rt tbody td.c{text-align:center;}
           <span class="fi-hint">Al seleccionar, carga H.Téc y H.Gest automáticamente</span>
         </div>
       </div>
-      <div style="margin:var(--sp-4) 0;font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent)">Horas</div>
+      <div style="margin:var(--sp-4) 0;font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);display:flex;align-items:center;gap:12px;">Horas e Importes<label style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;"><input type="checkbox" id="s-autocalc" checked style="width:13px;height:13px;"> Cálculo automático</label></div>
       <div class="fg3">
-        <div class="fi s2" style="display:flex;align-items:center;gap:8px;"><label style="font-weight:700;color:var(--accent);font-size:11px;letter-spacing:.08em;">── HORAS ──────────────────────────────</label><label style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;margin-left:auto;"><input type="checkbox" id="s-autocalc" checked style="width:14px;height:14px;"> Cálculo automático</label></div>
+        <div class="fi s2"><label style="font-weight:700;color:var(--accent);font-size:11px;letter-spacing:.08em;">HORAS</label></div>
         <div class="fi"><label>H. Producción</label><input type="number" id="s-hp" min="0" step="0.25"></div>
         <div class="fi"><label>H. Técnicas</label><input type="number" id="s-ht" min="0" step="0.25" oninput="calcImpTec();calcHProd()" onchange="calcImpTec();calcHProd()"></div>
         <div class="fi"><label>H. Gestión</label><input type="number" id="s-hg" min="0" step="0.25" oninput="autoCalcFromGestion();calcHProd();calcImpDir()" onchange="autoCalcFromGestion();calcHProd();calcImpDir()"></div>
@@ -761,11 +761,11 @@ table.rt tbody td.c{text-align:center;}
         <div class="fi"><label>H. Partner</label><input type="number" id="s-hpar" min="0" step="0.25"></div>
         <div class="fi"><label>H. Cliente</label><input type="number" id="s-hjmrey" min="0" step="0.25"></div>
         <div class="fi s2"><label style="font-weight:700;color:var(--accent);font-size:11px;letter-spacing:.08em;">── IMPORTES ─────────────────────────────</label></div>
-        <div class="fi"><label>Imp. H.Técnicas €</label><input type="number" id="s-it" min="0" step="0.01" placeholder="auto" oninput="calcImpTotDir()" onchange="calcImpTotDir()"></div>
-        <div class="fi"><label>Imp. H.Director €</label><input type="number" id="s-id2" min="0" step="0.01" placeholder="auto" oninput="calcImpTotDir()" onchange="calcImpTotDir()"></div>
         <div class="fi"><label>Imp. Venta €</label><input type="number" id="s-iventa" min="0" step="0.01" placeholder="auto"></div>
         <div class="fi"><label>Imp. Dir. Ventas €</label><input type="number" id="s-idirvta" min="0" step="0.01" placeholder="auto"></div>
         <div class="fi"><label>Imp. Socio €</label><input type="number" id="s-isocio" min="0" step="0.01" placeholder="auto"></div>
+        <div class="fi"><label>Imp. H.Técnicas €</label><input type="number" id="s-it" min="0" step="0.01" placeholder="auto" oninput="calcImpTotDir()" onchange="calcImpTotDir()"></div>
+        <div class="fi"><label>Imp. H.Director €</label><input type="number" id="s-id2" min="0" step="0.01" placeholder="auto" oninput="calcImpTotDir()" onchange="calcImpTotDir()"></div>
         <div class="fi s2" style="border-top:1px solid var(--border-soft);padding-top:8px;"><label style="font-weight:700;color:var(--accent);">Imp. Total Director €</label><input type="number" id="s-itodir" min="0" step="0.01" placeholder="auto" style="font-weight:700;background:var(--bg-elevated);"></div>
       </div>
       <div style="margin:var(--sp-4) 0;font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent)">Fechas &amp; enlaces</div>
@@ -1881,7 +1881,8 @@ function calcImpDir(){
   const cli    = document.getElementById('s-cli').value;
   const tarifa = getTarifa(proy, cli);
   const hg     = parseFloat(document.getElementById('s-hg').value) || 0;
-  document.getElementById('s-id2').value = (hg * tarifa).toFixed(2);
+  const hcoo   = parseFloat(document.getElementById('s-hcoo').value) || 0;
+  document.getElementById('s-id2').value = ((hg + hcoo) * tarifa).toFixed(2);
   calcImpTotDir();
 }
 
@@ -1940,7 +1941,8 @@ function autoCalcImportes(){
 
   if(tarifa > 0){
     document.getElementById('s-it').value  = (ht * tarifa).toFixed(2);
-    document.getElementById('s-id2').value = (hg * tarifa).toFixed(2);
+    const hcoo2 = parseFloat(document.getElementById('s-hcoo').value) || 0;
+    document.getElementById('s-id2').value = ((hg + hcoo2) * tarifa).toFixed(2);
   }
 
   const pventa = getPrecioVenta(proy, cli);
