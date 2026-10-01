@@ -619,6 +619,7 @@ table.rt tbody td.c{text-align:center;}
           <th data-col="imp_venta" class="r">Imp.Venta €<span class="rh"></span></th>
           <th data-col="imp_dir_ventas" class="r">Imp.Dir.Vta €<span class="rh"></span></th>
           <th data-col="imp_socio" class="r">Imp.Socio €<span class="rh"></span></th>
+          <th data-col="imp_total_dir" class="r">Imp.Tot.Dir €<span class="rh"></span></th>
           <th data-col="fecha_acept">F.Acept.<span class="rh"></span></th>
           <th data-col="fecha_fprev">F.Prev.<span class="rh"></span></th>
           <th data-col="fecha_entrega">F.Entrega<span class="rh"></span></th>
@@ -763,6 +764,7 @@ table.rt tbody td.c{text-align:center;}
         <div class="fi"><label>Imp. Venta €</label><input type="number" id="s-iventa" min="0" step="0.01" placeholder="auto"></div>
         <div class="fi"><label>Imp. Dir. Ventas €</label><input type="number" id="s-idirvta" min="0" step="0.01" placeholder="auto"></div>
         <div class="fi"><label>Imp. Socio €</label><input type="number" id="s-isocio" min="0" step="0.01" placeholder="auto"></div>
+        <div class="fi s2" style="border-top:1px solid var(--border-soft);padding-top:8px;"><label style="font-weight:700;color:var(--accent);">Imp. Total Director €</label><input type="number" id="s-itodir" min="0" step="0.01" placeholder="auto" style="font-weight:700;background:var(--bg-elevated);"></div>
       </div>
       <div style="margin:var(--sp-4) 0;font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent)">Fechas &amp; enlaces</div>
       <div class="fg2">
@@ -1646,7 +1648,7 @@ let editSvc=null;
 
 // ── SERVICIOS filters state ───────────────────────────
 const SVC_COLS = ['id','titulo','linea','proyecto','cliente2','tecnico','estado','id_val',
-  'h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec','imp_dir','imp_venta','imp_dir_ventas','imp_socio','fecha_acept','fecha_fprev','fecha_entrega'];
+  'h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec','imp_dir','imp_venta','imp_dir_ventas','imp_socio','imp_total_dir','fecha_acept','fecha_fprev','fecha_entrega'];
 let svcFilters = {};
 
 function resetSvcFilterRowDOM(){
@@ -1724,7 +1726,7 @@ function clearSvcFilters(){
 // Also called from drill-bar ✕
 // clearDrillFilter defined below with drillKPIExact
 
-const SVC_NUM_COLS = ['h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec','imp_dir','imp_venta','imp_dir_ventas','imp_socio','precio','margen'];
+const SVC_NUM_COLS = ['h_partner','h_jmrey','h_prod','h_gest','h_tec','imp_tec','imp_dir','imp_venta','imp_dir_ventas','imp_socio','imp_total_dir','precio','margen'];
 const SVC_DATE_COLS = ['fecha_acept','fecha_fprev','fecha_entrega'];
 
 function svcMatch(r, col, val){
@@ -1839,21 +1841,24 @@ function autoCalcEnabled(){
 
 function autoCalc(){
   if(!autoCalcEnabled()) return;
-  const proy = document.getElementById('s-proy').value;
-  const cli  = document.getElementById('s-cli').value;
-  const ht   = parseFloat(document.getElementById('s-ht').value) || 0;
-  const hg   = parseFloat(document.getElementById('s-hg').value) || 0;
-  const tarifa = getTarifa(proy, cli);
+  const proy   = document.getElementById('s-proy').value;
+  const cli    = document.getElementById('s-cli').value;
   const margen = getMargen(proy, cli);
+  const hcli   = parseFloat(document.getElementById('s-hjmrey').value) || 0;
 
-  // H. Producción = H. Técnicas + H. Gestor
+  // H. Técnicas = H. Cliente / (1 + margen/100)
+  const ht = margen > 0 ? hcli / (1 + margen / 100) : hcli;
+  // H. Gestor = H. Cliente - H. Técnicas
+  const hg = hcli - ht;
+  // H. Producción = H. Técnicas + H. Gestor = H. Cliente
   const hp = ht + hg;
-  document.getElementById('s-hp').value = hp ? hp.toFixed(4).replace(/\.?0+$/, '') : '';
+  // H. Partner = H. Cliente (por ahora)
+  const hpar = hcli;
 
-  // H. Cliente = H. Producción × (1 + margen/100)
-  const hcli = hp * (1 + margen / 100);
-  document.getElementById('s-hpar').value   = hcli ? hcli.toFixed(4).replace(/\.?0+$/, '') : '';
-  document.getElementById('s-hjmrey').value = hcli ? hcli.toFixed(4).replace(/\.?0+$/, '') : '';
+  document.getElementById('s-ht').value    = ht   ? ht.toFixed(4).replace(/\.?0+$/, '')   : '';
+  document.getElementById('s-hg').value    = hg   ? hg.toFixed(4).replace(/\.?0+$/, '')   : '';
+  document.getElementById('s-hp').value    = hp   ? hp.toFixed(4).replace(/\.?0+$/, '')   : '';
+  document.getElementById('s-hpar').value  = hpar ? hpar.toFixed(4).replace(/\.?0+$/, '') : '';
 
   autoCalcImportes();
 }
@@ -1876,16 +1881,23 @@ function autoCalcImportes(){
   const pctVta = getPctVentas(proy, cli);
   const pctSoc = getPctSocio(proy, cli);
   const impVenta = hcli * pventa;  // H. CLIENTE × P. Venta Hora
+  const impDirVta = impVenta * pctVta / 100;
+  const impSocio  = impVenta * pctSoc / 100;
   document.getElementById('s-iventa').value  = impVenta.toFixed(2);
-  document.getElementById('s-idirvta').value = (impVenta * pctVta / 100).toFixed(2);
-  document.getElementById('s-isocio').value  = (impVenta * pctSoc / 100).toFixed(2);
+  document.getElementById('s-idirvta').value = impDirVta.toFixed(2);
+  document.getElementById('s-isocio').value  = impSocio.toFixed(2);
+
+  // IMP. TOTAL DIRECTOR = Imp.Dir + Imp.DirVentas + Imp.Socio + Imp.Tec (solo si bg@jmrey.com)
+  const tecEmail = (document.getElementById('s-tec')?.value||'').toLowerCase().trim();
+  const iDir = parseFloat(document.getElementById('s-id2').value)||0;
+  const iTec = tecEmail === 'bg@jmrey.com' ? (parseFloat(document.getElementById('s-it').value)||0) : 0;
+  document.getElementById('s-itodir').value = (iDir + impDirVta + impSocio + iTec).toFixed(2);
 }
 
-['s-proy','s-cli','s-ht','s-hg'].forEach(id=>document.getElementById(id).addEventListener('change',autoCalc));
+['s-proy','s-cli'].forEach(id=>document.getElementById(id).addEventListener('change',autoCalc));
   document.getElementById('s-fa').addEventListener('change', calcFprevFromCode);
-['s-ht','s-hg'].forEach(id=>document.getElementById(id).addEventListener('input',autoCalc));
-['s-hjmrey'].forEach(id=>document.getElementById(id).addEventListener('input',autoCalcImportes));
-['s-hjmrey'].forEach(id=>document.getElementById(id).addEventListener('change',autoCalcImportes));
+document.getElementById('s-hjmrey').addEventListener('input', autoCalc);
+document.getElementById('s-hjmrey').addEventListener('change', autoCalc);
 document.getElementById('s-iventa').addEventListener('input',()=>{
   if(!autoCalcEnabled()) return;
   const pctVta = getPctVentas(document.getElementById('s-proy').value, document.getElementById('s-cli').value);
@@ -1958,6 +1970,7 @@ function saveSvc(){
     imp_venta:parseFloat(document.getElementById('s-iventa').value)||_impVenta,
     imp_dir_ventas:parseFloat(document.getElementById('s-idirvta').value)||(_impVenta*_pctVta/100),
     imp_socio:parseFloat(document.getElementById('s-isocio').value)||(_impVenta*_pctSoc/100),
+    imp_total_dir:parseFloat(document.getElementById('s-itodir').value)||0,
     fecha_acept:document.getElementById('s-fa').value,
     fecha_fprev:document.getElementById('s-ffprev').value,
     fecha_entrega:document.getElementById('s-fe').value,
