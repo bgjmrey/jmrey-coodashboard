@@ -1027,7 +1027,6 @@ async function sbInsert(table, row){
   }
 }
 async function sbUpdate(table, row, origKeys){
-  if(table==='servicios') console.log('sbUpdate servicios payload:', JSON.stringify({imp_dir:row.imp_dir, imp_tec:row.imp_tec, imp_venta:row.imp_venta}));
   // origKeys: optional object with original PK values before edit (for PK changes)
   const sb=getSB(); if(!sb) return;
   const r=Object.assign({},row); delete r.row_id; delete r.created_at; delete r.updated_at;
@@ -1973,7 +1972,6 @@ document.getElementById('s-iventa').addEventListener('input',()=>{
 
 function editSvcFn(i){
   editSvc=i; const r=DB.servicios[i];
-  console.log('editSvcFn r:', JSON.stringify({imp_dir:r.imp_dir, imp_tec:r.imp_tec, imp_venta:r.imp_venta, imp_total_dir:r.imp_total_dir}));
   window._origSvcId = r.id; // original id for UPDATE WHERE
   document.getElementById('svc-mt').textContent='Editar servicio';
   document.getElementById('s-id').value=r.id||'';
@@ -2037,7 +2035,7 @@ function saveSvc(){
     h_partner:parseFloat(document.getElementById('s-hpar').value)||0,
     h_jmrey:parseFloat(document.getElementById('s-hjmrey').value)||0,
     imp_tec:parseFloat(document.getElementById('s-it').value)||0,
-    imp_dir:(()=>{ const v=document.getElementById('s-id2').value; console.log('s-id2 value:',v); return parseFloat(v)||0; })(),
+    imp_dir:parseFloat(document.getElementById('s-id2').value)||0,
     imp_venta:parseFloat(document.getElementById('s-iventa').value)||_impVenta,
     imp_dir_ventas:parseFloat(document.getElementById('s-idirvta').value)||(_impVenta*_pctVta/100),
     imp_socio:parseFloat(document.getElementById('s-isocio').value)||(_impVenta*_pctSoc/100),
@@ -2055,10 +2053,12 @@ function saveSvc(){
     row_id:r0?.row_id||null,
   };
   // Recalcular imp_tec e imp_dir usando tarifa del cliente
-  const _tarifa = getTarifa(o.proyecto||'', o.cliente2||'');
-  if(_tarifa > 0){
-    o.imp_tec = Math.round((o.h_tec||0) * _tarifa * 100) / 100;
-    o.imp_dir = Math.round((o.h_gest||0) * _tarifa * 100) / 100;
+  if(autoCalcEnabled()){
+    const _tarifa = getTarifa(o.proyecto||'', o.cliente2||'');
+    if(_tarifa > 0){
+      o.imp_tec = Math.round((o.h_tec||0) * _tarifa * 100) / 100;
+      o.imp_dir = Math.round(((o.h_gest||0) + (o.h_coo||0)) * _tarifa * 100) / 100;
+    }
   }
   if(!o.titulo){toast('El título es obligatorio','err');return;}
   const _newSvc=editSvc===null;
