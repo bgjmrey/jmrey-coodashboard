@@ -1027,6 +1027,7 @@ async function sbInsert(table, row){
   }
 }
 async function sbUpdate(table, row, origKeys){
+  if(table==='servicios') console.log('sbUpdate servicios payload:', JSON.stringify({imp_dir:row.imp_dir, imp_tec:row.imp_tec, imp_venta:row.imp_venta}));
   // origKeys: optional object with original PK values before edit (for PK changes)
   const sb=getSB(); if(!sb) return;
   const r=Object.assign({},row); delete r.row_id; delete r.created_at; delete r.updated_at;
