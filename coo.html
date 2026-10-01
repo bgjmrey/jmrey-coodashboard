@@ -2036,7 +2036,7 @@ function saveSvc(){
     h_partner:parseFloat(document.getElementById('s-hpar').value)||0,
     h_jmrey:parseFloat(document.getElementById('s-hjmrey').value)||0,
     imp_tec:parseFloat(document.getElementById('s-it').value)||0,
-    imp_dir:parseFloat(document.getElementById('s-id2').value)||0,
+    imp_dir:(()=>{ const v=document.getElementById('s-id2').value; console.log('s-id2 value:',v); return parseFloat(v)||0; })(),
     imp_venta:parseFloat(document.getElementById('s-iventa').value)||_impVenta,
     imp_dir_ventas:parseFloat(document.getElementById('s-idirvta').value)||(_impVenta*_pctVta/100),
     imp_socio:parseFloat(document.getElementById('s-isocio').value)||(_impVenta*_pctSoc/100),
