@@ -677,7 +677,7 @@ table.rt tbody td.c{text-align:center;}
   </div>
   <div class="dtw"><div class="tw"><table class="dt" id="tbl-cli">
     <thead>
-      <tr><th data-col="partner">Partner</th><th data-col="cliente">Cliente</th><th data-col="tecnico">Técnico director</th><th class="r" data-col="precio">€/hora téc.</th><th class="r" data-col="margen">% Margen</th><th class="r" data-col="precio_venta">P.Venta €/h</th><th class="r" data-col="pct_ventas">% Ventas</th><th class="r" data-col="pct_socio">% Socio</th><th class="c"></th></tr>
+      <tr><th data-col="partner">Partner</th><th data-col="cliente">Cliente</th><th data-col="tecnico">Técnico director</th><th class="r" data-col="precio">€/hora téc.</th><th class="r" data-col="margen">% Margen</th><th class="r" data-col="pct_coo">% COO</th><th class="r" data-col="precio_venta">P.Venta €/h</th><th class="r" data-col="pct_ventas">% Ventas</th><th class="r" data-col="pct_socio">% Socio</th><th class="c"></th></tr>
       <tr class="filter-row" id="cli-filter-row"></tr>
     </thead>
     <tbody id="tbody-cli"></tbody>
@@ -824,6 +824,7 @@ table.rt tbody td.c{text-align:center;}
         <div class="fi"><label>Técnico director</label><select id="c-tec"><option value="">— seleccionar —</option></select></div>
         <div class="fi"><label>€ / hora técnico</label><input type="number" id="c-pre" min="0" step="0.5"></div>
         <div class="fi"><label>% Margen</label><input type="number" id="c-mar" min="0" max="200" step="1" placeholder="ej. 40"></div>
+        <div class="fi"><label>% COO</label><input type="number" id="c-pctcoo" min="0" max="100" step="1" placeholder="ej. 20"></div>
         <div class="fi s2"><label style="font-weight:700;color:var(--accent);font-size:11px;letter-spacing:.08em;">── VENTA ────────────────────────────────</label></div>
         <div class="fi"><label>P. Venta Hora €</label><input type="number" id="c-pventa" min="0" step="0.5"></div>
         <div class="fi"><label>% Ventas</label><input type="number" id="c-pctvta" min="0" max="100" step="1" placeholder="ej. 10"></div>
@@ -1431,6 +1432,10 @@ function getPctSocio(proyecto,cliente){
   const c = DB.clientes.find(x=>x.partner===proyecto && x.cliente===cliente);
   return c ? (c.pct_socio||0) : 0;
 }
+function getPctCOO(proyecto,cliente){
+  const c = DB.clientes.find(x=>x.partner===proyecto && x.cliente===cliente);
+  return c ? (c.pct_coo||0) : 0;
+}
 
 function calcKPI(svcs){
   // Por proyecto — ventas agrupa por fecha_acept, consumos por fecha_entrega
@@ -1846,10 +1851,11 @@ function autoCalc(){
   const margen = getMargen(proy, cli);
   const hcli   = parseFloat(document.getElementById('s-hjmrey').value) || 0;
 
-  // H. Técnicas = H. Cliente / (1 + margen/100)
-  const ht = margen > 0 ? hcli / (1 + margen / 100) : hcli;
-  // H. Gestor = H. Cliente - H. Técnicas
-  const hg = hcli - ht;
+  // H. Gestor = H. Cliente × % COO / 100
+  const pctCOO = getPctCOO(proy, cli);
+  const hg = hcli * pctCOO / 100;
+  // H. Técnicas = H. Cliente - H. Gestor
+  const ht = hcli - hg;
   // H. Producción = H. Técnicas + H. Gestor = H. Cliente
   const hp = ht + hg;
   // H. Partner = H. Cliente (por ahora)
@@ -2304,7 +2310,7 @@ function buildCliFilterRow(){
 function renderCli(){
   buildCliFilterRow();
   const tb=document.getElementById('tbody-cli');
-  if(!DB.clientes.length){tb.innerHTML=`<tr><td colspan="9" class="ec">Sin clientes.</td></tr>`;return;}
+  if(!DB.clientes.length){tb.innerHTML=`<tr><td colspan="10" class="ec">Sin clientes.</td></tr>`;return;}
   let cliData=DB.clientes;
   Object.entries(cliFilters).forEach(([col,val])=>{
     if(val===''||val===null||val===undefined) return;
@@ -2324,7 +2330,7 @@ function renderCli(){
     <td style="font-size:var(--fz-xs)">${shortMail(r.tecnico)}</td>
     <td class="r" style="font-weight:600">${r.precio!=null?fmtE(r.precio):'—'}</td>
     <td class="r">${r.margen!=null?fmt(r.margen,0)+' %':'—'}</td>
-    <td class="r">${fmtN(r.precio_venta)}</td><td class="r">${fmtN(r.pct_ventas)}</td><td class="r">${fmtN(r.pct_socio)}</td><td class="c" style="white-space:nowrap"><button class="bi" onclick="editCliFn(${DB.clientes.indexOf(r)})">✏️</button><button class="bi" onclick="delCli(${DB.clientes.indexOf(r)})">🗑️</button></td>
+    <td class="r">${fmtN(r.pct_coo)}</td><td class="r">${fmtN(r.precio_venta)}</td><td class="r">${fmtN(r.pct_ventas)}</td><td class="r">${fmtN(r.pct_socio)}</td><td class="c" style="white-space:nowrap"><button class="bi" onclick="editCliFn(${DB.clientes.indexOf(r)})">✏️</button><button class="bi" onclick="delCli(${DB.clientes.indexOf(r)})">🗑️</button></td>
   </tr>`).join('');
 }
 
@@ -2341,6 +2347,7 @@ function editCliFn(i){
   document.getElementById('c-tec').value=r.tecnico||'';
   document.getElementById('c-pre').value=r.precio??'';
   document.getElementById('c-mar').value=r.margen??'';
+  document.getElementById('c-pctcoo').value=r.pct_coo??'';
   document.getElementById('c-pventa').value=r.precio_venta??'';
   document.getElementById('c-pctvta').value=r.pct_ventas??'';
   document.getElementById('c-pctsoc').value=r.pct_socio??'';
@@ -2354,6 +2361,7 @@ function saveCli(){
     tecnico:document.getElementById('c-tec').value,
     precio:parseFloat(document.getElementById('c-pre').value)||0,
     margen:parseFloat(document.getElementById('c-mar').value)||0,
+    pct_coo:parseFloat(document.getElementById('c-pctcoo').value)||0,
     precio_venta:parseFloat(document.getElementById('c-pventa').value)||0,
     pct_ventas:parseFloat(document.getElementById('c-pctvta').value)||0,
     pct_socio:parseFloat(document.getElementById('c-pctsoc').value)||0,
