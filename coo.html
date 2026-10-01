@@ -751,6 +751,7 @@ table.rt tbody td.c{text-align:center;}
       </div>
       <div style="margin:var(--sp-4) 0;font-size:var(--fz-xs);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent)">Horas</div>
       <div class="fg3">
+        <div class="fi s2" style="display:flex;align-items:center;gap:8px;"><label style="font-weight:700;color:var(--accent);font-size:11px;letter-spacing:.08em;">── HORAS ──────────────────────────────</label><label style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;margin-left:auto;"><input type="checkbox" id="s-autocalc" checked style="width:14px;height:14px;"> Cálculo automático</label></div>
         <div class="fi"><label>H. Producción</label><input type="number" id="s-hp" min="0" step="0.25"></div>
         <div class="fi"><label>H. Técnicas</label><input type="number" id="s-ht" min="0" step="0.25"></div>
         <div class="fi"><label>H. Gestor</label><input type="number" id="s-hg" min="0" step="0.25"></div>
@@ -1832,7 +1833,12 @@ document.getElementById('s-id').addEventListener('change', function(){
 });
 
 // Auto-calcular horas y importes al cambiar campos clave
+function autoCalcEnabled(){
+  return document.getElementById('s-autocalc')?.checked !== false;
+}
+
 function autoCalc(){
+  if(!autoCalcEnabled()) return;
   const proy = document.getElementById('s-proy').value;
   const cli  = document.getElementById('s-cli').value;
   const ht   = parseFloat(document.getElementById('s-ht').value) || 0;
@@ -1844,27 +1850,50 @@ function autoCalc(){
   const hp = ht + hg;
   document.getElementById('s-hp').value = hp ? hp.toFixed(4).replace(/\.?0+$/, '') : '';
 
-  // H. Cliente (Partner) = H. Producción × (1 + margen/100)
-  const hpar = hp * (1 + margen / 100);
-  document.getElementById('s-hpar').value = hpar ? hpar.toFixed(4).replace(/\.?0+$/, '') : '';
-  document.getElementById('s-hjmrey').value = hpar ? hpar.toFixed(4).replace(/\.?0+$/, '') : '';
+  // H. Cliente = H. Producción × (1 + margen/100)
+  const hcli = hp * (1 + margen / 100);
+  document.getElementById('s-hpar').value   = hcli ? hcli.toFixed(4).replace(/\.?0+$/, '') : '';
+  document.getElementById('s-hjmrey').value = hcli ? hcli.toFixed(4).replace(/\.?0+$/, '') : '';
 
-  // Importes
+  autoCalcImportes();
+}
+
+function autoCalcImportes(){
+  if(!autoCalcEnabled()) return;
+  const proy = document.getElementById('s-proy').value;
+  const cli  = document.getElementById('s-cli').value;
+  const ht   = parseFloat(document.getElementById('s-ht').value) || 0;
+  const hg   = parseFloat(document.getElementById('s-hg').value) || 0;
+  const hcli = parseFloat(document.getElementById('s-hjmrey').value) || 0;
+  const tarifa = getTarifa(proy, cli);
+
   if(tarifa > 0){
     document.getElementById('s-it').value  = (ht * tarifa).toFixed(2);
     document.getElementById('s-id2').value = (hg * tarifa).toFixed(2);
-    const pventa = getPrecioVenta(proy, cli);
-    const pctVta = getPctVentas(proy, cli);
-    const pctSoc = getPctSocio(proy, cli);
-    const impVenta = hp * pventa;
-    document.getElementById('s-iventa').value     = impVenta.toFixed(2);
-    document.getElementById('s-idirvta').value    = (impVenta * pctVta / 100).toFixed(2);
-    document.getElementById('s-isocio').value     = (impVenta * pctSoc / 100).toFixed(2);
   }
+
+  const pventa = getPrecioVenta(proy, cli);
+  const pctVta = getPctVentas(proy, cli);
+  const pctSoc = getPctSocio(proy, cli);
+  const impVenta = hcli * pventa;  // H. CLIENTE × P. Venta Hora
+  document.getElementById('s-iventa').value  = impVenta.toFixed(2);
+  document.getElementById('s-idirvta').value = (impVenta * pctVta / 100).toFixed(2);
+  document.getElementById('s-isocio').value  = (impVenta * pctSoc / 100).toFixed(2);
 }
+
 ['s-proy','s-cli','s-ht','s-hg'].forEach(id=>document.getElementById(id).addEventListener('change',autoCalc));
   document.getElementById('s-fa').addEventListener('change', calcFprevFromCode);
 ['s-ht','s-hg'].forEach(id=>document.getElementById(id).addEventListener('input',autoCalc));
+['s-hjmrey'].forEach(id=>document.getElementById(id).addEventListener('input',autoCalcImportes));
+['s-hjmrey'].forEach(id=>document.getElementById(id).addEventListener('change',autoCalcImportes));
+document.getElementById('s-iventa').addEventListener('input',()=>{
+  if(!autoCalcEnabled()) return;
+  const pctVta = getPctVentas(document.getElementById('s-proy').value, document.getElementById('s-cli').value);
+  const pctSoc = getPctSocio(document.getElementById('s-proy').value, document.getElementById('s-cli').value);
+  const iv = parseFloat(document.getElementById('s-iventa').value)||0;
+  document.getElementById('s-idirvta').value = (iv*pctVta/100).toFixed(2);
+  document.getElementById('s-isocio').value  = (iv*pctSoc/100).toFixed(2);
+});
 
 function editSvcFn(i){
   editSvc=i; const r=DB.servicios[i];
