@@ -755,8 +755,8 @@ table.rt tbody td.c{text-align:center;}
       <div class="fg3">
         <div class="fi s2" style="display:flex;align-items:center;gap:8px;"><label style="font-weight:700;color:var(--accent);font-size:11px;letter-spacing:.08em;">── HORAS ──────────────────────────────</label><label style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;margin-left:auto;"><input type="checkbox" id="s-autocalc" checked style="width:14px;height:14px;"> Cálculo automático</label></div>
         <div class="fi"><label>H. Producción</label><input type="number" id="s-hp" min="0" step="0.25"></div>
-        <div class="fi"><label>H. Técnicas</label><input type="number" id="s-ht" min="0" step="0.25"></div>
-        <div class="fi"><label>H. Gestión</label><input type="number" id="s-hg" min="0" step="0.25" oninput="autoCalcFromGestion()" onchange="autoCalcFromGestion()"></div>
+        <div class="fi"><label>H. Técnicas</label><input type="number" id="s-ht" min="0" step="0.25" oninput="calcImpTec();calcHProd()" onchange="calcImpTec();calcHProd()"></div>
+        <div class="fi"><label>H. Gestión</label><input type="number" id="s-hg" min="0" step="0.25" oninput="autoCalcFromGestion();calcHProd()" onchange="autoCalcFromGestion();calcHProd()"></div>
         <div class="fi"><label>H. COO</label><input type="number" id="s-hcoo" min="0" step="0.25"></div>
         <div class="fi"><label>H. Partner</label><input type="number" id="s-hpar" min="0" step="0.25"></div>
         <div class="fi"><label>H. Cliente</label><input type="number" id="s-hjmrey" min="0" step="0.25"></div>
@@ -1875,6 +1875,32 @@ function autoCalc(){
   autoCalcImportes();
 }
 
+function calcHProd(){
+  const ht = parseFloat(document.getElementById('s-ht').value) || 0;
+  const hg = parseFloat(document.getElementById('s-hg').value) || 0;
+  const hp = ht + hg;
+  document.getElementById('s-hp').value = hp ? hp.toFixed(4).replace(/\.?0+$/, '') : '';
+}
+
+function calcImpTec(){
+  if(!autoCalcEnabled()) return;
+  const proy   = document.getElementById('s-proy').value;
+  const cli    = document.getElementById('s-cli').value;
+  const tarifa = getTarifa(proy, cli);
+  const ht     = parseFloat(document.getElementById('s-ht').value) || 0;
+  const hg     = parseFloat(document.getElementById('s-hg').value) || 0;
+  const hp     = ht + hg;
+  document.getElementById('s-hp').value = hp ? hp.toFixed(4).replace(/\.?0+$/, '') : '';
+  document.getElementById('s-it').value = (ht * tarifa).toFixed(2);
+  // Recalc total director
+  const tecEmail = (document.getElementById('s-tec')?.value||'').toLowerCase().trim();
+  const iDir = parseFloat(document.getElementById('s-id2').value)||0;
+  const iDirVta = parseFloat(document.getElementById('s-idirvta').value)||0;
+  const iSocio  = parseFloat(document.getElementById('s-isocio').value)||0;
+  const iTec = tecEmail === 'bg@jmrey.com' ? (ht * tarifa) : 0;
+  document.getElementById('s-itodir').value = (iDir + iDirVta + iSocio + iTec).toFixed(2);
+}
+
 function autoCalcFromGestion(){
   if(!autoCalcEnabled()) return;
   const proy = document.getElementById('s-proy').value;
@@ -1884,8 +1910,8 @@ function autoCalcFromGestion(){
   const margen = getMargen(proy, cli);
   const ht   = margen > 0 ? hcli / (1 + margen / 100) : hcli;
   const hp   = ht + hg;
-  document.getElementById('s-ht').value   = ht   ? ht.toFixed(4).replace(/\.?0+$/, '')   : '';
-  document.getElementById('s-hp').value   = hp   ? hp.toFixed(4).replace(/\.?0+$/, '')   : '';
+  document.getElementById('s-ht').value = ht ? ht.toFixed(4).replace(/\.?0+$/, '') : '';
+  document.getElementById('s-hp').value = hp ? hp.toFixed(4).replace(/\.?0+$/, '') : '';
   autoCalcImportes();
 }
 
