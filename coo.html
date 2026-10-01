@@ -1972,6 +1972,7 @@ document.getElementById('s-iventa').addEventListener('input',()=>{
 
 function editSvcFn(i){
   editSvc=i; const r=DB.servicios[i];
+  console.log('editSvcFn r:', JSON.stringify({imp_dir:r.imp_dir, imp_tec:r.imp_tec, imp_venta:r.imp_venta, imp_total_dir:r.imp_total_dir}));
   window._origSvcId = r.id; // original id for UPDATE WHERE
   document.getElementById('svc-mt').textContent='Editar servicio';
   document.getElementById('s-id').value=r.id||'';
