@@ -384,79 +384,6 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
 .fi input,.fi select,.fi textarea{font-family:var(--ff-sans);font-size:var(--fz-sm);color:var(--fg-2);background:var(--bg-e);border:1px solid var(--border);border-radius:var(--r-md);padding:6px var(--sp-3);outline:none;width:100%;}
 .fi input:focus,.fi select:focus,.fi textarea:focus{border-color:var(--accent);}
 .fi textarea{min-height:80px;resize:vertical;}
-
-
-  .sc-val{font-size:1.2rem;}
-  table.dt,table.rt,table.kt{min-width:480px;}
-}
-
-
-/* ── RESPONSIVE MÓVIL/TABLET ──────────────────────────────
-   Criterio: pantalla táctil (hover:none) O ancho ≤1024px
-   El ordenador con ratón siempre tiene hover:hover → no afectado
-   ─────────────────────────────────────────────────────── */
-
-/* ── TABLET grande y móvil: ≤1024px O táctil ── */
-@media (max-width:1024px), (hover:none) and (pointer:coarse){
-  .nav{overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;gap:0;-webkit-overflow-scrolling:touch;}
-  .nav-tab{white-space:nowrap;flex-shrink:0;}
-  .fbar{flex-wrap:wrap;gap:6px;}
-  .fg,.fg2,.fg3{flex-wrap:wrap;gap:6px;}
-  .fdiv{display:none;}
-  /* Scroll horizontal en wrappers de tabla */
-  .dtw,.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;display:block;width:100%;}
-  /* Anular overflow:hidden de .kc para que .tw pueda hacer scroll */
-  .kc{overflow:visible;}
-  table.dt,table.rt{min-width:600px;}
-  table.kt{min-width:0;width:100%;table-layout:auto;}
-  table.kt thead th{white-space:normal;font-size:10px;padding:5px 6px;}
-  table.kt tbody td,table.kt tfoot td{padding:5px 6px;font-size:11px;}
-  /* Grids a 1 columna */
-  .sg{grid-template-columns:1fr;}
-  .kpi-split{grid-template-columns:1fr;}
-  .kpi-divider{display:none;}
-  .kpi-split-side{padding-left:0!important;padding-right:0!important;}
-  .tg2{grid-template-columns:1fr;}
-  /* Grid de 3 cols de KPIs licencias → 1 col */
-  #kpi-3col-grid{grid-template-columns:1fr!important;gap:var(--sp-4)!important;}
-  #kpi-3col-grid > [style*="background:var(--border)"]{display:none!important;}
-  #kpi-3col-grid > div[style*="padding"]{padding-left:0!important;padding-right:0!important;}
-  /* Secciones no desbordan el viewport */
-  #sec-kpis,#sec-licencias,.app-content{overflow-x:hidden;}
-  .mod-box{width:95vw!important;max-width:95vw!important;max-height:90vh;overflow-y:auto;}
-}
-
-/* ── Pantalla táctil: botones más grandes para dedos ── */
-@media (hover:none) and (pointer:coarse){
-  .btn,.btn-s{min-height:38px;padding:7px 12px;}
-  .fsel,input.fsel,select.fsel{min-height:38px;font-size:14px;}
-  input[type=number],input[type=text],input[type=date]{min-height:36px;font-size:14px;}
-}
-
-/* ── Móvil: ≤767px ── */
-@media (max-width:767px){
-  .nav-tab{font-size:11px;padding:8px 10px;}
-  .app-content{padding:8px;}
-  .kc{padding:8px!important;}
-  .btn,.btn-s{font-size:11px;}
-  .sc-val{font-size:1.3rem;}
-  footer{padding:8px 12px!important;flex-wrap:wrap;gap:6px;}
-  .mod-body{padding:12px;}
-}
-
-/* ── Móvil pequeño: ≤480px ── */
-@media (max-width:480px){
-  .nav-tab{font-size:10px;padding:7px 8px;}
-  .sc-val{font-size:1.15rem;}
-  table.dt,table.rt,table.kt{min-width:420px;font-size:11px;}
-  .app-content{padding:6px;}
-}
-
-/* Licencias móvil */
-@media (max-width:767px){
-  #badge-periodo{font-size:18px;}
-  #btn-cerrar-periodo,#btn-abrir-periodo{font-size:11px;}
-}
 </style>
 <body>
 
@@ -536,7 +463,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
 
 
   <!-- GRID 3 COLUMNAS -->
-  <div id="kpi-3col-grid" style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;">
+  <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;">
 
     <!-- 3.1 NUEVAS LICENCIAS -->
     <div style="padding-right:var(--sp-5);">
@@ -930,7 +857,6 @@ function _grantAccess(account){
   document.getElementById('app-content').style.display = 'block';
   document.querySelector('.hdr-meta strong').textContent = account.name || account.username;
   document.querySelector('.hdr-meta span').textContent   = account.username;
-  window._currentUser = (account.username || '').toLowerCase().trim();
 }
 
 function showLoginError(msg){
@@ -995,7 +921,6 @@ function _grantAccess(account){
   document.getElementById('app-content').style.display = 'block';
   document.querySelector('.hdr-meta strong').textContent = account.name || account.username;
   document.querySelector('.hdr-meta span').textContent   = account.username;
-  window._currentUser = (account.username || '').toLowerCase().trim();
 }
 
 
@@ -1131,12 +1056,14 @@ function getLicsAcumPeriodo(year, month){
     const fin=new Date(r.fecha_fin);
     return fin.getFullYear()*100+(fin.getMonth()+1) >= year*100+month;
   }
-  return {
-    source: 'abierto',
-    lics: (DB.licencias||[]).filter(r=>{
+  const _licsAbiertas = (DB.licencias||[]).filter(r=>{
       const fi=(r.fecha_inicio||'').substring(0,10);
       return fi.length===10 && fi<=acumFin && licActiva(r);
-    }),
+    });
+  console.log('getLicsAcumPeriodo abierto', year, month, 'acumFin:', acumFin, 'total DB.licencias:', (DB.licencias||[]).length, 'licsActivas:', _licsAbiertas.length, 'muestra:', _licsAbiertas.slice(0,3).map(r=>r.fecha_inicio+'|'+r.anio_mes_fin));
+  return {
+    source: 'abierto',
+    lics: _licsAbiertas,
     licsMes: (DB.licencias||[]).filter(r=>{
       const fi=(r.fecha_inicio||'').substring(0,10);
       return fi>=mesIni && fi<=mesFin && licActiva(r);
@@ -1157,7 +1084,7 @@ async function cerrarPeriodo(){
   toast('Cerrando período...');
 
   // 1. Insert en periodo_cerrado
-  const {error:e1}=await sb.from('periodo_cerrado').upsert({anio:year, mes:month},{onConflict:'anio,mes'});
+  const {error:e1}=await sb.from('periodo_cerrado').insert({anio:year, mes:month});
   if(e1){ toast('Error al cerrar: '+e1.message); return; }
 
   // 2. Calcular y guardar registros en licencia_periodo_cerrado
@@ -1190,7 +1117,6 @@ async function cerrarPeriodo(){
       periodo_anio:year, periodo_mes:month, licencia_id:r.id,
       anio_mes:r.anio_mes, proveedor:r.proveedor,
       nro_contrato:r.nro_contrato, nro_pedido_cliente:r.nro_pedido_cliente,
-      nro_pedido_compra:r.nro_pedido_compra,
       fecha_solicitud:r.fecha_solicitud, anio_mes_inicio:r.anio_mes_inicio,
       fecha_inicio:r.fecha_inicio, anio_mes_fin:r.anio_mes_fin, fecha_fin:r.fecha_fin,
       dias_fact:dias, concepto:r.concepto, linea_producto:r.linea_producto,
@@ -1210,9 +1136,8 @@ async function cerrarPeriodo(){
   // Insert en lotes de 50
   let errores=0;
   for(let i=0;i<rows.length;i+=50){
-    const chunk=rows.slice(i,i+50).map(r=>({...r,created_by:window._currentUser||'',updated_by:window._currentUser||''}));
-    const {error:e2}=await sb.from('licencia_periodo_cerrado').insert(chunk);
-    if(e2){ errores++; console.error('cerrar error:',e2); toast('Error lote '+(Math.floor(i/50)+1)+': '+(e2.message||e2.code||JSON.stringify(e2)),'err'); }
+    const {error:e2}=await sb.from('licencia_periodo_cerrado').insert(rows.slice(i,i+50));
+    if(e2){ errores++; console.error('cerrar error:',e2); }
   }
 
   if(errores>0){ toast('Cerrado con '+errores+' errores'); return; }
@@ -2518,24 +2443,19 @@ function sendLicKpiEmail(){
 
   toast('Generando captura...');
   captureKPI(function(canvas){
-    if(canvas && navigator.clipboard && window.ClipboardItem){
+    // Abrir Outlook con asunto y texto
+    window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
+    if(canvas){
+      // Copiar imagen al portapapeles para pegar en Outlook
       canvas.toBlob(blob=>{
-        navigator.clipboard.write([new ClipboardItem({'image/png':blob})])
-          .then(()=>{
-            toast('📋 Imagen copiada al portapapeles');
-            setTimeout(()=>{
-              window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
-              setTimeout(()=>toast('✉️ Email abierto — pega la imagen con Ctrl+V'),800);
-            },400);
-          })
-          .catch(()=>{
-            window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
-            setTimeout(()=>toast('✉️ Email abierto — adjunta la imagen manualmente'),800);
-          });
+        if(navigator.clipboard && window.ClipboardItem){
+          navigator.clipboard.write([new ClipboardItem({'image/png':blob})])
+            .then(()=>{ setTimeout(()=>toast('📋 Imagen copiada — pégala en el email con Ctrl+V'), 800); })
+            .catch(()=>{ setTimeout(()=>toast('✉️ Email abierto — adjunta la imagen manualmente'), 800); });
+        } else {
+          setTimeout(()=>toast('✉️ Email abierto — adjunta la imagen manualmente'), 800);
+        }
       });
-    } else {
-      window.location.href='mailto:?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(lines.join('\n'));
-      setTimeout(()=>toast('✉️ Email abierto'),400);
     }
   });
 }
@@ -2710,30 +2630,6 @@ function _drawGrafico(labels, valores, colors, borders, chartType){
   });
 }
 
-
-// ── MOBILE KPI LAYOUT ────────────────────────────────────────
-function fixMobileKPILayout(){
-  const grid = document.getElementById('kpi-3col-grid');
-  if(!grid) return;
-  const ch = Array.from(grid.children); // [0]=nuevas,[1]=div,[2]=COO,[3]=div,[4]=agente
-  if(window.innerWidth <= 900){
-    grid.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:stretch;';
-    ch[1].style.display = 'none';  // hide divider
-    ch[3].style.display = 'none';  // hide divider
-    ch[0].style.cssText = 'padding:0;';
-    ch[2].style.cssText = 'padding:0;';
-    ch[4].style.cssText = 'padding:0;';
-  } else {
-    grid.style.cssText = 'display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;align-items:start;';
-    ch[1].style.cssText = 'background:var(--border);';
-    ch[3].style.cssText = 'background:var(--border);';
-    ch[0].style.cssText = 'padding-right:var(--sp-5);';
-    ch[2].style.cssText = 'padding:0 var(--sp-5);';
-    ch[4].style.cssText = 'padding-left:var(--sp-5);';
-  }
-}
-window.addEventListener('load', fixMobileKPILayout);
-window.addEventListener('resize', fixMobileKPILayout);
 // ── INIT ─────────────────────────────────────────────
 (async function initApp(){
   // Wait for Supabase CDN to load (same pattern as COO)
