@@ -1307,26 +1307,15 @@ function lookupPrecio(concepto, linea, compromiso, pago, cliente, fechaRef){
 
 // ── CALC DÍAS FACT ───────────────────────────────────────────
 function calcDiasFact(fechaIni, fechaFin){
-  if(!fechaIni) return 0;
-  const hoy = new Date();
-  const ini = new Date(fechaIni);
-  const fin = fechaFin ? new Date(fechaFin) : null;
-  if(fin){
-    const finMes = fin.getFullYear()*100+(fin.getMonth()+1);
-    const hoyMes = hoy.getFullYear()*100+(hoy.getMonth()+1);
-    if(finMes < hoyMes) return 0;
-    if(finMes === hoyMes){
-      const diasMes = new Date(hoy.getFullYear(),hoy.getMonth()+1,0).getDate();
-      return Math.max(0, Math.min(fin.getDate(),diasMes) - hoy.getDate() + 1);
-    }
-  }
-  const iniMes = ini.getFullYear()*100+(ini.getMonth()+1);
-  const hoyMes = hoy.getFullYear()*100+(hoy.getMonth()+1);
-  if(iniMes===hoyMes){
-    const diasMes = new Date(ini.getFullYear(),ini.getMonth()+1,0).getDate();
-    return diasMes - ini.getDate() + 1;
-  }
-  return new Date(hoy.getFullYear(),hoy.getMonth()+1,0).getDate();
+  // Calcula días usando el período KPI (27 mes anterior → 26 mes actual)
+  const ry = window._licKPIYear || (new Date().getFullYear());
+  const rm = window._licKPIMonth || (new Date().getMonth()+1);
+  const rFake = {
+    fecha_inicio: fechaIni||null,
+    fecha_fin: fechaFin||null,
+    anio_mes_fin: fechaFin ? null : 999999
+  };
+  return calcDiasKPI(rFake, ry, rm);
 }
 
 // ── LOOKUP AGENTE ────────────────────────────────────────────
@@ -1687,7 +1676,8 @@ function openLicModal(i){
   g('l-hl-ini').value=r.hl_fecha_inicio||'';
   g('l-fec-fin').value=(r.anio_mes_fin===999999||!r.fecha_fin)?'':r.fecha_fin||'';
   g('l-hl-fin').value=r.hl_fecha_fin||'';
-  g('l-dias').value=r.dias_fact??'';
+  // Calcular días dinámicamente según período KPI en vez de usar valor almacenado
+  g('l-dias').value=calcDiasFact(r.fecha_inicio||null, (r.anio_mes_fin===999999||!r.fecha_fin)?null:r.fecha_fin||null);
   g('l-concepto').value=r.concepto||'';
   g('l-linea').value=r.linea_producto||'';
   g('l-compromiso').value=r.compromiso||'';
