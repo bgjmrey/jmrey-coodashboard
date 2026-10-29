@@ -1056,14 +1056,12 @@ function getLicsAcumPeriodo(year, month){
     const fin=new Date(r.fecha_fin);
     return fin.getFullYear()*100+(fin.getMonth()+1) >= year*100+month;
   }
-  const _licsAbiertas = (DB.licencias||[]).filter(r=>{
-      const fi=(r.fecha_inicio||'').substring(0,10);
-      return fi.length===10 && fi<=acumFin && licActiva(r);
-    });
-  console.log('getLicsAcumPeriodo abierto', year, month, 'acumFin:', acumFin, 'total DB.licencias:', (DB.licencias||[]).length, 'licsActivas:', _licsAbiertas.length, 'muestra:', _licsAbiertas.slice(0,3).map(r=>r.fecha_inicio+'|'+r.anio_mes_fin));
   return {
     source: 'abierto',
-    lics: _licsAbiertas,
+    lics: (DB.licencias||[]).filter(r=>{
+      const fi=(r.fecha_inicio||'').substring(0,10);
+      return fi.length===10 && fi<=acumFin && licActiva(r);
+    }),
     licsMes: (DB.licencias||[]).filter(r=>{
       const fi=(r.fecha_inicio||'').substring(0,10);
       return fi>=mesIni && fi<=mesFin && licActiva(r);
@@ -2309,36 +2307,31 @@ function toggleAllAcumAgt(){
 }
 
 function calcDiasKPI(r, refYear, refMonth){
-  // Calcula los días a facturar para el mes de referencia (refYear/refMonth)
-  // teniendo en cuenta fecha_inicio y fecha_fin de la licencia
-  const refDate = new Date(refYear, refMonth-1, 1);
-  const diasMesRef = new Date(refYear, refMonth, 0).getDate();
+  // Período real: 27 del mes anterior → 26 del mes actual
+  const rng = licMesRange(refYear, refMonth);
+  const perIni = rng.ini; // 27 mes anterior a las 00:00
+  const perFin = rng.fin; // 26 mes actual a las 23:59:59
+  // Normalizar a medianoche para cálculo de días exacto
+  const perIniD = new Date(perIni.getFullYear(), perIni.getMonth(), perIni.getDate());
+  const perFinD = new Date(perFin.getFullYear(), perFin.getMonth(), perFin.getDate());
+  const diasPeriodo = Math.round((perFinD - perIniD) / 86400000) + 1; // ~31 días
+
   const ini = r.fecha_inicio ? new Date(r.fecha_inicio) : null;
   const fin = (r.fecha_fin && r.anio_mes_fin !== 999999) ? new Date(r.fecha_fin) : null;
 
-  // Si tiene fecha_fin y ya terminó antes de este mes → 0 días
-  if(fin){
-    const finMes = fin.getFullYear()*100+(fin.getMonth()+1);
-    const refMes = refYear*100+refMonth;
-    if(finMes < refMes) return 0;
-    // Si fecha_fin es este mes → días proporcionales hasta fecha_fin
-    if(finMes === refMes){
-      const diaInicio = ini && ini.getFullYear()*100+(ini.getMonth()+1)===refMes ? ini.getDate() : 1;
-      return Math.max(0, fin.getDate() - diaInicio + 1);
-    }
-  }
+  // Calcular inicio efectivo (el mayor entre perIniD y fecha_inicio)
+  let efectivoIni = perIniD;
+  if(ini){ const iniD=new Date(ini.getFullYear(),ini.getMonth(),ini.getDate()); if(iniD > perIniD) efectivoIni = iniD; }
 
-  // Si fecha_inicio es posterior a este mes → 0 días (aún no ha empezado)
-  if(ini){
-    const iniMes = ini.getFullYear()*100+(ini.getMonth()+1);
-    const refMes = refYear*100+refMonth;
-    if(iniMes > refMes) return 0;
-    // Si fecha_inicio es este mes → días desde inicio hasta fin de mes
-    if(iniMes === refMes) return diasMesRef - ini.getDate() + 1;
-  }
+  // Calcular fin efectivo (el menor entre perFinD y fecha_fin)
+  let efectivoFin = perFinD;
+  if(fin){ const finD=new Date(fin.getFullYear(),fin.getMonth(),fin.getDate()); if(finD < perFinD) efectivoFin = finD; }
 
-  // Mes completo
-  return diasMesRef;
+  // Si el rango efectivo no tiene sentido → 0 días
+  if(efectivoIni > efectivoFin) return 0;
+
+  const dias = Math.round((efectivoFin - efectivoIni) / 86400000) + 1;
+  return Math.max(0, Math.min(dias, diasPeriodo));
 }
 
 function calcLicRowSimple(r, refYear, refMonth){
@@ -2351,14 +2344,15 @@ function calcLicRowSimple(r, refYear, refMonth){
   const pvpMes  =precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
   const costeMes=precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
   const cant=parseFloat(r.cantidad)||0;
-  const diasMesRef = new Date(ry, rm, 0).getDate();
+  const rngRef = licMesRange(ry, rm);
+  const diasPeriodo = Math.round((rngRef.fin - rngRef.ini) / 86400000) + 1;
   const dias = calcDiasKPI(r, ry, rm);
 
   // Si días=0, la licencia no aplica a este mes
   if(dias === 0) return null;
 
-  const pvp  = dias < diasMesRef ? pvpMes*dias/diasMesRef : pvpMes;
-  const coste= dias < diasMesRef ? costeMes*dias/diasMesRef : costeMes;
+  const pvp  = dias < diasPeriodo ? pvpMes*dias/diasPeriodo : pvpMes;
+  const coste= dias < diasPeriodo ? costeMes*dias/diasPeriodo : costeMes;
   const agt=lookupAgente(r.agente);
   return {cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
           mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
