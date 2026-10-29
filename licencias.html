@@ -1048,8 +1048,9 @@ function getLicsAcumPeriodo(year, month){
     };
   }
   // Período abierto: calcular desde licencias originales
-  const acumFin = licDateStr(licMesRange(year,month).fin);
-  const mesIni  = year+'-'+String(month).padStart(2,'0')+'-01';
+  const rng = licMesRange(year, month);
+  const acumFin  = licDateStr(rng.fin);
+  const periodoIni = licDateStr(rng.ini);  // 27 del mes anterior
   const mesFin  = year+'-'+String(month).padStart(2,'0')+'-'+String(new Date(year,month,0).getDate()).padStart(2,'0');
   function licActiva(r){
     if(!r.fecha_fin || r.anio_mes_fin===999999) return true;
@@ -1063,8 +1064,9 @@ function getLicsAcumPeriodo(year, month){
       return fi.length===10 && fi<=acumFin && licActiva(r);
     }),
     licsMes: (DB.licencias||[]).filter(r=>{
+      // Nuevas este período: fecha_inicio dentro del período (27-anterior al 26-actual)
       const fi=(r.fecha_inicio||'').substring(0,10);
-      return fi>=mesIni && fi<=mesFin && licActiva(r);
+      return fi>=periodoIni && fi<=acumFin && licActiva(r);
     })
   };
 }
@@ -2344,15 +2346,19 @@ function calcLicRowSimple(r, refYear, refMonth){
   const pvpMes  =precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
   const costeMes=precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
   const cant=parseFloat(r.cantidad)||0;
-  const rngRef = licMesRange(ry, rm);
-  const diasPeriodo = Math.round((rngRef.fin - rngRef.ini) / 86400000) + 1;
+  const diasMesRef = new Date(ry, rm, 0).getDate();
   const dias = calcDiasKPI(r, ry, rm);
 
   // Si días=0, la licencia no aplica a este mes
   if(dias === 0) return null;
 
-  const pvp  = dias < diasPeriodo ? pvpMes*dias/diasPeriodo : pvpMes;
-  const coste= dias < diasPeriodo ? costeMes*dias/diasPeriodo : costeMes;
+  // Proration: si no es período completo (31 días) dividir por días del mes calendario
+  const rngRef2 = licMesRange(ry, rm);
+  const perIniD2 = new Date(rngRef2.ini.getFullYear(), rngRef2.ini.getMonth(), rngRef2.ini.getDate());
+  const perFinD2 = new Date(rngRef2.fin.getFullYear(), rngRef2.fin.getMonth(), rngRef2.fin.getDate());
+  const diasPeriodo = Math.round((perFinD2 - perIniD2) / 86400000) + 1;
+  const pvp  = dias < diasPeriodo ? pvpMes*dias/diasMesRef : pvpMes;
+  const coste= dias < diasPeriodo ? costeMes*dias/diasMesRef : costeMes;
   const agt=lookupAgente(r.agente);
   return {cant, pvpTotal:pvp*cant, costeTotal:coste*cant,
           mrgJmrey:(pvp-coste)*(agt.pct_jmrey||0)*cant,
