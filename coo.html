@@ -1777,7 +1777,7 @@ function renderSvc(){
     const ri=DB.servicios.indexOf(r);
     return `<tr draggable="true" onclick="toggleRowSel(event,this)" ondblclick="editSvcFn(${ri})">
       <td style="font-size:var(--fz-xs);color:var(--fg-3)">${r.id||'—'}</td>
-      <td title="${esc(r.titulo)}">${esc(r.titulo)||'—'}${hl(r.hl_func,'📄','Documento funcional')}</td>
+      <td title="${esc(r.titulo)}" style="max-width:300px">${esc(r.titulo)||'—'}${hl(r.hl_func,'📄','Documento funcional')}</td>
       <td>${r.linea||'—'}</td>
       <td><span class="bdg b-gray">${r.proyecto||'—'}</span></td>
       <td>${r.cliente2||'—'}</td>
@@ -2213,7 +2213,7 @@ function renderVal(){
       <td style="font-size:var(--fz-xs)">${r.id_svc||'—'}</td>
       <td style="font-size:var(--fz-xs)">${r.id_val||'—'}</td>
       <td><span class="bdg b-gray">${r.cliente||'—'}</span></td>
-      <td title="${esc(r.titulo)}">${esc(r.titulo)||'—'}</td>
+      <td title="${esc(r.titulo)}" style="max-width:300px">${esc(r.titulo)||'—'}</td>
       <td style="font-size:var(--fz-xs)">${shortMail(r.tecnico)}</td>
       <td class="r">${fmt(r.h_prod,2)}</td>
       <td class="r">${fmt(r.h_gest,2)}</td>
@@ -2676,8 +2676,8 @@ function measureColWidths(table){
     });
 
     // Si el th tiene width fijo explícito, respetarlo sin sobreescribir
-    if(th.dataset.fixedWidth) return;
-    // Apply, respecting any min-width and max-width set in HTML
+    if(th.hasAttribute('data-fixed-width')) return;
+    // Apply, respecting any min-width set in HTML
     const minAttr = parseInt(th.style.minWidth) || 0;
     const finalW = Math.max(minAttr, Math.ceil(maxW));
     th.style.width = finalW + 'px';
