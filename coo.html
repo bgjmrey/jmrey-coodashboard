@@ -602,7 +602,7 @@ table.rt tbody td.c{text-align:center;}
       <thead>
         <tr class="hdr-row">
           <th data-col="id">ID<span class="rh"></span></th>
-          <th data-col="titulo" style="width:100px" data-fixed-width="1">Título<span class="rh"></span></th>
+          <th data-col="titulo" style="width:300px;min-width:0" data-fixed-width="1">Título<span class="rh"></span></th>
           <th data-col="linea">Línea negocio<span class="rh"></span></th>
           <th data-col="proyecto">Proyecto<span class="rh"></span></th>
           <th data-col="cliente2">Cliente<span class="rh"></span></th>
@@ -651,7 +651,7 @@ table.rt tbody td.c{text-align:center;}
           <th data-col="id_svc">ID Servicio<span class="rh"></span></th>
           <th data-col="id_val">ID Val.<span class="rh"></span></th>
           <th data-col="cliente">Cliente<span class="rh"></span></th>
-          <th data-col="titulo" style="width:100px" data-fixed-width="1">Título<span class="rh"></span></th>
+          <th data-col="titulo" style="width:300px;min-width:0" data-fixed-width="1">Título<span class="rh"></span></th>
           <th data-col="tecnico">Técnico<span class="rh"></span></th>
           <th data-col="h_prod" class="r">H.Prod<span class="rh"></span></th>
           <th data-col="h_gest" class="r">H.Gestión<span class="rh"></span></th>
@@ -1796,7 +1796,7 @@ function renderSvc(){
       <td class="c"><button class="bi" onclick="editSvcFn(${ri})" title="Editar">✏️</button> <button class="bi" onclick="dupSvc(${ri})" title="Duplicar">⧉</button> <button class="bi" onclick="delSvc(${ri})" title="Eliminar">🗑️</button></td>
     </tr>`;
   }).join('');
-  requestAnimationFrame(()=>{ const t=document.getElementById('tbl-svc'); if(t) delete t.dataset.resized; initResize('tbl-svc'); });
+  requestAnimationFrame(()=>initResize('tbl-svc'));
 }
 
 function populateSvcSelects(){
@@ -2223,7 +2223,7 @@ function renderVal(){
       <td class="c"><button class="bi" onclick="editValFn(${ri})">✏️</button> <button class="bi" onclick="delVal(${ri})">🗑️</button></td>
     </tr>`;
   }).join('');
-  requestAnimationFrame(()=>{ const t=document.getElementById('tbl-val'); if(t) delete t.dataset.resized; initResize('tbl-val'); });
+  requestAnimationFrame(()=>initResize('tbl-val'));
 }
 
 function autoCalcValHoras(){
