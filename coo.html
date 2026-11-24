@@ -602,7 +602,7 @@ table.rt tbody td.c{text-align:center;}
       <thead>
         <tr class="hdr-row">
           <th data-col="id">ID<span class="rh"></span></th>
-          <th data-col="titulo">Título<span class="rh"></span></th>
+          <th data-col="titulo" style="position:relative;max-width:200px;min-width:120px">Título<span class="rh"></span></th>
           <th data-col="linea">Línea negocio<span class="rh"></span></th>
           <th data-col="proyecto">Proyecto<span class="rh"></span></th>
           <th data-col="cliente2">Cliente<span class="rh"></span></th>
@@ -651,7 +651,7 @@ table.rt tbody td.c{text-align:center;}
           <th data-col="id_svc">ID Servicio<span class="rh"></span></th>
           <th data-col="id_val">ID Val.<span class="rh"></span></th>
           <th data-col="cliente">Cliente<span class="rh"></span></th>
-          <th data-col="titulo">Título<span class="rh"></span></th>
+          <th data-col="titulo" style="position:relative;max-width:200px;min-width:120px">Título<span class="rh"></span></th>
           <th data-col="tecnico">Técnico<span class="rh"></span></th>
           <th data-col="h_prod" class="r">H.Prod<span class="rh"></span></th>
           <th data-col="h_gest" class="r">H.Gestión<span class="rh"></span></th>
@@ -2675,9 +2675,10 @@ function measureColWidths(table){
       if(w > maxW) maxW = w;
     });
 
-    // Apply, respecting any min-width set in HTML
+    // Apply, respecting any min-width and max-width set in HTML
     const minAttr = parseInt(th.style.minWidth) || 0;
-    const finalW = Math.max(minAttr, Math.ceil(maxW));
+    const maxAttr = parseInt(th.style.maxWidth) || Infinity;
+    const finalW = Math.min(maxAttr, Math.max(minAttr, Math.ceil(maxW)));
     th.style.width = finalW + 'px';
   });
 }

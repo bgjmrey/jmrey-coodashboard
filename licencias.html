@@ -554,7 +554,7 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
         <th data-col="fecha_inicio">F.Inicio</th>
         <th data-col="fecha_fin">F.Fin</th>
         <th data-col="dias_fact" class="r">D&iacute;as</th>
-        <th data-col="concepto">Concepto</th>
+        <th data-col="concepto" style="position:relative;min-width:220px;width:220px">Concepto<span class="rh"></span></th>
         <th data-col="linea_producto">L&iacute;nea Producto</th>
         <th data-col="compromiso">Compromiso</th>
         <th data-col="pago">Pago</th>
@@ -1542,7 +1542,7 @@ function renderLic(){
       <td><div class="hl-row">${fmtDate(r.fecha_inicio)}${hl(r.hl_fecha_inicio,'📄','Ver documento')}</div></td>
       <td><div class="hl-row">${(r.anio_mes_fin===999999||!r.fecha_fin)?'∞':fmtDate(r.fecha_fin)}${r.hl_fecha_fin?hl(r.hl_fecha_fin,'📄','Ver documento'):''}</div></td>
       <td class="r">${c.dias}</td>
-      <td title="${r.concepto||''}">${(r.concepto||'').substring(0,30)}${(r.concepto||'').length>30?'…':''}</td>
+      <td title="${r.concepto||''}" style="max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.concepto||''}</td>
       <td style="font-size:var(--fz-xs)">${(r.linea_producto||'').substring(0,25)}</td>
       <td>${r.compromiso||'—'}</td><td>${r.pago||'—'}</td>
       <td>${r.proy||'—'}</td><td>${r.cliente||'—'}</td>
@@ -1573,6 +1573,23 @@ function renderLic(){
   const rng=licMesRange(_ry,_rm);
   document.getElementById('lic-period-lbl').textContent=
     'Período de cálculo: 27 '+MESES_ES[_rm===1?12:_rm-1]+' – 26 '+MESES_ES[_rm]+' '+_ry;
+  requestAnimationFrame(()=>initResizeLic('tbl-lic'));
+}
+
+function initResizeLic(tableId){
+  const table = document.getElementById(tableId);
+  if(!table) return;
+  table.querySelectorAll('.hdr-row th').forEach(th=>{
+    const handle = th.querySelector('.rh');
+    if(!handle || handle._licResizeInit) return;
+    handle._licResizeInit = true;
+    let startX, startW;
+    function startDrag(clientX){ startX=clientX; startW=th.offsetWidth; handle.classList.add('dragging'); }
+    function onMove(clientX){ if(startX==null) return; th.style.width=Math.max(60,startW+(clientX-startX))+'px'; }
+    function endDrag(){ startX=null; handle.classList.remove('dragging'); }
+    handle.addEventListener('mousedown', e=>{ e.preventDefault(); startDrag(e.clientX); document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu,{once:true}); function mm(e){onMove(e.clientX);} function mu(){endDrag();document.removeEventListener('mousemove',mm);} });
+    handle.addEventListener('touchstart', e=>{ e.preventDefault(); startDrag(e.touches[0].clientX); document.addEventListener('touchmove',tm); document.addEventListener('touchend',te,{once:true}); function tm(e){onMove(e.touches[0].clientX);} function te(){endDrag();document.removeEventListener('touchmove',tm);} },{passive:false});
+  });
 }
 
 function renderPrec(){
