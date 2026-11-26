@@ -1105,8 +1105,8 @@ async function cerrarPeriodo(){
     const c=calcLicRowSimple(r, year, month);
     if(!c) continue;
     const diasMes=new Date(year,month,0).getDate();
-    const pvpMes  =lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio)?.pvp_mes||r.pvp_mes_compl||0;
-    const costeMes=lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio)?.coste_mes||r.coste_mes_compl||0;
+    const pvpMes  =r.pvp_mes_compl||lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio)?.pvp_mes||0;
+    const costeMes=r.coste_mes_compl||lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio)?.coste_mes||0;
     const dias=calcDiasKPI(r,year,month);
     const pvp  = dias<diasMes ? pvpMes*dias/diasMes  : pvpMes;
     const coste= dias<diasMes ? costeMes*dias/diasMes: costeMes;
@@ -1418,9 +1418,8 @@ function calcRow(r, refYear, refMonth){
   const ry = refYear || now.getFullYear();
   const rm = refMonth || (now.getMonth()+1);
   const today = now.toISOString().slice(0,10);
-  const precio = lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
-  const pvpMes   = precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
-  const costeMes = precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
+  const pvpMes   = parseFloat(r.pvp_mes_compl)||lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today)?.pvp_mes||0;
+  const costeMes = parseFloat(r.coste_mes_compl)||lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today)?.coste_mes||0;
   const cant = parseFloat(r.cantidad)||0;
   // Calcular días según el mes de referencia (no hoy)
   const diasMesCompl = new Date(ry, rm, 0).getDate();
@@ -1738,14 +1737,14 @@ function openLicModal(i){
   g('l-cant').value=r.cantidad??1;
   // Rellenar pvp-mes y coste-mes desde el registro guardado (o desde tabla de precios si existe)
   const _today = new Date().toISOString().slice(0,10);
-  const _precio = i===null ? null : lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||_today);
-  if(_precio){
-    g('l-pvp-mes').value  = (parseFloat(_precio.pvp_mes)||0).toFixed(6);
-    g('l-coste-mes').value= (parseFloat(_precio.coste_mes)||0).toFixed(6);
-  } else {
-    g('l-pvp-mes').value  = r.pvp_mes_compl!=null ? parseFloat(r.pvp_mes_compl).toFixed(6) : '';
-    g('l-coste-mes').value= r.coste_mes_compl!=null ? parseFloat(r.coste_mes_compl).toFixed(6) : '';
-  }
+  // Prioridad: valor guardado en el registro; si es 0/nulo, buscar en tabla de precios
+  const _pvpMes0   = parseFloat(r.pvp_mes_compl)||0;
+  const _costeMes0 = parseFloat(r.coste_mes_compl)||0;
+  const _precio = (!_pvpMes0||!_costeMes0) && i!==null
+    ? lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||_today)
+    : null;
+  g('l-pvp-mes').value  = (_pvpMes0||parseFloat(_precio?.pvp_mes)||0).toFixed(6);
+  g('l-coste-mes').value= (_costeMes0||parseFloat(_precio?.coste_mes)||0).toFixed(6);
   g('l-pvp').value  = r.pvp!=null ? parseFloat(r.pvp).toFixed(6) : '';
   g('l-coste').value= r.coste!=null ? parseFloat(r.coste).toFixed(6) : '';
   g('l-fec-ini').onchange=updateDias;
@@ -2394,9 +2393,8 @@ function calcLicRowSimple(r, refYear, refMonth){
   const rm = refMonth || (now.getMonth()+1);
   const today = now.toISOString().slice(0,10);
 
-  const precio=lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today);
-  const pvpMes  =precio?(parseFloat(precio.pvp_mes)||0):parseFloat(r.pvp_mes_compl)||0;
-  const costeMes=precio?(parseFloat(precio.coste_mes)||0):parseFloat(r.coste_mes_compl)||0;
+  const pvpMes  =parseFloat(r.pvp_mes_compl)||lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today)?.pvp_mes||0;
+  const costeMes=parseFloat(r.coste_mes_compl)||lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||today)?.coste_mes||0;
   const cant=parseFloat(r.cantidad)||0;
   const diasMesRef = new Date(ry, rm, 0).getDate();
   const dias = calcDiasKPI(r, ry, rm);
