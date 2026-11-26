@@ -1736,9 +1736,21 @@ function openLicModal(i){
   g('l-cliente').value=r.cliente||'';
   g('l-agente').value=r.agente||'-';
   g('l-cant').value=r.cantidad??1;
+  // Rellenar pvp-mes y coste-mes desde el registro guardado (o desde tabla de precios si existe)
+  const _today = new Date().toISOString().slice(0,10);
+  const _precio = i===null ? null : lookupPrecio(r.concepto,r.linea_producto,r.compromiso,r.pago,r.cliente,r.fecha_inicio||_today);
+  if(_precio){
+    g('l-pvp-mes').value  = (parseFloat(_precio.pvp_mes)||0).toFixed(6);
+    g('l-coste-mes').value= (parseFloat(_precio.coste_mes)||0).toFixed(6);
+  } else {
+    g('l-pvp-mes').value  = r.pvp_mes_compl!=null ? parseFloat(r.pvp_mes_compl).toFixed(6) : '';
+    g('l-coste-mes').value= r.coste_mes_compl!=null ? parseFloat(r.coste_mes_compl).toFixed(6) : '';
+  }
+  g('l-pvp').value  = r.pvp!=null ? parseFloat(r.pvp).toFixed(6) : '';
+  g('l-coste').value= r.coste!=null ? parseFloat(r.coste).toFixed(6) : '';
   g('l-fec-ini').onchange=updateDias;
   g('l-fec-fin').onchange=updateDias;
-  recalcLicDerived();
+  _recalcMargenes();
   document.getElementById('mod-lic').style.display='flex';
 }
 
