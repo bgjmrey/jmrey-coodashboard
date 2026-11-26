@@ -662,8 +662,8 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="fg"><span class="fl">Pago</span><select class="fsel" id="l-pago" style="width:100%" onchange="recalcLic()"><option value="">&#8212;</option><option>Mensual</option><option>Trimestral</option><option>Anual</option><option>Trianual</option></select></div>
       <div class="fg"><span class="fl">Proyecto</span><select class="fsel" id="l-proy" style="width:100%"><option>JMREY</option></select></div>
       <div class="fg"><span class="fl">Cliente</span><select class="fsel" id="l-cliente" style="width:100%" onchange="recalcLic()"><option value="">&#8212;</option></select></div>
-      <div class="fg"><span class="fl">Agente</span><select class="fsel" id="l-agente" style="width:100%" onchange="recalcLic()"><option value="-">-</option></select></div>
-      <div class="fg"><span class="fl">Cantidad</span><input type="number" class="finp" id="l-cant" min="0" value="1" style="width:100%" oninput="recalcLic()"></div>
+      <div class="fg"><span class="fl">Agente</span><select class="fsel" id="l-agente" style="width:100%" onchange="recalcLicDerived()"><option value="-">-</option></select></div>
+      <div class="fg"><span class="fl">Cantidad</span><input type="number" class="finp" id="l-cant" min="0" value="1" style="width:100%" oninput="recalcLicDerived()"></div>
       <div class="fg"><span class="fl">PVP Mes Compl.</span><input class="finp" id="l-pvp-mes" type="number" step="any" oninput="recalcLicDerived()" style="width:100%"></div>
       <div class="fg"><span class="fl">PVP</span><input class="finp" id="l-pvp" type="number" step="any" oninput="recalcLicFromPvp()" style="width:100%"></div>
       <div class="fg"><span class="fl">Importe <em style="color:var(--accent)">(calc)</em></span><input class="finp calc" id="l-importe" readonly style="width:100%"></div>
@@ -1761,7 +1761,7 @@ function openLicModal(i){
   g('l-cant').value=r.cantidad??1;
   g('l-fec-ini').onchange=updateDias;
   g('l-fec-fin').onchange=updateDias;
-  recalcLic();
+  recalcLicDerived();
   document.getElementById('mod-lic').style.display='flex';
 }
 
