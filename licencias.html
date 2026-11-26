@@ -1327,41 +1327,8 @@ function lookupAgente(agenteNombre){
 }
 
 // ── RECALC MODAL LICENCIA ────────────────────────────────────
-// recalcLicDerived: recalcula solo los campos derivados a partir de los valores
-// actuales del formulario (pvp-mes, coste-mes, dias, cant). No sobreescribe
-// los campos base editables (pvp-mes, coste-mes, pvp, coste).
-function recalcLicDerived(){
-  const g = id => document.getElementById(id);
-  const agente  = g('l-agente').value;
-  const cant    = parseFloat(g('l-cant').value)||0;
-  const dias    = parseFloat(g('l-dias').value)||0;
-  const fechaIni= g('l-fec-ini').value;
-  const pvpMes  = parseFloat(g('l-pvp-mes').value)||0;
-  const costeMes= parseFloat(g('l-coste-mes').value)||0;
-
-  let diasMesCompl = 30;
-  if(fechaIni){ const d=new Date(fechaIni); diasMesCompl=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); }
-
-  const pvp   = dias>0 ? pvpMes*dias/diasMesCompl : pvpMes;
-  const coste = dias>0 ? costeMes*dias/diasMesCompl : costeMes;
-  const importe=pvp*cant, impCoste=coste*cant;
-  const mrg=pvp-coste, impMrgTotal=importe-impCoste;
-  const pctMrg=pvp>0?mrg/pvp:0;
-  const agt=lookupAgente(agente);
-  const mrgJ=mrg*(agt.pct_jmrey||0), mrgJm=mrg*(agt.pct_juanma||0), mrgB=mrg*(agt.pct_borja||0), mrgA=mrg*(agt.margen||0);
-
-  const s=(id,v)=>{g(id).value=typeof v==='number'?v.toFixed(6):'';};
-  s('l-pvp',pvp); s('l-importe',importe);
-  s('l-coste',coste); s('l-imp-coste',impCoste);
-  s('l-pct-mrg',pctMrg); s('l-mrg',mrg); s('l-imp-mrg-total',impMrgTotal);
-  s('l-pct-jmrey',agt.pct_jmrey||0); s('l-mrg-jmrey',mrgJ); s('l-imp-mrg-jmrey',mrgJ*cant);
-  s('l-pct-juanma',agt.pct_juanma||0); s('l-mrg-juanma',mrgJm); s('l-imp-mrg-juanma',mrgJm*cant);
-  s('l-pct-borja',agt.pct_borja||0); s('l-mrg-borja',mrgB); s('l-imp-mrg-borja',mrgB*cant);
-  s('l-pct-agente',agt.margen||0); s('l-mrg-agente',mrgA); s('l-imp-mrg-agente',mrgA*cant);
-}
-
-// recalcLicFromPvp: cuando el usuario edita PVP directamente, recalcula Importe y márgenes
-function recalcLicFromPvp(){
+// _recalcMargenes: actualiza importes y márgenes a partir de pvp y coste actuales del form
+function _recalcMargenes(){
   const g = id => document.getElementById(id);
   const cant   = parseFloat(g('l-cant').value)||0;
   const pvp    = parseFloat(g('l-pvp').value)||0;
@@ -1381,25 +1348,35 @@ function recalcLicFromPvp(){
   s('l-pct-agente',agt.margen||0); s('l-mrg-agente',mrgA); s('l-imp-mrg-agente',mrgA*cant);
 }
 
-// recalcLicFromCoste: cuando el usuario edita Coste directamente
-function recalcLicFromCoste(){
+// recalcLicDerived: llamado cuando cambia pvp-mes, coste-mes, agente, cant o dias.
+// Prorratea pvp y coste a partir de los campos *-mes, luego recalcula márgenes.
+// NO sobreescribe pvp-mes ni coste-mes.
+function recalcLicDerived(){
   const g = id => document.getElementById(id);
-  const cant   = parseFloat(g('l-cant').value)||0;
-  const pvp    = parseFloat(g('l-pvp').value)||0;
-  const coste  = parseFloat(g('l-coste').value)||0;
-  const agente = g('l-agente').value;
-  const importe=pvp*cant, impCoste=coste*cant;
-  const mrg=pvp-coste, impMrgTotal=importe-impCoste;
-  const pctMrg=pvp>0?mrg/pvp:0;
-  const agt=lookupAgente(agente);
-  const mrgJ=mrg*(agt.pct_jmrey||0), mrgJm=mrg*(agt.pct_juanma||0), mrgB=mrg*(agt.pct_borja||0), mrgA=mrg*(agt.margen||0);
+  const dias    = parseFloat(g('l-dias').value)||0;
+  const fechaIni= g('l-fec-ini').value;
+  const pvpMes  = parseFloat(g('l-pvp-mes').value)||0;
+  const costeMes= parseFloat(g('l-coste-mes').value)||0;
+
+  let diasMesCompl = 30;
+  if(fechaIni){ const d=new Date(fechaIni); diasMesCompl=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); }
+
+  const pvp   = dias>0 ? pvpMes*dias/diasMesCompl : pvpMes;
+  const coste = dias>0 ? costeMes*dias/diasMesCompl : costeMes;
   const s=(id,v)=>{g(id).value=typeof v==='number'?v.toFixed(6):'';};
-  s('l-imp-coste',impCoste);
-  s('l-pct-mrg',pctMrg); s('l-mrg',mrg); s('l-imp-mrg-total',impMrgTotal);
-  s('l-pct-jmrey',agt.pct_jmrey||0); s('l-mrg-jmrey',mrgJ); s('l-imp-mrg-jmrey',mrgJ*cant);
-  s('l-pct-juanma',agt.pct_juanma||0); s('l-mrg-juanma',mrgJm); s('l-imp-mrg-juanma',mrgJm*cant);
-  s('l-pct-borja',agt.pct_borja||0); s('l-mrg-borja',mrgB); s('l-imp-mrg-borja',mrgB*cant);
-  s('l-pct-agente',agt.margen||0); s('l-mrg-agente',mrgA); s('l-imp-mrg-agente',mrgA*cant);
+  s('l-pvp',pvp);
+  s('l-coste',coste);
+  _recalcMargenes();
+}
+
+// recalcLicFromPvp: cuando el usuario edita PVP directamente. No toca pvp-mes.
+function recalcLicFromPvp(){
+  _recalcMargenes();
+}
+
+// recalcLicFromCoste: cuando el usuario edita Coste directamente. No toca coste-mes.
+function recalcLicFromCoste(){
+  _recalcMargenes();
 }
 
 // recalcLic: llamada desde triggers de Compromiso/Pago/Cliente/Concepto/Agente/Cant/Dias
