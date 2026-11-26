@@ -664,11 +664,11 @@ table.rt .filter-row th,table.rt .filter-row td{background:var(--navy-800);paddi
       <div class="fg"><span class="fl">Cliente</span><select class="fsel" id="l-cliente" style="width:100%" onchange="recalcLic()"><option value="">&#8212;</option></select></div>
       <div class="fg"><span class="fl">Agente</span><select class="fsel" id="l-agente" style="width:100%" onchange="recalcLic()"><option value="-">-</option></select></div>
       <div class="fg"><span class="fl">Cantidad</span><input type="number" class="finp" id="l-cant" min="0" value="1" style="width:100%" oninput="recalcLic()"></div>
-      <div class="fg"><span class="fl">PVP Mes Compl. <em style="color:var(--accent)">(calc)</em></span><input class="finp calc" id="l-pvp-mes" readonly style="width:100%"></div>
-      <div class="fg"><span class="fl">PVP <em style="color:var(--accent)">(calc)</em></span><input class="finp calc" id="l-pvp" readonly style="width:100%"></div>
+      <div class="fg"><span class="fl">PVP Mes Compl.</span><input class="finp" id="l-pvp-mes" type="number" step="any" oninput="recalcLicDerived()" style="width:100%"></div>
+      <div class="fg"><span class="fl">PVP</span><input class="finp" id="l-pvp" type="number" step="any" oninput="recalcLicFromPvp()" style="width:100%"></div>
       <div class="fg"><span class="fl">Importe <em style="color:var(--accent)">(calc)</em></span><input class="finp calc" id="l-importe" readonly style="width:100%"></div>
-      <div class="fg"><span class="fl">Coste Mes Compl. <em style="color:var(--accent)">(calc)</em></span><input class="finp calc" id="l-coste-mes" readonly style="width:100%"></div>
-      <div class="fg"><span class="fl">Coste <em style="color:var(--accent)">(calc)</em></span><input class="finp calc" id="l-coste" readonly style="width:100%"></div>
+      <div class="fg"><span class="fl">Coste Mes Compl.</span><input class="finp" id="l-coste-mes" type="number" step="any" oninput="recalcLicDerived()" style="width:100%"></div>
+      <div class="fg"><span class="fl">Coste</span><input class="finp" id="l-coste" type="number" step="any" oninput="recalcLicFromCoste()" style="width:100%"></div>
       <div class="fg"><span class="fl">Importe Coste <em style="color:var(--accent)">(calc)</em></span><input class="finp calc" id="l-imp-coste" readonly style="width:100%"></div>
       <div class="fg"><span class="fl">% Margen</span><input class="finp calc" id="l-pct-mrg" readonly style="width:100%"></div>
       <div class="fg"><span class="fl">Margen</span><input class="finp calc" id="l-mrg" readonly style="width:100%"></div>
@@ -1327,6 +1327,83 @@ function lookupAgente(agenteNombre){
 }
 
 // ── RECALC MODAL LICENCIA ────────────────────────────────────
+// recalcLicDerived: recalcula solo los campos derivados a partir de los valores
+// actuales del formulario (pvp-mes, coste-mes, dias, cant). No sobreescribe
+// los campos base editables (pvp-mes, coste-mes, pvp, coste).
+function recalcLicDerived(){
+  const g = id => document.getElementById(id);
+  const agente  = g('l-agente').value;
+  const cant    = parseFloat(g('l-cant').value)||0;
+  const dias    = parseFloat(g('l-dias').value)||0;
+  const fechaIni= g('l-fec-ini').value;
+  const pvpMes  = parseFloat(g('l-pvp-mes').value)||0;
+  const costeMes= parseFloat(g('l-coste-mes').value)||0;
+
+  let diasMesCompl = 30;
+  if(fechaIni){ const d=new Date(fechaIni); diasMesCompl=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); }
+
+  const pvp   = dias>0 ? pvpMes*dias/diasMesCompl : pvpMes;
+  const coste = dias>0 ? costeMes*dias/diasMesCompl : costeMes;
+  const importe=pvp*cant, impCoste=coste*cant;
+  const mrg=pvp-coste, impMrgTotal=importe-impCoste;
+  const pctMrg=pvp>0?mrg/pvp:0;
+  const agt=lookupAgente(agente);
+  const mrgJ=mrg*(agt.pct_jmrey||0), mrgJm=mrg*(agt.pct_juanma||0), mrgB=mrg*(agt.pct_borja||0), mrgA=mrg*(agt.margen||0);
+
+  const s=(id,v)=>{g(id).value=typeof v==='number'?v.toFixed(6):'';};
+  s('l-pvp',pvp); s('l-importe',importe);
+  s('l-coste',coste); s('l-imp-coste',impCoste);
+  s('l-pct-mrg',pctMrg); s('l-mrg',mrg); s('l-imp-mrg-total',impMrgTotal);
+  s('l-pct-jmrey',agt.pct_jmrey||0); s('l-mrg-jmrey',mrgJ); s('l-imp-mrg-jmrey',mrgJ*cant);
+  s('l-pct-juanma',agt.pct_juanma||0); s('l-mrg-juanma',mrgJm); s('l-imp-mrg-juanma',mrgJm*cant);
+  s('l-pct-borja',agt.pct_borja||0); s('l-mrg-borja',mrgB); s('l-imp-mrg-borja',mrgB*cant);
+  s('l-pct-agente',agt.margen||0); s('l-mrg-agente',mrgA); s('l-imp-mrg-agente',mrgA*cant);
+}
+
+// recalcLicFromPvp: cuando el usuario edita PVP directamente, recalcula Importe y márgenes
+function recalcLicFromPvp(){
+  const g = id => document.getElementById(id);
+  const cant   = parseFloat(g('l-cant').value)||0;
+  const pvp    = parseFloat(g('l-pvp').value)||0;
+  const coste  = parseFloat(g('l-coste').value)||0;
+  const agente = g('l-agente').value;
+  const importe=pvp*cant, impCoste=coste*cant;
+  const mrg=pvp-coste, impMrgTotal=importe-impCoste;
+  const pctMrg=pvp>0?mrg/pvp:0;
+  const agt=lookupAgente(agente);
+  const mrgJ=mrg*(agt.pct_jmrey||0), mrgJm=mrg*(agt.pct_juanma||0), mrgB=mrg*(agt.pct_borja||0), mrgA=mrg*(agt.margen||0);
+  const s=(id,v)=>{g(id).value=typeof v==='number'?v.toFixed(6):'';};
+  s('l-importe',importe); s('l-imp-coste',impCoste);
+  s('l-pct-mrg',pctMrg); s('l-mrg',mrg); s('l-imp-mrg-total',impMrgTotal);
+  s('l-pct-jmrey',agt.pct_jmrey||0); s('l-mrg-jmrey',mrgJ); s('l-imp-mrg-jmrey',mrgJ*cant);
+  s('l-pct-juanma',agt.pct_juanma||0); s('l-mrg-juanma',mrgJm); s('l-imp-mrg-juanma',mrgJm*cant);
+  s('l-pct-borja',agt.pct_borja||0); s('l-mrg-borja',mrgB); s('l-imp-mrg-borja',mrgB*cant);
+  s('l-pct-agente',agt.margen||0); s('l-mrg-agente',mrgA); s('l-imp-mrg-agente',mrgA*cant);
+}
+
+// recalcLicFromCoste: cuando el usuario edita Coste directamente
+function recalcLicFromCoste(){
+  const g = id => document.getElementById(id);
+  const cant   = parseFloat(g('l-cant').value)||0;
+  const pvp    = parseFloat(g('l-pvp').value)||0;
+  const coste  = parseFloat(g('l-coste').value)||0;
+  const agente = g('l-agente').value;
+  const importe=pvp*cant, impCoste=coste*cant;
+  const mrg=pvp-coste, impMrgTotal=importe-impCoste;
+  const pctMrg=pvp>0?mrg/pvp:0;
+  const agt=lookupAgente(agente);
+  const mrgJ=mrg*(agt.pct_jmrey||0), mrgJm=mrg*(agt.pct_juanma||0), mrgB=mrg*(agt.pct_borja||0), mrgA=mrg*(agt.margen||0);
+  const s=(id,v)=>{g(id).value=typeof v==='number'?v.toFixed(6):'';};
+  s('l-imp-coste',impCoste);
+  s('l-pct-mrg',pctMrg); s('l-mrg',mrg); s('l-imp-mrg-total',impMrgTotal);
+  s('l-pct-jmrey',agt.pct_jmrey||0); s('l-mrg-jmrey',mrgJ); s('l-imp-mrg-jmrey',mrgJ*cant);
+  s('l-pct-juanma',agt.pct_juanma||0); s('l-mrg-juanma',mrgJm); s('l-imp-mrg-juanma',mrgJm*cant);
+  s('l-pct-borja',agt.pct_borja||0); s('l-mrg-borja',mrgB); s('l-imp-mrg-borja',mrgB*cant);
+  s('l-pct-agente',agt.margen||0); s('l-mrg-agente',mrgA); s('l-imp-mrg-agente',mrgA*cant);
+}
+
+// recalcLic: llamada desde triggers de Compromiso/Pago/Cliente/Concepto/Agente/Cant/Dias
+// Rellena pvp-mes y coste-mes desde la tabla de precios, luego deriva el resto
 function recalcLic(){
   const g = id => document.getElementById(id);
   const concepto   = g('l-concepto').value;
@@ -1334,35 +1411,14 @@ function recalcLic(){
   const compromiso = g('l-compromiso').value;
   const pago       = g('l-pago').value;
   const cliente    = g('l-cliente').value;
-  const agente     = g('l-agente').value;
-  const cant       = parseFloat(g('l-cant').value)||0;
-  const dias       = parseFloat(g('l-dias').value)||0;
   const fechaIni   = g('l-fec-ini').value;
 
   const precio = lookupPrecio(concepto, linea, compromiso, pago, cliente, fechaIni||null);
-  const pvpMes   = precio ? (parseFloat(precio.pvp_mes)||0) : 0;
-  const costeMes = precio ? (parseFloat(precio.coste_mes)||0) : 0;
-
-  let diasMesCompl = 30;
-  if(fechaIni){ const d=new Date(fechaIni); diasMesCompl=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); }
-
-  const pvp    = dias>0 ? pvpMes*dias/diasMesCompl : pvpMes;
-  const coste  = dias>0 ? costeMes*dias/diasMesCompl : costeMes;
-  const importe = pvp*cant, impCoste=coste*cant;
-  const mrg = pvp-coste;
-  const impMrgTotal = importe-impCoste;
-  const pctMrg = pvp>0 ? mrg/pvp : 0;
-  const agt = lookupAgente(agente);
-  const mrgJ = mrg*(agt.pct_jmrey||0), mrgJm=mrg*(agt.pct_juanma||0), mrgB=mrg*(agt.pct_borja||0), mrgA=mrg*(agt.margen||0);
-
-  const s=(id,v)=>{g(id).value=typeof v==='number'?v.toFixed(6):'';};
-  s('l-pvp-mes',pvpMes);s('l-pvp',pvp);s('l-importe',importe);
-  s('l-coste-mes',costeMes);s('l-coste',coste);s('l-imp-coste',impCoste);
-  s('l-pct-mrg',pctMrg);s('l-mrg',mrg);s('l-imp-mrg-total',impMrgTotal);
-  s('l-pct-jmrey',agt.pct_jmrey||0);s('l-mrg-jmrey',mrgJ);s('l-imp-mrg-jmrey',mrgJ*cant);
-  s('l-pct-juanma',agt.pct_juanma||0);s('l-mrg-juanma',mrgJm);s('l-imp-mrg-juanma',mrgJm*cant);
-  s('l-pct-borja',agt.pct_borja||0);s('l-mrg-borja',mrgB);s('l-imp-mrg-borja',mrgB*cant);
-  s('l-pct-agente',agt.margen||0);s('l-mrg-agente',mrgA);s('l-imp-mrg-agente',mrgA*cant);
+  if(precio){
+    g('l-pvp-mes').value  = (parseFloat(precio.pvp_mes)||0).toFixed(6);
+    g('l-coste-mes').value= (parseFloat(precio.coste_mes)||0).toFixed(6);
+  }
+  recalcLicDerived();
 }
 
 function onConceptoChange(){
@@ -1376,7 +1432,7 @@ function updateDias(){
   const ini = document.getElementById('l-fec-ini').value;
   const fin = document.getElementById('l-fec-fin').value;
   document.getElementById('l-dias').value = calcDiasFact(ini||null, fin||null);
-  recalcLic();
+  recalcLicDerived();
 }
 
 // ── CALC PARA FILA DE TABLA ──────────────────────────────────
