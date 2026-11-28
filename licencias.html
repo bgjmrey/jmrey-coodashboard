@@ -1991,7 +1991,7 @@ function clearPrecFilters(){ precFilters={}; document.getElementById('prec-filte
 (function initLicKPI(){
   const yearSel=document.getElementById('lic-kpi-year');
   const now=new Date();
-  for(let y=now.getFullYear(); y>=2023; y--){
+  for(let y=Math.max(now.getFullYear(),2028); y>=2023; y--){
     const o=document.createElement('option');
     o.value=y; o.textContent=y;
     yearSel.appendChild(o);
