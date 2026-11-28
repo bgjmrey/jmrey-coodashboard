@@ -1996,6 +1996,7 @@ function clearPrecFilters(){ precFilters={}; document.getElementById('prec-filte
     o.value=y; o.textContent=y;
     yearSel.appendChild(o);
   }
+  yearSel.value=now.getFullYear();
   // Auto-detect: si día > 26 → mes siguiente
   const autoMonth = now.getDate()>26 ? now.getMonth()+2 : now.getMonth()+1;
   const m = autoMonth>12?1:autoMonth;
